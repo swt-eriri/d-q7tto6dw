@@ -1,0 +1,311 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 一件事做完之后：事件与任务</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--fw:#a78bfa;--m04:#38bdf8;--m06:#f59e0b;--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+.who.fw{color:var(--fw);border-color:var(--fw)}.who.m04{color:var(--m04);border-color:var(--m04)}.who.m06{color:var(--m06);border-color:var(--m06)}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;grid-template-columns:200px 1fr 220px;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip[data-own=fw]{--c:var(--fw)}.chip[data-own=m04]{--c:var(--m04)}.chip[data-own=m06]{--c:var(--m06)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+</style>
+</head>
+<body><div class="wrap">
+
+<h1>一件事做完之后，「接下来该发生的事」怎么保证发生</h1>
+<p class="lead">机制：事件与任务（后端框架 0004 第 3.3、3.4 节）。例子：管理员发布「客服 Agent」。</p>
+<p class="sub">这一页想让你关掉以后能自己讲出：每一步是谁在做、数据库里留下了什么、在哪一步崩了会怎样、为什么非这样不可。
+<span class="who fw">框架</span> = 你负责的 0004；<span class="who m04">M04</span> = Agent 配置与发布（蕴颐）；<span class="who m06">M06</span> = 自进化（闻洛）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（可以让它崩）</a><a href="#s3">③ 为什么非这样不可</a><a href="#s4">④ 它不保证什么</a><a href="#s5">⑤ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词 <small>口试里最容易混的</small></h2>
+<div class="pairs">
+  <div class="pair"><h3>事件 ≠ 任务</h3><dl>
+    <dt>事件</dt><dd>已经发生的事实，比如「Agent 版本已发布」。只是一条数据，自己什么都不做。</dd>
+    <dt>任务</dt><dd>一件要去做的后台工作，比如「执行这次发布」。有状态，会被某个进程领走，可能要做几分钟。</dd></dl>
+    <div class="eg">这一页里：2 个事件，1 个任务。第一个事件的作用就是「建出这个任务」。</div></div>
+  <div class="pair"><h3>事件登记表 ≠ 收件记录 ≠ 任务表</h3><dl>
+    <dt>事件登记表</dt><dd>发出方这边：这件事要通知哪几个监听器、各自通知到没有。每个监听器一行。</dd>
+    <dt>收件记录</dt><dd>接收方这边：「这个监听器处理过这条事件」。用来防止同一件事处理两次。</dd>
+    <dt>任务表</dt><dd>后台工作的清单和进度：排队、谁在做、做完没有。</dd></dl>
+    <div class="eg">三张都是框架的公共表，全平台各一张，不是每个模块一份。</div></div>
+  <div class="pair"><h3>监听器 ≠ 进程</h3><dl>
+    <dt>监听器</dt><dd>一段写好的处理代码，「收到某种事件就做某件事」。登记时按逻辑上有几个监听器算。</dd>
+    <dt>进程</dt><dd>同一套代码在每个进程里都有一份，但一个事件只在<b>提交它的那个进程</b>里触发监听器。</dd></dl>
+    <div class="eg">部署 2 个请求进程 + 2 个后台进程，C04 只有 1 个监听器 → 登记表里只有 1 行，不是 4 行。</div></div>
+  <div class="pair"><h3>事件处理完 ≠ 事情做完</h3><dl>
+    <dt>事件处理完</dt><dd>监听器跑完了。对第一个事件来说，就是「任务建好了」。</dd>
+    <dt>事情做完</dt><dd>任务执行成功。</dd></dl>
+    <div class="eg">这一页里：10:00:00 第一个事件就处理完了，发布要到 10:02:31 才完成。</div></div>
+</div>
+<details class="basics"><summary>用到的四个基础概念（不熟就点开）</summary>
+  <p><b>事务</b>：一组数据库操作，要么全部生效（提交），要么全部不生效（回滚）。提交之前，别的进程看不到这些修改；进程在提交前崩了，等于回滚。</p>
+  <p><b>提交后触发</b>：监听器不是在 events.publish 那一刻跑，而是等整个事务提交成功后才跑。事务回滚了，监听器根本不会被触发。</p>
+  <p><b>进程</b>：一个运行中的 Java 程序，有自己的内存和线程。两个进程之间不共享内存，只共享同一个数据库。</p>
+  <p><b>租约</b>：领到任务的进程拿到一个「我在做，60 秒内有效」的标记，每 20 秒续一次。进程崩了就续不上，到期后别人可以接手（细节在「任务」那一页）。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>点左边跳到某一步；每一步都可以点「💥 在这里崩」</small></h2>
+<div class="walk">
+  <div class="steps" id="steps"></div>
+  <div>
+    <div class="stage">
+      <div class="page" id="page"></div>
+      <div class="proc" id="pApi"><h4>请求进程 API-A<small>处理页面请求；不领任务</small></h4>
+        <div class="chip" data-k="m04req" data-own="m04">M04 · 发布受理<span class="o">模块代码（蕴颐）</span></div>
+        <div class="chip" data-k="fwApi" data-own="fw">框架 · 建任务监听器<span class="o">框架代码（你）</span></div>
+      </div>
+      <div class="db"><h4>数据库（全平台一个库）<small>只画这个例子用到的行</small></h4><div id="tables"></div>
+        <div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>
+      <div class="proc" id="pWk"><h4>后台进程 Worker-1<small>领任务、跑监听器、定时重提</small></h4>
+        <div class="chip" data-k="claim" data-own="fw">框架 · 执行池领取<span class="o">框架代码（你）</span></div>
+        <div class="chip" data-k="job" data-own="m04">M04 · 发布任务处理器<span class="o">模块代码（蕴颐）</span></div>
+        <div class="chip" data-k="m06" data-own="m06">M06 · 标记建议监听器<span class="o">模块代码（闻洛）</span></div>
+        <div class="chip" data-k="fwWk" data-own="fw">框架 · 标记完成 / 每分钟重提<span class="o">框架代码（你）</span></div>
+      </div>
+    </div>
+    <div class="explain" id="explain"></div>
+    <div class="ctl">
+      <button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button>
+      <button class="boom" id="boom">💥 在这一步之后崩</button>
+    </div>
+    <div class="crash" id="crash"></div>
+  </div>
+</div>
+
+<h2 id="s3">③ 为什么非这样不可 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么「改业务数据」和「登记事件」必须在同一个事务里？（第 6 步）</summary>
+  <p>分开有两种顺序，都会坏：</p>
+  <p class="if">先提交业务、再登记事件：指针已经换到 v7，登记前进程崩了 → 事件永远不存在 → M06 永远不知道，建议 s_88 一直显示「未发布」，没人会发现。</p>
+  <p class="if">先登记事件、再提交业务：事件登记了，切换指针时失败 → M06 把 s_88 标成「已发布」，但线上还是 v6。</p>
+  <p>放在一个事务里，就只有「都生效」或「都不生效」两种结果。这是整套机制的地基：<b>只要业务改成功了，事件就一定在。</b></p></details>
+<details><summary>2. 为什么收件记录必须和接收方的业务修改在同一个事务里？（第 7 步）</summary>
+  <p class="if">如果先单独提交「处理过 evt_2001」，再去改 s_88，中间崩了：重提时一看收件记录，以为处理过了，直接跳过 → s_88 永远停在「已采纳」。</p>
+  <p>反过来，只改业务、不记收件，重提时就会再改一遍。对「标已发布」这种改两次也一样的操作没事，但对「额度扣一次」这种就会扣两次。框架统一要求「收件记录 + 业务修改」同一个事务，模块不用每次自己判断。</p></details>
+<details><summary>3. 为什么建任务的监听器不需要收件记录？（第 2 步）</summary>
+  <p>任务表自己就挡得住重复：（任务类型，去重键）唯一，去重键用的是事件 ID。同一个事件再触发一次，插入会撞唯一约束，框架把它当作「已经建过了」，算成功。</p>
+  <p class="if">注意：如果把「撞了唯一约束」当成错误往外抛，登记行就永远完不成，每分钟被重提一次，1 小时后告警。</p></details>
+<details><summary>4. 为什么不在请求里直接把发布做完，而要绕一圈建任务？（第 1→4 步）</summary>
+  <p>发布要安装到 DSH、跑探测，要几分钟。</p>
+  <p class="if">放在请求里做：页面要一直等，网关可能先超时；请求进程中途重启，做到一半的发布没人知道，也没人接着做。</p>
+  <p>建成任务后，进度记在任务表里：谁在做、做到哪、租约有没有过期。进程崩了，别的进程能接手。</p></details>
+<details><summary>5. 为什么第二个事件的监听器在后台进程里跑，不在请求进程？（第 7 步）</summary>
+  <p>规则只有一条：<b>监听器在提交这个事务的进程里触发。</b>第 6 步的事务是后台进程 Worker-1 在跑发布任务时提交的，所以 M06 的监听器就在 Worker-1 里跑。第 1 步的事务是请求进程提交的，所以建任务的监听器在 API-A 里跑。</p>
+  <p>两个进程都装了全部模块的代码，所以两边都能跑任何监听器。</p></details>
+<details><summary>6. 为什么不把事件广播给所有进程？</summary>
+  <p>这一页的两个事件，每个监听器只需要处理一次：建一次任务、标一次已发布。广播给 4 个进程，反而要再想办法让其中 3 个别做。</p>
+  <p>真正要「每个进程都知道」的只有清内存缓存（比如停用账号后清认证缓存）。那件事另有办法：本进程立刻清，其他进程等缓存 30 秒自己过期（身份与权限那一页讲）。</p></details>
+</div>
+
+<h2 id="s4">④ 它不保证什么 <small>常见误解</small></h2>
+<ul class="no">
+  <li><b>忘了调 events.publish，框架不会替你补。</b>业务提交了、事件没登记，就是「悄悄漏了」。只能靠评审和测试。</li>
+  <li><b>能重试不等于一定成功。</b>监听器一直报错（比如代码有 bug），登记行就每分钟被重提一次，1 小时后告警，要人来修。</li>
+  <li><b>收件记录只挡「同一个监听器处理两次」。</b>两个不同的监听器做了同一件事、A 事件引发 B、B 又引发 A 的循环，它都挡不住，要靠设计时想清楚。</li>
+  <li><b>只保证数据库里的修改只生效一次。</b>监听器里如果调了外部系统（比如发了一条消息），那一下可能发两次。</li>
+  <li><b>任务只建一次，不等于任务只执行一次。</b>租约被收回的那一小段时间里，可能有两个进程在做同一个任务，所以任务处理器要能重复执行而不出错（「任务」那一页讲）。</li>
+  <li><b>事件处理完，不等于事情做完。</b>第 3 步时页面上的发布还远没完成。</li>
+</ul>
+
+<h2 id="s5">⑤ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 第 2 步做完（任务已插入）、第 3 步之前，API-A 断电。最后任务表里有几条发布任务？是谁把登记行改成「已完成」的？</summary>
+  <p>1 条。1 分钟后 Worker 的定时任务把这条没完成的登记行重新提交，在 <b>Worker 进程</b>里再跑一次建任务监听器；插入撞上（类型，去重键）唯一约束，当作已建过，算成功，由 Worker 把登记行标为已完成。</p></details>
+<details><summary>2. 部署了 2 个请求进程、2 个后台进程。这次的 C04 事件在登记表里有几行？M06 的监听器在哪个进程里跑？</summary>
+  <p>1 行。登记按逻辑监听器算（C04 只有 M06 一个），不按进程数算。监听器在提交第 6 步事务的那个后台进程里跑，其他 3 个进程不会被通知。</p></details>
+<details><summary>3. 第 5 步装 DSH 装到一半，Worker-1 崩了。会不会再发一次「发布已申请」事件？发布靠什么继续？</summary>
+  <p>不会。那个事件第 3 步就处理完了。继续靠任务表：租约 60 秒没人续，过期后任务退回排队，被另一个后台进程（或重启后的 Worker-1）领走重做。所以发布任务的每一步都要能重做而不出错。</p></details>
+<details><summary>4. 如果有人把第 7 步写成：先单独提交收件记录，再改建议状态。在哪两步之间崩会出事？出什么事？</summary>
+  <p>在「收件记录已提交」和「建议状态已改」之间崩。重提时收件记录说处理过了，监听器直接跳过，s_88 永远显示「已采纳」，而且不会报任何错。</p></details>
+<details><summary>5. 10:00:30 管理员刷新页面：第一个事件已经处理完了，发布完成了吗？</summary>
+  <p>没有。这时任务还在第 5 步（安装、探测）。事件处理完只说明「任务建好了」。发布是否完成，要看任务状态和发布记录。</p></details>
+</div>
+
+<p class="src">出处：0004 第 3.3 节（事件登记、提交后监听器、收件记录、建任务、每分钟重提、1 小时告警）、第 3.4 节（任务表、租约、执行池、谁建任务）、第 2.1 节（两个进程各做什么）；0011 第 2 节（发布六步、切换与 C04 同一事务）；0016 C04 一行（M06 标建议「已发布」）。
+<b>示意，不是 RFC 定的</b>：所有时间、ID（evt_1001、apr_31、s_88）、事件名「发布已申请」（0004 只写了发布任务由事件建出，0011 没给这个事件起名）。表里只画了和这个例子有关的列。</p>
+
+</div>
+<script>
+const OWN={m04req:'m04',fwApi:'fw',claim:'fw',job:'m04',m06:'m06',fwWk:'fw'};
+const S0={page:'管理员之前采纳了一条自进化建议 s_88，已写进草稿（修订号 7）。现在点「发布」。',
+  ptr:'v6',pub:[],ev:[],jobs:[],inbox:[],sug:[{id:'s_88',st:'已采纳（未发布）'}]};
+const STEPS=[];
+let cur=JSON.parse(JSON.stringify(S0));
+function step(o,mut){ if(mut) mut(cur); STEPS.push(Object.assign({state:JSON.parse(JSON.stringify(cur))},o)); }
+
+step({t:'09:59',k:[],h:'开始之前',
+  b:'线上是 v6。管理员采纳过的建议 s_88 写在草稿修订号 7 里，还没发布。事件登记表、任务表、收件记录里还没有和这次发布有关的行。',
+  why:'下面每一步注意三件事：在哪个进程里、是谁的代码、数据库里多了或改了哪一行。',crash:null});
+
+step({t:'10:00:00.000',k:['m04req'],proc:'api',h:'M04 受理发布请求，登记事件',
+  b:'请求到了 API-A。M04 开一个事务，调 events.publish(「发布已申请」，带草稿修订号 7)。框架在<b>同一个事务</b>里往事件登记表写 1 行：要通知「框架·建任务监听器」，未完成。提交。页面显示「发布中」。',
+  why:'受理只做一件事：把「要发布」可靠地记下来。真正的发布要几分钟，不在请求里做（③ 第 4 条）。',
+  crash:[{w:'提交之前崩',left:'事务回滚，登记行不存在，什么都没留下。',next:'没有人会接着做。',end:'页面报错，管理员再点一次「发布」。这是安全的失败：要么记下了，要么什么都没发生。'},
+         {w:'提交之后、监听器跑之前崩',left:'登记行在，状态「未完成」。任务表里还没有任务。',next:'1 分钟后，Worker 的定时任务发现这行超过 1 分钟没完成，在 Worker 进程里重新提交给建任务监听器。',end:'任务照样建出来，只是晚了 1 分钟。'}]},
+  s=>{s.page='管理员看到：<b>发布中…</b>';s.ev.push({id:'evt_1001',n:'发布已申请',to:'框架·建任务',done:'否'});});
+
+step({t:'10:00:00.050',k:['fwApi'],proc:'api',h:'提交后，API-A 里的框架监听器建任务',
+  b:'事务提交后，<b>API-A 自己</b>的事件监听线程触发「建任务监听器」（事务是 API-A 提交的，所以在 API-A 里跑，不是 Worker）。它往任务表插 1 行：类型 agent-publish，去重键 = 事件 ID evt_1001，串行键 agent-publish:客服（同一个 Agent 的发布排队，一次只做一个），池 default，状态「排队」。',
+  why:'模块不直接写任务表，一律「发事件 → 框架建任务」（0004 第 3.4 节）。去重键用事件 ID，是为了这个监听器被重跑时不会建出第二个任务。',
+  crash:[{w:'任务插入后、标记完成前崩',left:'任务表里有 1 条排队任务；登记行还是「未完成」。',next:'1 分钟后 Worker 重提，再跑一次建任务监听器：插入撞上（类型，去重键）唯一约束 → 当作已建过，算成功 → 把登记行标为完成。',end:'仍然只有 1 个任务。这就是建任务不需要收件记录的原因（③ 第 3 条）。'}]},
+  s=>{s.jobs.push({ty:'agent-publish',dk:'evt_1001',sk:'agent-publish:客服',st:'排队',who:'—'});});
+
+step({t:'10:00:00.060',k:['fwApi'],proc:'api',h:'标记登记行完成：第一个事件处理完了',
+  b:'监听器正常返回，框架把登记行标为「已完成」。<b>到这里第一个事件就处理完了，但发布一步都还没做。</b>',
+  why:'这是「事件处理完 ≠ 事情做完」最清楚的地方。之后的发布进度只看任务表，和这个事件再没有关系。',
+  crash:[{w:'这之后 API-A 崩',left:'登记行已完成，任务在排队。',next:'和 API-A 无关了：任何一个后台进程都会来领这个任务。',end:'发布照常进行。'}]},
+  s=>{s.ev[0].done='是';});
+
+step({t:'10:00:01',k:['claim'],proc:'wk',h:'Worker-1 领到任务',
+  b:'Worker-1 的 default 池有空闲，约每秒去任务表领一次：把这条任务从「排队」改成「运行中」，记下持有者 Worker-1、租约代次 1、租约到 10:01:01。',
+  why:'请求进程不领任务，只有后台进程领（评估执行器的评估任务是唯一例外，由请求进程代领）。有几个后台进程都没关系，数据库保证一条任务只被一个进程领走。',
+  crash:[{w:'领到后马上崩',left:'任务「运行中」，持有者 Worker-1，但没人续租。',next:'租约 60 秒到期后，Worker 的定时检查（每 10 秒一次）把它退回「排队」。',end:'另一个后台进程领走，从头做。'}]},
+  s=>{s.jobs[0].st='运行中';s.jobs[0].who='Worker-1 · 代次1';});
+
+step({t:'10:00:02 → 10:02:30',k:['job'],proc:'wk',h:'发布任务干活：校验、组装、安装、探测',
+  b:'M04 的处理器：检查草稿修订号还是 7 → 校验 → 组装出 v7，建发布记录 apr_31「组装完成」→ 经 DSH 适配层把 v7 安装到 DSH、跑探测（约两分钟）→ 发布记录改为「已安装未上线」。这期间每 20 秒续一次租约。',
+  why:'装 DSH、跑探测是在等外部系统，这时<b>不开着数据库事务</b>：写发布记录是一个个短事务，写完就提交、还连接。线上这时仍然是 v6。',
+  crash:[{w:'安装到一半 Worker-1 崩',left:'发布记录 apr_31 停在「组装完成」；任务「运行中」但没人续租。',next:'60 秒后租约过期 → 任务退回排队 → 别的后台进程领走重做。<b>不会再发一次「发布已申请」事件</b>，恢复全靠任务表。',end:'重做时要能接着已有的发布记录做，不出错（任务处理器必须能重复执行，「任务」页讲）。'}]},
+  s=>{s.pub.push({id:'apr_31',v:'v7',st:'已安装未上线'});s.jobs[0].who='Worker-1 · 代次1（每 20 秒续租）';});
+
+step({t:'10:02:31.000',k:['job'],proc:'wk',h:'切换：一个事务里改三样东西',
+  b:'同一个事务里：① 把「客服 Agent 当前发布版本」从 v6 换成 v7（只有它还是 v6 才换，叫「比较并替换」）；② 发布记录改为「已发布」；③ events.publish(C04「Agent 版本已发布」，带建议清单 [s_88]) → 登记表新增 1 行，要通知「M06·标记建议」。提交。',
+  why:'三样必须一起生效或一起不生效（③ 第 1 条）。从这一刻起新受理的执行用 v7；已经受理的执行继续用 v6。',
+  crash:[{w:'提交之前崩',left:'三样都没生效：指针仍是 v6，记录仍是「已安装未上线」，没有 C04 登记行。',next:'任务租约过期后被重新领取，重新走到切换这一步。',end:'不会出现「指针换了但 M06 不知道」这种半截状态。'}]},
+  s=>{s.ptr='v7';s.pub[0].st='已发布';s.ev.push({id:'evt_2001',n:'C04 Agent 版本已发布',to:'M06·标记建议',done:'否'});});
+
+step({t:'10:02:31.050',k:['m06'],proc:'wk',h:'提交后，Worker-1 里的 M06 监听器标记建议',
+  b:'这次事务是 <b>Worker-1</b> 提交的，所以 M06 的监听器在 Worker-1 里触发（③ 第 5 条）。M06 开一个事务：先往收件记录插（M06·标记建议，evt_2001），再把 s_88 改成「已发布」。提交。',
+  why:'收件记录和改建议必须在同一个事务里（③ 第 2 条）。插收件记录撞上主键，说明处理过了，直接跳过。',
+  crash:[{w:'M06 提交后、标记完成前崩',left:'收件记录在，s_88 已是「已发布」；登记行还是「未完成」。',next:'1 分钟后重提，再跑 M06 监听器：插收件记录撞主键 → 跳过，算成功 → 标完成。',end:'s_88 只被改了一次。另外别忘了任务那一侧：发布任务也停在「运行中」，租约过期后被接手重跑，处理器看到发布记录已经是「已发布」，就该直接算成功，不能再切一次（任务处理器要能重复执行，这是对 M04 处理器的要求，RFC 没写到这么细）。'},
+         {w:'M06 提交之前崩',left:'收件记录和 s_88 的修改一起回滚，好像没处理过。',next:'1 分钟后重提，重新处理。',end:'照样只生效一次。'}]},
+  s=>{s.inbox.push({l:'M06·标记建议',e:'evt_2001'});s.sug[0].st='已发布';});
+
+step({t:'10:02:31.060',k:['fwWk'],proc:'wk',h:'收尾：登记行完成，任务成功',
+  b:'框架把 C04 的登记行标为完成；发布任务处理器返回成功，任务改为「成功」。页面显示「已发布 v7」。',
+  why:'回头看：两个事件都在 1 秒内处理完，一个任务用了两分半。每一步都有一张表记着做到哪，任何一步崩了，都知道该由谁、从哪里接着做。',
+  crash:null},
+  s=>{s.ev[1].done='是';s.jobs[0].st='成功';s.jobs[0].who='—';s.page='管理员看到：<b>已发布 v7</b>';});
+
+const TBL=[
+ {k:'ptr',n:'Agent 当前发布版本',o:'M04 的表',cols:['Agent','当前版本'],rows:s=>[['客服',s.ptr]]},
+ {k:'pub',n:'发布记录',o:'M04 · publish_records',cols:['ID','版本','状态'],rows:s=>s.pub.map(r=>[r.id,r.v,r.st])},
+ {k:'ev',n:'事件登记表',o:'框架 · event_publication',cols:['事件','通知谁','完成'],rows:s=>s.ev.map(r=>[r.id+' '+r.n,r.to,r.done])},
+ {k:'jobs',n:'任务表',o:'框架 · platform_jobs',cols:['类型','去重键','串行键','状态','持有者'],rows:s=>s.jobs.map(r=>[r.ty,r.dk,r.sk,r.st,r.who])},
+ {k:'inbox',n:'收件记录',o:'框架 · platform_inbox',cols:['监听器','事件'],rows:s=>s.inbox.map(r=>[r.l,r.e])},
+ {k:'sug',n:'自进化建议',o:'M06 的表',cols:['建议','状态'],rows:s=>s.sug.map(r=>[r.id,r.st])},
+];
+let i=0,boom=false;
+const $=id=>document.getElementById(id);
+function render(){
+  const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+  $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+  $('page').innerHTML=st.state.page;
+  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',st.k.includes(c.dataset.k)));
+  $('tables').innerHTML=TBL.map(t=>{
+    const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+    const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+      return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+      :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+    return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+  const own=st.k.map(k=>OWN[k]).filter((v,j,a)=>a.indexOf(v)===j).map(o=>`<span class="who ${o}">${{fw:'框架',m04:'M04',m06:'M06'}[o]}</span>`).join('');
+  $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t} ${st.proc?'· 在 '+(st.proc==='api'?'请求进程 API-A':'后台进程 Worker-1'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p><p class="why">${st.why}</p>`;
+  $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+  $('boom').style.display=st.crash?'':'none';
+  $('boom').classList.toggle('on',boom&&!!st.crash);
+  $('pApi').classList.toggle('crashed',boom&&!!st.crash&&st.proc==='api');
+  $('pWk').classList.toggle('crashed',boom&&!!st.crash&&st.proc==='wk');
+  $('crash').classList.toggle('show',boom&&!!st.crash);
+  $('crash').innerHTML=st.crash?st.crash.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
+  history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+}
+$('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+$('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+$('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+$('boom').onclick=()=>{boom=!boom;render();};
+document.addEventListener('keydown',e=>{if(e.target.tagName==='SUMMARY')return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+render();
+</script>
+</body>
+</html>
