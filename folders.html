@@ -1,0 +1,436 @@
+<!DOCTYPE html><html lang="zh"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8"><title>OntoHelm 项目文件夹大图</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#0b1120;color:#e2e8f0;font:15px/1.65 "Microsoft YaHei","PingFang SC",sans-serif;height:100vh;display:flex;flex-direction:column}
+header{display:flex;align-items:center;gap:8px;padding:10px 16px;border-bottom:1px solid #1e293b;background:#0f172a;flex-wrap:wrap}
+h1{font-size:18px;margin:0 14px 0 0}header button{background:#1e293b;color:#cbd5e1;border:1px solid #334155;border-radius:8px;padding:5px 12px;font-size:14px;cursor:pointer}
+header button.on{background:#3b82f6;color:#fff;border-color:#3b82f6}.lg{margin-left:auto;font-size:13px;color:#94a3b8;display:flex;gap:12px;align-items:center}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:4px;vertical-align:-1px}
+main{flex:1;display:flex;min-height:0}
+#tree{width:430px;overflow:auto;border-right:1px solid #1e293b;padding:10px 6px 30px;flex-shrink:0}
+#tree ul{list-style:none;margin:0;padding-left:16px}#tree>ul{padding-left:4px}
+.row{display:flex;align-items:center;gap:6px;padding:3px 8px;border-radius:6px;cursor:pointer;white-space:nowrap}
+.row:hover{background:#1e293b}.row.sel{background:#1e3a8a}
+.tw{width:14px;color:#64748b;font-size:11px;flex-shrink:0;text-align:center}
+.pn{font-family:Consolas,monospace;font-size:14px}.cn{color:#94a3b8;font-size:13px;overflow:hidden;text-overflow:ellipsis}
+.mine>.row .pn{color:#fbbf24;font-weight:bold}.rel>.row .pn{color:#7dd3fc}.other>.row .pn{color:#94a3b8}.mixed>.row .pn{color:#e2e8f0}
+.star{color:#fbbf24;font-size:12px}
+#view{flex:1;overflow:auto;padding:22px 34px 60px}
+#view h2{margin:0 0 4px;font-size:24px}#view h2 .pn{font-size:22px}.sub{color:#94a3b8;margin-bottom:16px}
+.badge{display:inline-block;font-size:12px;padding:1px 8px;border-radius:10px;margin-left:8px;vertical-align:3px}
+.b-mine{background:#78350f;color:#fde68a}.b-rel{background:#0c4a6e;color:#bae6fd}.b-other{background:#1e293b;color:#94a3b8}.b-mixed{background:#1e293b;color:#cbd5e1}
+.one{font-size:18px;margin:6px 0 16px;color:#f8fafc}
+.card{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:12px 16px;margin:0 0 12px}
+.card h3{margin:0 0 6px;font-size:14px;color:#93c5fd;font-weight:normal}
+.card ul{margin:4px 0;padding-left:20px}.card li{margin:2px 0}
+.relc{border-color:#0369a1;background:#0b2234}.relc h3{color:#7dd3fc}
+.ft{display:flex;gap:8px;align-items:baseline;margin:3px 0}.ty{font-size:12px;padding:0 7px;border-radius:5px;color:#0b1120;font-weight:bold;flex-shrink:0}
+code{font-family:Consolas,monospace;background:#1e293b;padding:0 5px;border-radius:4px;font-size:.92em;color:#e2e8f0}
+.meta{color:#64748b;font-size:13px;margin-top:14px}
+.kids{display:flex;flex-wrap:wrap;gap:8px}.kid{background:#1e293b;border:1px solid #334155;border-radius:8px;padding:6px 10px;cursor:pointer;max-width:330px}
+.kid:hover{border-color:#60a5fa}.kid .pn{font-size:13px}.kid div{font-size:12.5px;color:#94a3b8}
+.mine-k .pn{color:#fbbf24}.rel-k .pn{color:#7dd3fc}
+.faq details{background:#111827;border:1px solid #1f2937;border-radius:10px;margin:0 0 8px;padding:10px 16px}
+.faq summary{cursor:pointer;font-size:16px;color:#f8fafc}.faq details[open] summary{color:#93c5fd;margin-bottom:6px}
+table.t{border-collapse:collapse;width:100%}table.t th,table.t td{border:1px solid #1f2937;padding:6px 10px;text-align:left;vertical-align:top}
+table.t th{background:#111827;color:#93c5fd;font-weight:normal}
+.flow{margin:0 0 26px}.flow h3{font-size:17px;margin:0 0 4px}.flow .d{color:#94a3b8;margin-bottom:10px}
+.step{display:flex;gap:12px;margin:0 0 8px}.step i{font-style:normal;background:#3b82f6;color:#fff;border-radius:50%;width:24px;height:24px;flex-shrink:0;text-align:center;line-height:24px;font-size:13px;margin-top:2px}
+.step .b{background:#111827;border:1px solid #1f2937;border-radius:10px;padding:8px 14px;flex:1}
+.how{display:inline-block;font-size:12px;padding:0 8px;border-radius:10px;margin-left:6px}.h-http{background:#7c2d12;color:#fed7aa}.h-java{background:#14532d;color:#bbf7d0}
+.go{color:#fbbf24;cursor:pointer;font-family:Consolas,monospace;border-bottom:1px dashed #fbbf24}.go.r{color:#7dd3fc;border-color:#7dd3fc}.go.o{color:#cbd5e1;border-color:#64748b}
+.big{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:10px 0 18px}.big .card{margin:0}
+</style></head><body>
+<header><h1>OntoHelm 项目文件夹大图</h1>
+<button data-v="home" class="on">先看这里</button><button data-v="flow">一次请求怎么走</button><button data-v="faq">常见疑问</button><button data-v="types">文件类型</button><button data-v="names">命名规律</button>
+<span class="lg"><span><span class="dot" style="background:#fbbf24"></span>你负责</span><span><span class="dot" style="background:#7dd3fc"></span>别人的，和你有关</span><span><span class="dot" style="background:#64748b"></span>其他</span><span>数据截至 <span id="dt"></span></span></span></header>
+<main><nav id="tree"></nav><section id="view"></section></main>
+<script>
+// 项目文件夹大图的内容。tag：mine 你负责；rel 别人的但和你有关；other 其他
+// f：里面的文件 [类型, 说明]；类型 java ts py sql yaml json cfg md
+// 文件名后带 * 的是示意，RFC 没写死
+const DATE = '2026-11-16';
+const T = [
+{ p:'apps/', n:'程序入口', tag:'mixed', open:1,
+  one:'每个能单独启动的程序一个文件夹。一共 4 个程序，用 3 种语言。',
+  what:'「程序」指能单独启动、单独运行的东西。这里只放每个程序的<b>启动入口和它自己的配置</b>，真正的业务代码大多在 <code>backend/</code>。',
+  inside:['<code>workbench/</code>：前端网页（TypeScript）','<code>platform-api/</code>：请求进程（Java）★','<code>platform-worker/</code>：后台进程（Java）★','<code>eval-runner/</code>：评估执行器（Python）'],
+  src:'RFC-0003 第 2.3 节', kids:[
+  { p:'workbench/', n:'前端网页（工作台）', tag:'other', owner:'嘉敏（前端框架 RFC-0005）',
+    one:'用户在浏览器里看到的所有页面。',
+    f:[['ts','.ts / .tsx 文件：TypeScript + React 写的页面和组件'],['cfg','package.json：前端的依赖和构建命令']],
+    what:'打包后是一堆静态网页文件（HTML、JS、CSS），浏览器加载它们，再通过 HTTP 调请求进程拿数据。它不是 Java，也不直接连数据库。',
+    inside:['<code>app/</code>：整体布局、路由、导航、登录状态','<code>features/</code>：每个业务模块一个文件夹，和后端模块同名'],
+    src:'RFC-0003 第 2.2、2.3 节', kids:[
+    { p:'features/identity/', n:'身份相关的页面', tag:'rel', owner:'前端（谁写按 RFC-0005 定）',
+      one:'登录页、改密页、用户管理、评估账号、接入应用的页面。',
+      f:[['ts','.tsx 页面组件']],
+      what:'这些页面调的是你身份模块的页面接口（<code>/api/v1/identity/…</code>）。接口长什么样以你写的 <code>openapi.yaml</code> 为准，前端的类型由它自动生成。',
+      rel:'你提供接口，前端按接口做页面。你要保证：写请求带防跨站请求头、按「我是谁」返回的能力显示菜单、必须改密时只显示改密页、新建和重置后显示一次性密码。',
+      src:'RFC-0006 第 11.3 节' } ]},
+  { p:'platform-api/', n:'请求进程', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+    one:'接收所有外部 HTTP 请求的那个 Java 程序的启动入口。',
+    f:[['java','PlatformApiApplication.java*：启动类，几十行'],['cfg','build.gradle.kts*：构建配置，写明「我依赖 backend」'],['cfg','这个进程自己的配置：开 HTTP 端口、不领任务']],
+    what:'这里的代码很少。它做的事是：<b>把 <code>backend/</code> 里的全部代码装起来，以「请求进程」的身份启动</b>，开 HTTP 端口接请求，但不领后台任务。',
+    inside:['启动类','一份只写「要用哪些模块接口」的清单（请求入口要调身份模块认人、调会话模块核验回调）'],
+    rel:'名字里的 api 指「对外提供 HTTP 接口」，和模块里的 <code>api/</code> 文件夹不是一回事。',
+    src:'RFC-0004 第 2.1、2.2 节' },
+  { p:'platform-worker/', n:'后台进程', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+    one:'执行后台任务的那个 Java 程序的启动入口。',
+    f:[['java','PlatformWorkerApplication.java*：启动类'],['cfg','build.gradle.kts*：构建配置'],['cfg','这个进程的配置：不开业务端口、领任务']],
+    what:'和请求进程用<b>同一套 <code>backend/</code> 代码</b>，只是启动时打开的开关不同：不接用户请求，专门领任务、跑定时任务、跟随 DSH 的事件流、做清理。这样某个任务卡住，不会拖慢用户的页面。',
+    inside:['启动类','一份「要用哪些模块接口」的清单'],
+    rel:'任务执行器、DSH 跟随器、应答通道这些组件具体放哪个文件夹，RFC 还没写（倾向 <code>backend/worker/</code>，这里只留启动类），搭骨架时定。',
+    src:'RFC-0004 第 2.1、6 节' },
+  { p:'eval-runner/', n:'评估执行器', tag:'other', owner:'闻洛（自进化与评估 RFC-0016）',
+    one:'跑自进化评估的 Python 程序，沿用现有的评估代码。',
+    f:[['py','.py 文件'],['cfg','pyproject.toml*：Python 依赖']],
+    what:'它不连数据库，也不装后端模块，只通过 HTTP 调请求进程上的内部接口（<code>/internal/eval/v1</code>）领任务、交结果。所以它的请求也经过你的请求入口。',
+    src:'RFC-0004 第 2.1 节' } ]},
+
+{ p:'backend/', n:'后端代码', tag:'mixed', open:1,
+  one:'平台后端的全部 Java 代码。两个 Java 程序（请求进程、后台进程）都用它。',
+  what:'几乎都是 <code>.java</code> 文件，外加建表用的 <code>.sql</code>。它是<b>一个构建单元</b>，不是九个：模块之间的边界靠自动检查来守，不靠拆成多个包。',
+  f:[['java','.java：所有 Java 代码'],['sql','.sql：migrations/ 里的建表改表脚本'],['cfg','build.gradle.kts*：后端的构建配置']],
+  inside:['<code>kernel/</code>：内核 ★','<code>http/</code>：请求入口 ★','<code>bootstrap/</code>：启动引导 ★','<code>modules/</code>：9 个业务模块','<code>adapters/</code>：对接外部系统','<code>migrations/</code>：建表改表脚本'],
+  src:'RFC-0003 第 2.3 节；RFC-0004 第 11.3 节', kids:[
+  { p:'kernel/', n:'内核', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+    one:'每个模块都要用的基础服务。',
+    f:[['java','.java：每项服务一组接口和实现']],
+    what:'模块要用数据库、发事件、提交任务时，不自己去连、不自己造，而是调内核提供的服务。这样连接池、事务、ID 格式全平台统一。',
+    inside:['开事务（一个进程一个共享连接池）','发布事件（和业务在同一个事务里登记）','防重复提交（幂等）','提交、查询、取消任务','统一时钟、生成带前缀的 ID','日志、追踪','按引用取密钥、加解密'],
+    rel:'0003 的目录图里还没有这个文件夹，是 0004 新加的。内核的代码在这里，内核的「组装」在 <code>bootstrap/</code>。',
+    src:'RFC-0004 第 2.3 节' },
+  { p:'http/', n:'请求入口', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+    one:'外部 HTTP 请求进来，先在这里过一遍公共检查，再交给模块。',
+    f:[['java','.java：过滤器、校验、错误转换、事件流']],
+    what:'按技术起的名字，意思是「HTTP 请求进来时的公共处理」。<b>只有从后端程序外面来的调用才经过这里</b>：浏览器、业务系统、DSH 回调、评估执行器、后台进程推送。模块之间互相调用不经过这里。',
+    inside:['认人：登录 cookie → 调身份模块，30 秒缓存；DSH 回调 → 验签名','防跨站检查（cookie 双提交）','按接口说明检查请求格式','把错误转成统一格式','<code>stream/</code>：事件流，把消息实时推给浏览器'],
+    rel:'它只认「你是谁」，不判「能不能做」，判权在各模块里。认人这一步调的就是你身份模块的 <code>api/</code>。',
+    src:'RFC-0004 第 4、5 节' },
+  { p:'bootstrap/', n:'启动引导', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+    one:'每个进程每次启动时，把各部分组装起来并检查有没有违规。',
+    f:[['java','.java：组装配置类、清单校验']],
+    what:'不是整个系统只跑一次，而是<b>每个进程每次启动跑一次</b>（请求进程、后台进程各跑一次，重启再跑）。启动完成后它就不再干活。',
+    inside:['组装内核','读每个模块的清单，检查依赖是否允许、有没有越界；不合规就拒绝启动','接三处跨层的线，其中一处是把身份模块的「签发进程令牌」接给 DSH 适配层'],
+    src:'RFC-0004 第 2.2 节' },
+  { p:'modules/', n:'9 个业务模块', tag:'mixed', open:1,
+    one:'每个业务模块一个文件夹，结构一样。',
+    what:'每个模块内部都按同一个模板分子文件夹（看 <code>identity/</code> 就知道其他的）。<b>别的模块只能用它的 <code>api/</code></b>，其余文件夹对外看不见，越界会被检查拦住。',
+    src:'RFC-0003 第 2.4 节', kids:[
+    { p:'identity/', n:'身份与权限', tag:'mine', owner:'你（RFC-0006）', open:1,
+      one:'你的业务模块：账号、登录、判权、取数身份、进程令牌、评估账号、接入应用。',
+      f:[['java','.java：全部代码'],['cfg','package-info.java + module.yaml：模块清单']],
+      what:'按模板分成下面几个子文件夹。P0 先做 <code>api/</code>、<code>events/</code>、<code>mock/</code> 和建表，让别人能先跑起来；P1 再做真实实现。',
+      inside:['模块清单：名字、表名前缀 identity_、依赖谁、提供哪些接口、页面路由、定时任务'],
+      src:'RFC-0006 第 11.3 节', kids:[
+      { p:'api/', n:'对外接口', tag:'mine', owner:'你', phase:'P0',
+        one:'别的模块只能用这里的东西。',
+        f:[['java','.java：Java 接口（interface）+ 数据类型（record）']],
+        what:'这里<b>只有接口的样子，没有实现</b>：方法叫什么、传什么、返回什么。别的模块按类型拿到这些接口直接调用（Java 方法调用，不走 HTTP）。这就是「模块之间的契约」。',
+        inside:['<code>Authentication</code>：认人（cookie → 主体）','<code>PermissionQuery</code>：判权、查能力清单','<code>GatewayIdentityQuery</code>：取网关 uid','<code>EvalAccountQuery</code>：查评估账号','<code>ProcessTokenIssuer</code>：签发、作废进程令牌','<code>CallerTokenVerification</code>：校验进程令牌'],
+        src:'RFC-0006 第 8.1、11.3 节' },
+      { p:'events/', n:'发出的事件', tag:'mine', owner:'你', phase:'P0',
+        one:'只有一种：「主体变了」，也就是变更通知。',
+        f:[['java','PrincipalChanged.java 等：事件的数据类型']],
+        what:'账号停用、启用、移除，改角色、改导出权限，重置密码、本人改密，管理员失去自进化管理能力，评估账号停用启用，接入应用停用、换凭据、改资格时发出。请求入口和 MCP 代理收到后清缓存。',
+        rel:'0006 大图 ⑧「变更通知与审计」讲的就是它。审计记录不在这里，它按审计模块定的格式发给审计模块。',
+        src:'RFC-0006 第 8.3 节' },
+      { p:'domain/', n:'业务规则', tag:'mine', owner:'你', phase:'P1',
+        one:'纯规则，不碰数据库也不碰网络。',
+        f:[['java','.java：普通的 Java 类']],
+        what:'把规则单独放，好处是不起数据库就能写单元测试。<b>这里没有契约</b>，契约在 <code>api/</code> 和 <code>packages/contracts/</code>。',
+        inside:['<code>RoleCapabilities</code>：角色 → 能力对照表，直接写在代码里','<code>PasswordPolicy</code>：密码规则（8 位、字母 + 数字）、连错 5 次锁 15 分钟','<code>RouteKeys</code>：路由键 → 令牌种类和主体','<code>IdentityAudit</code>：拼审计记录'],
+        src:'RFC-0006 第 11.3 节' },
+      { p:'store/', n:'读写数据库', tag:'mine', owner:'你', phase:'P1 起',
+        one:'store 是「存储」：读写本模块那七张表的代码。',
+        f:[['java','.java：每张表一个读写类，用 jOOQ 写查询']],
+        what:'只有这里碰数据库，而且只能碰 <code>identity_</code> 开头的表（自动检查）。jOOQ 会按表结构自动生成 Java 类，写查询时表名列名写错，编译就报错。',
+        inside:['<code>UserStore</code> 账号','<code>CredentialStore</code> 密码','<code>WebSessionStore</code> 登录会话','<code>ProcessTokenStore</code> 进程令牌','<code>EvalAccountStore</code> 评估账号','<code>IntegrationAppStore</code>、<code>AppCredentialStore</code> 接入应用（P4 才用）'],
+        src:'RFC-0006 第 9、11.3 节' },
+      { p:'http/', n:'页面接口', tag:'mine', owner:'你', phase:'P1 起',
+        one:'浏览器直接调的那些接口的处理代码。',
+        f:[['java','.java：每组页面接口一个类']],
+        what:'接口的路径和格式先写在 <code>packages/contracts/modules/identity/openapi.yaml</code>，工具按它生成 Java 接口，这里的类去实现。请求先经过 <code>backend/http/</code> 的公共检查，再到这里。',
+        inside:['<code>LoginController</code>：登录、退出、我是谁、改密','<code>UserAdminController</code>：用户管理','<code>EvalAccountController</code>：评估账号（P3）','<code>IntegrationAppController</code>：接入应用（P4）'],
+        src:'RFC-0006 第 8.2、11.3 节' },
+      { p:'jobs/', n:'定时任务和启动任务', tag:'mine', owner:'你', phase:'P1',
+        one:'不由用户触发、到点或启动时自己跑的事。',
+        f:[['java','.java：任务处理类']],
+        what:'在后台进程里运行。',
+        inside:['<code>IdentityCleanup</code>：每天删作废或过期超过 7 天的会话、令牌、应用凭据','<code>InitialAdmin</code>：启动时没有管理员就按部署配置建一个'],
+        src:'RFC-0006 第 11.3 节' },
+      { p:'mock/', n:'假实现', tag:'mine', owner:'你', phase:'P0',
+        one:'P0 时让别的模块先跑起来。',
+        f:[['java','.java：api/ 接口的假实现']],
+        what:'只在开发配置下启用：所有请求都认成同一个开发管理员（有全部能力、允许导出、网关 uid 从配置读），进程令牌随便生成。别人不用等你做完真实登录就能开发。',
+        src:'RFC-0006 第 11.2 节' },
+      { p:'tests/', n:'本模块的测试', tag:'mine', owner:'你',
+        one:'单元测试和本模块的集成测试。',
+        f:[['java','.java：JUnit 测试']],
+        what:'规则类（角色 → 能力、路由键解析、密码规则）写单元测试；登录、停用、令牌等用真实 MySQL 跑集成测试。',
+        rel:'0006 草稿的目录表里漏了这一行，0003 的模板里有。',
+        src:'RFC-0003 第 2.4 节；RFC-0006 第 12 节' } ]},
+    { p:'conversations/', n:'会话', tag:'rel', owner:'嘉敏（RFC-0012）', one:'对话、执行、事件。',
+      rel:'执行操作前调你的判权；起 DSH 进程会间接用到你签发的令牌；用户停用后要不要停掉执行由它定。', src:'RFC-0003 第 2.3 节' },
+    { p:'data-access/', n:'数据访问', tag:'rel', owner:'蕴颐（RFC-0013）', one:'取数 tool 的处理。',
+      rel:'取数时调你的「取网关 uid」，把 uid 交给取数网关。', src:'RFC-0006 第 4 节' },
+    { p:'resources/', n:'资源库', tag:'rel', owner:'蕴颐（RFC-0010）', one:'知识包、Skill、MCP 连接；MCP 代理归它。',
+      rel:'MCP 代理校验进程令牌时调你的接口，收到变更通知清缓存。', src:'RFC-0006 第 5 节' },
+    { p:'audit/', n:'日志与审计', tag:'rel', owner:'础豪（RFC-0008）', one:'操作日志、权限审计。',
+      rel:'你发的审计记录（登录失败、用户管理、判权被拒等）按它定的格式交给它。', src:'RFC-0006 第 8.3 节' },
+    { p:'evolution/', n:'自进化与评估', tag:'rel', owner:'闻洛（RFC-0016）', one:'自进化分析、评估。',
+      rel:'选评估账号时调你的「查评估账号」；自进化令牌签发时要求发起人有自进化管理能力。', src:'RFC-0006 第 5、6 节' },
+    { p:'files/', n:'文件与产出', tag:'other', owner:'础豪（RFC-0009）', one:'上传、产出、报告、导出。', rel:'导出前判「数据导出」能力（判权调你的接口，所有模块都一样）。' },
+    { p:'agents/', n:'Agent 配置与发布', tag:'other', owner:'蕴颐（RFC-0011）', one:'Agent 的配置、版本、发布。' },
+    { p:'operations/', n:'模型、用量与限额', tag:'other', owner:'闻洛（RFC-0007）', one:'模型与连接配置、用量、限额。' } ]},
+  { p:'adapters/', n:'对接外部系统', tag:'mixed',
+    one:'和平台外面的系统打交道的代码，每个外部系统一个文件夹。',
+    what:'业务模块不直接连外部系统，而是通过这里的「适配器」。以后外部系统换了，只改适配器。',
+    src:'RFC-0003 第 2.3 节', kids:[
+    { p:'dsh/', n:'DSH 适配层', tag:'rel', owner:'闻洛（RFC-0002）',
+      one:'起停 DSH 进程、把请求交给对应进程。',
+      rel:'起进程前要一把进程令牌：通过 <code>bootstrap/</code> 接好的线调你的「签发令牌」，回收进程时调「作废令牌」。它本身不直接引用你的模块。', src:'RFC-0004 第 2.2 节' },
+    { p:'mcp-proxy/', n:'MCP 代理', tag:'rel', owner:'蕴颐（资源模块）',
+      one:'Agent 调 MCP 服务（比如 mem0）时请求直接发到这里。',
+      rel:'这条路<b>不经过请求入口</b>，所以靠进程令牌认人：代理拿令牌调你的「校验令牌」。收到你的变更通知要清缓存。', src:'RFC-0006 第 5 节' },
+    { p:'gateway/', n:'取数网关客户端', tag:'rel', owner:'数据访问模块（蕴颐）',
+      one:'调行内取数网关的代码，只给数据访问模块用。', rel:'它把你给的 uid 带给取数网关。' },
+    { p:'storage/', n:'对象存储', tag:'other', one:'存文件本体（上传原件、报告等），不进数据库。' } ]},
+  { p:'migrations/', n:'建表改表脚本', tag:'mixed',
+    one:'数据库表结构的变更记录，按模块分文件夹。',
+    f:[['sql','.sql：每个文件一次变更，带编号，比如 V0003__identity_users.sql']],
+    what:'每建一张表、改一次表结构，就<b>新增</b>一个带编号的 SQL 文件，写好后不再修改。部署时 Flyway（执行迁移的工具）会记下哪些执行过：第一次部署全部执行，以后每次只执行新增的。所以不是一次性的。<br><br>为什么不放 <code>scripts/</code>：<code>scripts/</code> 是开发者用的工具命令，不上生产；表结构是产品的一部分，要和代码一起改、一起评审、一起上线，按模块放是为了「表归谁谁维护」。',
+    src:'RFC-0004 第 2.5 节', kids:[
+    { p:'platform/', n:'框架自己的表', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+      one:'不属于任何业务模块、框架要用的表，表名以 platform_ 开头。',
+      f:[['sql','.sql']],
+      inside:['任务表','回调防重放表','幂等表','事件登记表（Spring Modulith 的）','已处理事件表、有序订阅进度表','DSH 进程登记表（定义在 RFC-0002）'],
+      src:'RFC-0004 第 3.6 节' },
+    { p:'identity/', n:'身份模块的七张表', tag:'mine', owner:'你（RFC-0006）', phase:'P0',
+      one:'七张表 P0 一次建完。',
+      f:[['sql','.sql']],
+      inside:['账号','密码','登录会话','进程令牌','评估账号','接入应用、应用凭据（P4 才用，P0 先建）'],
+      src:'RFC-0006 第 9 节' },
+    { p:'<其他模块>/', n:'其他模块的表', tag:'other', one:'各模块自己维护自己的表。' } ]} ]},
+
+{ p:'packages/', n:'共用包', tag:'mixed',
+  one:'前后端、DSH 都要用的东西。',
+  what:'不同包用不同语言：契约是 YAML 和 JSON 文本；前端组件是 TypeScript；DSH 客户端是 Java。',
+  src:'RFC-0003 第 2.3 节', kids:[
+  { p:'contracts/', n:'契约（接口说明文件）', tag:'rel', open:1,
+    one:'大家约定好的接口长什么样，写成文件，由工具生成代码。',
+    f:[['yaml','openapi.yaml：HTTP 接口说明（OpenAPI 格式）'],['yaml','contracts.yaml：契约目录'],['json','events/*.json：事件和类型的格式（由 Java 导出）'],['json','examples/：请求、响应样例']],
+    what:'「契约」有两种，在两个地方：<br>① <b>HTTP 接口</b>（浏览器、业务系统调的）：写在这里的 <code>openapi.yaml</code>，是文本文件，不是 md。后端的 Java 接口、前端的类型都从它自动生成。<br>② <b>模块之间的接口</b>：就是各模块 <code>api/</code> 里的 Java 接口；导出成 JSON 放在这里，给前端和 Python 用。',
+    src:'RFC-0003 第 2.2、2.4 节', kids:[
+    { p:'common/', n:'公共格式', tag:'other', one:'错误、分页、任务、事件信封等全平台共用的格式。' },
+    { p:'modules/identity/', n:'身份模块的契约', tag:'mine', owner:'你', phase:'P0',
+      one:'你的页面接口说明和导出的类型。',
+      f:[['yaml','openapi.yaml：登录、我是谁、用户管理等页面接口'],['yaml','contracts.yaml：你提供哪些跨模块接口、谁在用'],['json','events/*.json：「主体变了」等类型'],['json','examples/：样例，假实现和测试都用']],
+      what:'改这里会影响别人，所以由你负责评审；改跨模块接口还要使用方负责人同意。',
+      src:'RFC-0003 第 2.4、2.6 节' } ]},
+  { p:'api-client/', n:'前端调用代码（生成的）', tag:'other', one:'由契约自动生成，前端用它调后端。' },
+  { p:'agent-sdk/', n:'桥接插件', tag:'rel', owner:'TypeScript，装进 DSH',
+    one:'Agent 调业务 tool 时，由它把请求转回平台。',
+    rel:'它发出的回调（<code>/internal/tool/v1</code>）进的是你的请求入口，在那里验签。', src:'RFC-0003 第 2.11 节' },
+  { p:'dsh-client/', n:'DSH 客户端', tag:'other', one:'DSH 原生协议的 Java 客户端，只给 DSH 适配层用。' },
+  { p:'ui/', n:'前端公共组件', tag:'other', one:'按钮、表格等公共组件和交互规范。' },
+  { p:'shared-skills/、trace-kit/', n:'共用 skill、轨迹工具', tag:'other', one:'Agent 共用的 skill；轨迹规范化（Python）。' } ]},
+
+{ p:'agents/', n:'Agent 代码包', tag:'other',
+  one:'各个 Agent 的代码，打包后装进 DSH 运行。',
+  f:[['yaml','agent.manifest.yaml：Agent 的身份和要求'],['md','prompts/、skills/：提示词和 skill'],['ts','tools/：调平台业务 tool 的客户端']],
+  what:'问数、报告、自进化、评分、模拟用户等每个 Agent 一个文件夹。它们不碰平台数据库，要业务能力就经业务 tool 回调平台。',
+  src:'RFC-0003 第 2.11 节' },
+{ p:'tests/', n:'跨模块测试', tag:'other',
+  one:'不属于某一个模块的测试。',
+  inside:['<code>contracts/</code>：契约兼容性、使用方契约测试、依赖边界检查','<code>integration/</code>：集成测试','<code>e2e/</code>：端到端测试（模拟用户在浏览器里点）','<code>fixtures/</code>：测试用的固定数据（脱敏或合成）'],
+  rel:'框架的多进程测试、别的模块对你接口的使用方测试会放这里。', src:'RFC-0003 第 2.3、2.6 节' },
+{ p:'docs/', n:'文档', tag:'other', one:'PRD、RFC、决策记录、工程说明。',
+  f:[['md','.md：文档'],['yaml','module-deps.yaml：模块依赖关系（机器可读）']], rel:'你的 RFC 在 <code>docs/rfcs/</code>。' },
+{ p:'deploy/', n:'部署', tag:'rel',
+  one:'部署到服务器上要用的东西。', what:'目前只有一个：<code>dsh-host/</code>，DSH 主机守护程序（TypeScript）。它在 DSH 那台机器上<b>一直运行</b>，按用户启停 DSH 进程、放版本包、删会话目录。不是一次性的。',
+  rel:'它负责把你签发的进程令牌放进 DSH 进程的环境变量。', owner:'闻洛（RFC-0002）', src:'RFC-0003 第 2.3 节；RFC-0004 第 2.2 节' },
+{ p:'scripts/', n:'开发脚本', tag:'other',
+  one:'开发者平时用的命令。', inside:['<code>dev</code>：一条命令起本地全套环境（后端、前端、数据库、假 DSH）','<code>ci</code>：CI 用的脚本','<code>new-module</code>：按模板新建一个模块'],
+  what:'随时用，不上生产，也不是一次性的。', src:'RFC-0003 第 2.3、2.10 节' },
+{ p:'dev/', n:'本地开发环境配置', tag:'mine', owner:'你（RFC-0004）', phase:'P0',
+  one:'本地 MySQL 的参数，照抄行内实例。',
+  f:[['cfg','mysql/my.cnf：MySQL 配置文件']],
+  what:'行内 TDSQL 默认区分大小写、表名不区分大小写、读已提交……本地 MySQL 默认值不一样。照抄行内参数，本地测过的写法到行内才不会变样。',
+  rel:'0003 的目录图里还没有这个文件夹，是 0004 新加的。', src:'RFC-0004 第 2.5 节' }
+];
+
+const TYPES = {
+  java:['Java','#f59e0b'], ts:['TypeScript','#38bdf8'], py:['Python','#4ade80'], sql:['SQL','#c084fc'],
+  yaml:['YAML','#94a3b8'], json:['JSON','#94a3b8'], cfg:['配置','#64748b'], md:['Markdown','#64748b']
+};
+
+const FAQ = [
+['这些文件具体长什么样，要等开发时才知道吗？',
+ '大部分现在就定了：每个文件夹放什么、用什么语言、文件是什么类型，0003、0004、0006 都写了；你身份模块里主要的类名，0006 也列了。开发时才定的只是一些细节：每个类里具体怎么写、少数文件名（图里带 * 的是示意）、后台进程的组件放哪个文件夹。<br>另外，<b>这些文件夹现在仓库里还没有</b>。main 分支上还是旧目录（evaluation/、query-agent-A-bundle/ 等），要等工程基线（0003）先把骨架建出来，各模块再往里填。'],
+['apps 里都是 Java 程序吗？',
+ '不是。4 个程序 3 种语言：前端网页 workbench 是 TypeScript；请求进程、后台进程是 Java；评估执行器是 Python。另外 DSH 主机守护程序（deploy/dsh-host）和桥接插件（packages/agent-sdk）是 TypeScript，因为 DSH 是 Node 程序。'],
+['后端的代码怎么被调用？走 HTTP，还是调 api 里的 Java 接口？',
+ '<b>两种都有，看是谁在调。</b><br>① <b>从后端程序外面来的</b>（浏览器、业务系统、DSH 回调、评估执行器）：只能走网络，用 HTTP → 进 <code>backend/http/</code> 做公共检查 → 交给对应模块 <code>http/</code> 里的处理类。<br>② <b>后端程序内部，模块调模块</b>：不走网络，直接调对方 <code>api/</code> 里的 Java 接口，就是普通的方法调用。比如会话模块问身份模块「张三能不能做这件事」。<br>点顶部「一次请求怎么走」看完整例子。'],
+['一个网址是怎么找到对应的 Java 代码的？',
+ '三步：① 你在 <code>openapi.yaml</code> 里写「<code>POST /api/v1/identity/login</code> 收什么、回什么」；② 工具按它自动生成一个 Java 接口；③ 你在 <code>identity/http/</code> 里写一个类去实现它。启动时 <code>bootstrap/</code> 按模块清单把这些路由登记好，请求进来就能对上。'],
+['契约是什么文件？在 domain 里吗？是 md 吗？',
+ '<b>不在 domain 里，也不是 md。</b>契约有两种：<br>① HTTP 接口的契约：<code>packages/contracts/modules/&lt;模块&gt;/openapi.yaml</code>，YAML 文本文件。<br>② 模块之间的契约：各模块 <code>api/</code> 里的 Java 接口（.java）；再导出成 JSON（events/*.json）给前端和 Python 用。<br><code>domain/</code> 里是业务规则的 Java 类。md 只用于文档。'],
+['为什么既有 api/ 又有 packages/contracts/？',
+ 'api/ 是给<b>后端其他模块</b>用的，Java 写的，同一个程序里直接调用。packages/contracts/ 是给<b>程序外面</b>用的（前端、Python、业务系统），它们不认识 Java，所以要一份通用格式的说明文件。两者描述的是不同的接口：前者是模块之间，后者主要是 HTTP 接口。'],
+['「由契约生成代码」是什么意思？',
+ '写一份接口说明，工具自动生成多种语言的代码：后端的 Java 接口、前端的 TypeScript 类型、Python 的类型。好处是接口只写一遍，前后端不会对不上；改了说明，各方的代码一起更新，对不上的地方编译就报错。'],
+['请求进程和后台进程是两套代码吗？',
+ '不是。<b>同一套 backend/ 代码，两个启动入口。</b>启动时打开的开关不同：请求进程开 HTTP 端口、不领任务；后台进程不接用户请求、专门领任务。两边都装了全部 9 个模块。'],
+['程序最后是怎么运行起来的？',
+ '后端用 Gradle（Java 的构建工具）把 <code>apps/platform-api</code> 和 <code>backend/</code> 一起编译打包，通常打成一个可运行的 jar 文件，用 java 命令启动；后台进程同理（打包形式 RFC 没写死，这是 Spring Boot 的通常做法）。前端打包成静态网页。本地开发不用管这些，<code>scripts/dev</code> 一条命令起全部。'],
+['数据库的表在哪定义？代码里怎么用？',
+ '表结构写在 <code>backend/migrations/&lt;模块&gt;/</code> 的 SQL 文件里，部署时执行。代码里用 jOOQ：它按表结构自动生成 Java 类，<code>store/</code> 里用这些类写查询，表名列名写错编译就报错。每个模块只能用自己前缀的表，越界 CI 会拦。'],
+['为什么模块不能直接调别的模块的内部代码？越界会怎样？',
+ '为了以后改得动：只要 api/ 不变，模块内部怎么改都不影响别人。越界有几道检查：编译和 CI 时检查依赖方向、只能经 api/、不能碰别的模块的表；启动时 bootstrap/ 再按清单检查一遍，不合规就拒绝启动。违规的代码合不进主干。'],
+['测试放哪？',
+ '模块自己的单元测试和集成测试放模块里的 <code>tests/</code>；跨模块的（契约兼容、端到端、多进程）放顶层 <code>tests/</code>。'],
+['配置和密钥放哪？',
+ '配置用环境变量，启动时检查，缺了就启动失败；仓库里只放一份示例 <code>.env.example</code>。密钥不进仓库、不进日志。本地 MySQL 的参数在 <code>dev/mysql/my.cnf</code>。'],
+['MCP 代理在哪？为什么它不经过请求入口？',
+ '在 <code>backend/adapters/mcp-proxy/</code>，归资源模块。Agent 调 MCP 服务时，请求按 MCP 协议直接发给代理，不经过 <code>backend/http/</code>，所以代理自己靠进程令牌认人，调的是你的「校验令牌」接口。'],
+['P0 我要建哪些文件夹？',
+ '<b>框架</b>：kernel/、http/、bootstrap/、两个进程入口、migrations/platform/、dev/mysql/（0004 的 F1–F4：内核与装配 → 幂等、事件、任务 → 请求入口和事件流 → tool 回调核验）。<br><b>身份模块</b>：api/、events/、mock/、migrations/identity/、packages/contracts/modules/identity/。domain/、store/、http/、jobs/ 是 P1 的真实实现。'],
+['一个文件夹归谁？改别人的要谁同意？',
+ '按模块归属：模块和它的表、契约归模块负责人。<code>packages/contracts/modules/&lt;模块&gt;/</code> 由提供方负责人评审；改跨模块的接口，还要使用方负责人批准。'],
+['0003 写的是 PostgreSQL、JDK 21，这里怎么是 MySQL、JDK 17？',
+ '0003 是环境确定前写的。行内实际是 TDSQL MySQL、JDK 17，分支里的「实际环境基准」文档已经说明，0003 原文由蕴颐改。本图按实际环境写。']
+];
+
+const NAMES = [
+['platform','平台自己的（不属于任何业务模块）','platform-api、platform-worker、migrations/platform、表名前缀 platform_'],
+['api','对外提供的接口。<b>两层意思</b>：apps/platform-api 是「对外提供 HTTP 接口的进程」；模块里的 api/ 是「给别的模块用的 Java 接口」','apps/platform-api、modules/*/api/'],
+['worker','干活的，在后台跑','platform-worker'],
+['backend','后端','backend/'],
+['kernel','内核','backend/kernel/'],
+['bootstrap','启动引导','backend/bootstrap/'],
+['http','HTTP 协议相关：外部请求的处理','backend/http/、modules/*/http/'],
+['modules','业务模块','backend/modules/'],
+['adapters','适配器：对接外部系统','backend/adapters/'],
+['migrations','数据库迁移：建表改表脚本','backend/migrations/'],
+['contracts','契约：约定好的接口说明','packages/contracts/'],
+['domain','业务规则','modules/*/domain/'],
+['store','存储：读写数据库','modules/*/store/'],
+['events / jobs','事件 / 任务','modules/*/events/、jobs/'],
+['mock','假的、模拟的','modules/*/mock/'],
+['workbench / features','工作台（前端网页）/ 功能页','apps/workbench/features/'],
+['common','公共的、全平台共用的','packages/contracts/common/'],
+['deploy / scripts / dev','部署 / 脚本 / 开发环境','顶层'],
+['e2e / fixtures','端到端测试 / 测试用的固定数据','tests/'],
+['identity','身份（你的模块）','modules/identity/、migrations/identity/、features/identity/']
+];
+
+const $ = s => document.querySelector(s);
+const NODES = {}; let seq = 0;
+function index(list, parent, path) { for (const n of list) { n.id = 'n' + (seq++); n.full = path + n.p; n.parent = parent; NODES[n.id] = n; if (n.kids) index(n.kids, n, n.full); } }
+index(T, null, '');
+const byPath = {}; Object.values(NODES).forEach(n => byPath[n.full] = n);
+const tagName = { mine:'你负责', rel:'和你有关', other:'其他', mixed:'有你负责的部分' };
+
+function treeHtml(list) {
+  return '<ul>' + list.map(n => `<li class="${n.tag}${n.kids ? '' : ' leaf'}" data-id="${n.id}"><div class="row" data-id="${n.id}"><span class="tw">${n.kids ? (n.open ? '▾' : '▸') : ''}</span><span class="pn">${n.p}</span><span class="cn">${n.n}</span>${n.tag === 'mine' ? '<span class="star">★</span>' : ''}</div>${n.kids ? `<div class="kc" style="display:${n.open ? 'block' : 'none'}">${treeHtml(n.kids)}</div>` : ''}</li>`).join('') + '</ul>';
+}
+function renderTree() { $('#tree').innerHTML = treeHtml(T); }
+
+function ft(f) { return f.map(([t, s]) => `<div class="ft"><span class="ty" style="background:${TYPES[t][1]}">${TYPES[t][0]}</span><span>${s}</span></div>`).join(''); }
+function showNode(id) {
+  const n = NODES[id]; state = { v:'node', id };
+  document.querySelectorAll('.row').forEach(r => r.classList.toggle('sel', r.dataset.id === id));
+  for (let p = n.parent; p; p = p.parent) { p.open = 1; }
+  syncOpen();
+  let h = `<h2><span class="pn">${n.full}</span><span class="badge b-${n.tag}">${tagName[n.tag]}</span></h2><div class="sub">${n.n}${n.owner ? '　·　负责：' + n.owner : ''}${n.phase ? '　·　' + n.phase + ' 做' : ''}</div>`;
+  h += `<div class="one">${n.one}</div>`;
+  if (n.what) h += `<div class="card"><h3>它是干什么的</h3>${n.what}</div>`;
+  if (n.f) h += `<div class="card"><h3>里面是什么文件</h3>${ft(n.f)}</div>`;
+  if (n.inside) h += `<div class="card"><h3>里面有什么</h3><ul>${n.inside.map(x => `<li>${x}</li>`).join('')}</ul></div>`;
+  if (n.rel) h += `<div class="card relc"><h3>${n.tag === 'mine' || n.tag === 'mixed' ? '补充' : '和你的关系'}</h3>${n.rel}</div>`;
+  if (n.kids) h += `<div class="card"><h3>下一层（点开看）</h3><div class="kids">${n.kids.map(k => `<div class="kid ${k.tag}-k" data-id="${k.id}"><span class="pn">${k.p}</span> ${k.n}<div>${k.one}</div></div>`).join('')}</div></div>`;
+  if (n.src) h += `<div class="meta">出处：${n.src}</div>`;
+  $('#view').innerHTML = h; $('#view').scrollTop = 0; setTab(null); location.hash = 'f=' + encodeURIComponent(n.full);
+}
+function syncOpen() {
+  document.querySelectorAll('#tree li').forEach(li => { const n = NODES[li.dataset.id]; if (!n.kids) return; const kc = li.querySelector(':scope>.kc'); kc.style.display = n.open ? 'block' : 'none'; li.querySelector(':scope>.row .tw').textContent = n.open ? '▾' : '▸'; });
+}
+const go = (p, label) => { const n = byPath[p]; return `<span class="go ${n && n.tag === 'rel' ? 'r' : n && n.tag === 'other' ? 'o' : ''}" data-p="${p}">${label || p}</span>`; };
+
+const LBL = {
+  http:'<span class="how h-http">HTTP</span>', java:'<span class="how h-java">Java 调用</span>',
+  mix4:'<span class="how h-java">Java 调用：要令牌</span><span class="how h-http">网络：交给 DSH 主机上的守护程序</span>',
+  mix6:'<span class="how h-java">Java 调用：取 uid</span><span class="how h-http">网络：调取数网关</span>',
+  mix7:'<span class="how h-http">网络：MCP 协议</span><span class="how h-java">Java 调用：校验令牌</span>' };
+const VIEWS = {
+home: () => `<h2>先看这里</h2><div class="sub">左边是仓库的文件夹，点任意一个，右边讲它是干什么的。黄色是你负责的，蓝色是别人的但和你有关。</div>
+<div class="big">
+<div class="card"><h3>① 顶层 9 个文件夹</h3><ul>
+<li>${go('apps/')}：程序入口（4 个程序）</li><li>${go('backend/')}：后端 Java 代码</li><li>${go('packages/')}：共用包（契约、前端组件等）</li>
+<li>${go('agents/')}：Agent 代码包</li><li>${go('tests/')}：跨模块测试</li><li>${go('docs/')}：文档</li><li>${go('deploy/')}：部署（DSH 主机守护程序）</li><li>${go('scripts/')}：开发脚本</li><li>${go('dev/')}：本地开发环境配置</li></ul></div>
+<div class="card"><h3>② 你负责的部分</h3><ul>
+<li><b>框架（0004）</b>：${go('apps/platform-api/','请求进程')}、${go('apps/platform-worker/','后台进程')}、${go('backend/kernel/','内核')}、${go('backend/http/','请求入口')}、${go('backend/bootstrap/','启动引导')}、${go('backend/migrations/platform/','框架的表')}、${go('dev/','本地 MySQL 配置')}</li>
+<li><b>身份模块（0006）</b>：${go('backend/modules/identity/')}（7 个子文件夹）、${go('backend/migrations/identity/','七张表')}、${go('packages/contracts/modules/identity/','接口说明')}</li></ul></div>
+<div class="card"><h3>③ 后端代码被调用的两种方式</h3><ul>
+<li><span class="how h-http">HTTP</span> 从程序外面来的（浏览器、业务系统、DSH 回调）：先过 ${go('backend/http/','请求入口')}，再到模块的 <code>http/</code></li>
+<li><span class="how h-java">Java 调用</span> 程序内部模块调模块：直接调对方的 <code>api/</code>，不走网络</li></ul>看顶部「一次请求怎么走」。</div>
+<div class="card"><h3>④ 每个业务模块都长一个样</h3><code>api/</code> 对外接口 · <code>events/</code> 事件 · <code>domain/</code> 规则 · <code>store/</code> 读写数据库 · <code>http/</code> 页面接口 · <code>jobs/</code> 定时任务 · <code>tests/</code> 测试<br>别的模块只能用 <code>api/</code>。看 ${go('backend/modules/identity/','你的模块')} 就懂了其他的。</div>
+</div>
+<div class="card"><h3>两件容易误会的事</h3><ul><li>这些文件夹<b>现在仓库里还没有</b>，要等工程基线（0003）把骨架建出来。</li><li>0003 原文写的是 PostgreSQL、JDK 21；行内实际是 TDSQL MySQL、JDK 17，本图按实际环境写。</li></ul></div>`,
+
+flow: () => `<h2>一次请求怎么走</h2><div class="sub">两个例子，看代码在哪些文件夹之间流转。点文件夹名会跳到它的讲解。</div>
+<div class="flow"><h3>例一：张三登录（从外面来的请求）</h3><div class="d">全程是一次 HTTP 请求，进了后端以后在模块内部流转。</div>
+${[
+ [`张三在浏览器打开工作台。网页本身是 ${go('apps/workbench/')} 打包出来的静态文件。`, ''],
+ [`点「登录」，网页发出 HTTP 请求 <code>POST /api/v1/identity/login</code>，到达 ${go('apps/platform-api/','请求进程')}。`, 'http'],
+ [`${go('backend/http/','请求入口')} 先做公共处理：记请求 ID、看路径属于哪一类、按 ${go('packages/contracts/modules/identity/','openapi.yaml')} 检查请求格式。登录接口本身不要求已登录。`, ''],
+ [`交给 ${go('backend/modules/identity/http/','identity/http/')} 里的 <code>LoginController</code>：它实现的是从 openapi.yaml 生成的 Java 接口。`, ''],
+ [`用 ${go('backend/modules/identity/domain/','domain/')} 的密码规则检查是否被锁定；用 ${go('backend/modules/identity/store/','store/')} 查账号、核对密码、写一条登录会话。这些表是 ${go('backend/migrations/identity/')} 里的脚本建的。`, ''],
+ [`返回响应，带上登录 cookie。`, '']
+].map((s, i) => `<div class="step"><i>${i + 1}</i><div class="b">${s[0]}${s[1] === 'http' ? '<span class="how h-http">HTTP</span>' : ''}</div></div>`).join('')}</div>
+<div class="flow"><h3>例二：张三发一条消息，Agent 去取数（外部请求 + 模块之间调用）</h3><div class="d">红色标签走网络（HTTP 等），绿色标签是程序内部的 Java 调用、不走网络。</div>
+${[
+ [`网页发 HTTP 请求给会话模块的接口，到达请求进程。`, 'http'],
+ [`${go('backend/http/','请求入口')} 拿 cookie 认人：调身份模块 ${go('backend/modules/identity/api/','api/')} 的「认人」，得到「用户张三」（结果缓存 30 秒）。`, 'java'],
+ [`交给 ${go('backend/modules/conversations/','会话模块')}。它执行前调身份模块的「判权」，问张三有没有对话这项能力。`, 'java'],
+ [`会话模块要用张三的 DSH 进程 → ${go('backend/adapters/dsh/','DSH 适配层')} 起进程前，通过 ${go('backend/bootstrap/','启动引导')} 接好的线向身份模块要一把进程令牌 → ${go('deploy/','DSH 主机守护程序')} 把令牌放进进程的环境变量。`, 'mix4'],
+ [`Agent 要取数：DSH 里的 ${go('packages/agent-sdk/','桥接插件')} 发 HTTP 回调 <code>/internal/tool/v1</code> 回平台 → ${go('backend/http/','请求入口')} 验签名、查出这次是替张三干活。`, 'http'],
+ [`交给 ${go('backend/modules/data-access/','数据访问模块')}，它调身份模块的「取网关 uid」→ 经 ${go('backend/adapters/gateway/','取数网关客户端')} 把 uid 带给取数网关。`, 'mix6'],
+ [`如果 Agent 调的是 mem0 这种 MCP 服务：请求直接发给 ${go('backend/adapters/mcp-proxy/','MCP 代理')}，不经过请求入口；代理拿进程令牌调身份模块的「校验令牌」认人。`, 'mix7']
+].map((s, i) => `<div class="step"><i>${i + 1}</i><div class="b">${s[0]}${LBL[s[1]]}</div></div>`).join('')}</div>`,
+
+faq: () => `<h2>常见疑问</h2><div class="sub">点问题展开。</div><div class="faq">${FAQ.map(([q, a]) => `<details><summary>${q}</summary>${a}</details>`).join('')}</div>`,
+
+types: () => `<h2>文件类型</h2><div class="sub">仓库里会出现的文件，大致就这几种。</div><table class="t"><tr><th>类型</th><th>后缀</th><th>是什么</th><th>主要在哪</th></tr>
+<tr><td><span class="ty" style="background:${TYPES.java[1]}">Java</span></td><td>.java</td><td>后端代码。接口、类、记录类型都是 .java</td><td>backend/、apps/platform-api、apps/platform-worker、packages/dsh-client</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.sql[1]}">SQL</span></td><td>.sql</td><td>建表改表语句，部署时由 Flyway 执行</td><td>backend/migrations/</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.yaml[1]}">YAML</span></td><td>.yaml</td><td>结构化的文本配置。openapi.yaml 是 HTTP 接口说明；module.yaml 是模块清单</td><td>packages/contracts/、各模块</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.json[1]}">JSON</span></td><td>.json</td><td>由 Java 类型导出的格式说明、样例</td><td>packages/contracts/</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.ts[1]}">TypeScript</span></td><td>.ts / .tsx</td><td>前端页面、桥接插件、DSH 主机守护程序</td><td>apps/workbench、packages/agent-sdk、deploy/dsh-host</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.py[1]}">Python</span></td><td>.py</td><td>评估执行器、轨迹工具、skill 脚本</td><td>apps/eval-runner、packages/trace-kit、agents/</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.cfg[1]}">配置</span></td><td>build.gradle.kts、package.json、pyproject.toml、my.cnf、.env.example</td><td>构建配置（依赖、怎么编译打包）和环境配置</td><td>各程序和包的根目录、dev/</td></tr>
+<tr><td><span class="ty" style="background:${TYPES.md[1]}">Markdown</span></td><td>.md</td><td>文档。<b>只用于文档</b>，契约不是 md</td><td>docs/、各处 README</td></tr></table>`,
+
+names: () => `<h2>命名规律</h2><div class="sub">文件夹名里反复出现的词，各有固定意思。</div><table class="t"><tr><th>词</th><th>意思</th><th>在哪出现</th></tr>${NAMES.map(r => `<tr><td><code>${r[0]}</code></td><td>${r[1]}</td><td>${r[2]}</td></tr>`).join('')}</table>`
+};
+let state = { v:'home' };
+function setTab(v) { document.querySelectorAll('header button').forEach(b => b.classList.toggle('on', b.dataset.v === v)); }
+function showView(v) { state = { v }; $('#view').innerHTML = VIEWS[v](); $('#view').scrollTop = 0; setTab(v); document.querySelectorAll('.row').forEach(r => r.classList.remove('sel')); location.hash = 'v=' + v; }
+
+document.addEventListener('click', e => {
+  const b = e.target.closest('header button'); if (b) return showView(b.dataset.v);
+  const g = e.target.closest('.go'); if (g) { const n = byPath[g.dataset.p]; if (n) showNode(n.id); return; }
+  const k = e.target.closest('.kid'); if (k) return showNode(k.dataset.id);
+  const r = e.target.closest('.row');
+  if (r) { const n = NODES[r.dataset.id];
+    if (e.target.classList.contains('tw') && n.kids) { n.open = !n.open; syncOpen(); return; }
+    if (n.kids) { n.open = state.id === n.id ? !n.open : 1; syncOpen(); }
+    showNode(n.id); }
+});
+$('#dt').textContent = DATE;
+renderTree();
+const hp = new URLSearchParams(location.hash.slice(1));
+if (hp.get('f') && byPath[hp.get('f')]) showNode(byPath[hp.get('f')].id); else showView(hp.get('v') && VIEWS[hp.get('v')] ? hp.get('v') : 'home');
+
+</script></body></html>

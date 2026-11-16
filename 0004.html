@@ -1,0 +1,478 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8"><title>RFC-0004 后端框架结构图</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;flex-direction:column;background:#0a101c;color:#e2e8f0;font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif}
+header{display:flex;gap:8px;align-items:center;padding:8px 14px;background:#020617;border-bottom:1px solid #1e293b;flex-wrap:wrap}
+header h1{font-size:17px;margin:0 8px 0 0}
+header button,header select{font:inherit;padding:4px 11px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;cursor:pointer}
+header button:hover{background:#1e293b}
+.sep{width:1px;height:22px;background:#334155;margin:0 4px}
+main{flex:1;display:flex;min-height:0}
+#stage{flex:1;position:relative;overflow:hidden}#stage.grab{cursor:grabbing}
+#svg{width:100%;height:100%;display:block;user-select:none}
+#panel{width:400px;background:#0f172a;border-left:1px solid #1e293b;overflow:auto;padding:14px 16px}
+#panel h2{font-size:17px;margin:0 0 6px}#panel h3{font-size:13px;color:#93c5fd;margin:14px 0 4px}
+#panel ul{margin:0;padding-left:18px}#panel li{margin:3px 0}
+#panel .cols li{margin:6px 0}#panel code{font-family:Consolas,monospace;font-size:12px;color:#94a3b8}.gl dt{font-weight:700;color:#fde68a;margin-top:10px}.gl dd{margin:2px 0 0 0}#panel .bl li{cursor:pointer}#panel .bl li:hover{color:#facc15}
+.mut{color:#94a3b8}
+#legend{position:absolute;left:12px;bottom:12px;background:rgba(2,6,23,.88);border:1px solid #1e293b;border-radius:10px;padding:6px 10px;font-size:12px;max-width:62%}
+#legend span{display:inline-block;margin:2px 10px 2px 0;white-space:nowrap}
+#legend i{display:inline-block;width:22px;height:22px;border:2px solid;border-radius:50%;text-align:center;line-height:18px;font-style:normal;margin-right:4px;font-size:12px;background:#0f172a}
+.region{stroke-width:4}.region.ghost{opacity:.35}
+.r-gate{fill:#0f141d;stroke:#3f4756;stroke-dasharray:14 10}.r-api{fill:#0b1730;stroke:#2563eb}.r-wk{fill:#08201d;stroke:#0d9488}
+.r-nb{fill:#11151c;stroke:#4b5563;stroke-dasharray:14 10}.r-db{fill:#1a1206;stroke:#b45309}
+.sec{fill:rgba(255,255,255,.03);stroke:#64748b;stroke-width:2.5;stroke-dasharray:12 8}
+.tplate{fill:#0a101c;stroke:#334155;stroke-width:1.5}.tplate.w{fill:#0b1220}
+.rt{fill:#f1f5f9;font-size:32px;font-weight:800}.rs{fill:#94a3b8;font-size:21px}.st{fill:#e2e8f0;font-size:22px;font-weight:700}
+.pipe{stroke:#7c3aed;stroke-width:14;stroke-linecap:round;opacity:.8}.pplate{fill:#1b1336;stroke:#a78bfa}.ptxt{fill:#ede9fe;font-size:18px;font-weight:700}.ptxt.s{font-weight:400;font-size:16px}
+.node{cursor:pointer;transition:opacity .25s}.body{stroke-width:2.5}
+.c-entry{fill:#141b26;stroke:#94a3b8}.tbar{fill:#1f2937}.c-plug{fill:#1d1424;stroke:#f87171}.prong{fill:#cbd5e1}
+.c-flask{fill:#102419;stroke:#4ade80}.c-rack{fill:#1a1530;stroke:#c084fc}.back{fill:#120f22;stroke:#7c3aed;stroke-width:2;opacity:.8}.slot{fill:#0b1220;stroke:#7c3aed}
+.c-switch{fill:#13233f;stroke:#60a5fa}.rail{stroke:#60a5fa;stroke-width:3}.track{fill:none;stroke:#60a5fa;stroke-width:4}.tip{fill:#60a5fa}.tip.in{fill:#94a3b8}.route{fill:#bfdbfe;font-size:16px;font-family:Consolas,monospace}
+.c-booth{fill:#1a2233;stroke:#eab308}.roofbar{fill:#eab308}.post{fill:#94a3b8}.arm{fill:#eab308;stroke:#111;stroke-width:2;stroke-dasharray:10 8}
+.mini{fill:#0b1220;stroke:#eab308;stroke-width:2}.stg{fill:#fde68a;font-size:17px;font-weight:700}
+.c-stamp{fill:#14213a;stroke:#3b82f6}.c-press{fill:#14213a;stroke:#3b82f6}
+.c-clock{fill:#2a1d07;stroke:#f59e0b}.face{fill:#0b1220;stroke:#fbbf24;stroke-width:3}.hand{stroke:#fbbf24;stroke-width:4;stroke-linecap:round}
+.c-tower{fill:#2a1030;stroke:#ec4899}.mast{fill:none;stroke:#f472b6;stroke-width:5}.wave{fill:none;stroke:#f472b6;stroke-width:4}.chev{fill:none;stroke:#f472b6;stroke-width:5}
+.c-mail{fill:#2a1608;stroke:#fb923c}.slotw{fill:#0b1220;stroke:#fb923c;stroke-width:2}
+.c-tray{fill:#0d2a2a;stroke:#14b8a6}.rail2{fill:#14b8a6;opacity:.6}.cap{fill:#14b8a6;opacity:.75}.capt{fill:#5eead4;font-size:17px;font-weight:700}
+.c-long{fill:#1e1233;stroke:#a855f7}.note{fill:#d8b4fe;font-size:17px;font-weight:700}
+.c-ker{fill:#1b1336;stroke:#8b5cf6}.chip{fill:#2a1f52;stroke:#a78bfa;stroke-width:1.5}.cp{color:#ede9fe;font-size:17px;line-height:1.35}
+.c-cyl{fill:#2a1c08;stroke:#d97706}.c-cylg{fill:#1c1917;stroke:#78716c;stroke-dasharray:9 6}.top{fill:#3b2709}
+.colt{fill:#fcd34d;font-size:17px}.colt .en{fill:#94a3b8;font-size:13px;font-family:Consolas,monospace}
+.c-house{fill:#161b24;stroke:#64748b;stroke-dasharray:9 6}
+.ic{font-size:30px}.led{fill:#22c55e}body:not(.still) .led{animation:blink 1.6s infinite}
+.nm{color:#fff;font-size:24px;line-height:30px}.nm.tb{color:#fde68a;font-size:22px;line-height:28px}.ds{color:#cbd5e1;font-size:18px;line-height:27px}
+.node.hl .body{stroke:#facc15;stroke-width:5}.node.sel .body{stroke:#f472b6;stroke-width:6}.node.dim{opacity:.15}
+.belt{cursor:pointer}.belt .bh{fill:none;stroke:transparent;stroke-width:24}
+.belt .bb{fill:none;stroke:#141c2b;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
+.belt .bm{fill:none;stroke:#475569;stroke-width:2.5;opacity:.45}
+.belt.hl .bb{stroke:#0a101c;stroke-width:18;opacity:1}.belt.hl .bm{stroke:var(--ic);stroke-width:5;opacity:1;stroke-dasharray:12 12}
+body:not(.still) .belt.hl .bm{animation:flow .9s linear infinite}
+.blab{display:none;cursor:pointer}.blab.on{display:block}.blab rect{fill:#020617;stroke:#facc15;stroke-width:2}.blab text{fill:#fde68a;font-size:20px;text-anchor:middle}
+.belt.dim{opacity:.06}.item{pointer-events:none}
+@keyframes flow{to{stroke-dashoffset:-48}}@keyframes blink{50%{opacity:.25}}
+#tourbar{display:none;position:absolute;left:50%;transform:translateX(-50%);bottom:16px;background:#020617;border:2px solid #facc15;border-radius:14px;padding:10px 14px;gap:12px;align-items:center;width:min(1000px,92%);box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#tourbar button{font:inherit;padding:6px 14px;border-radius:8px;border:0;background:#facc15;color:#111;cursor:pointer;font-weight:700}#tourbar button:disabled{opacity:.35}
+#ttxt{flex:1;font-size:15px}
+body.nopanel #panel{display:none}
+</style></head><body>
+<header><h1>RFC-0004 后端框架结构图</h1><select id="tour"></select><span class="sep"></span>
+<span class="mut">去看：</span><button id="gall">全局</button><button id="gapi">外部入口 + 请求进程</button><button id="gdb">数据库</button><button id="gwk">后台进程</button><button id="gtop">其他模块 + DSH</button><span class="sep"></span>
+<button id="bgl">名词解释</button><button id="bpanel">隐藏右侧面板</button><span class="mut" style="font-size:12px">点击看连线 · 滚轮缩放 · 按住拖动 · 双击放大 · 数据截至 2026-11-16</span></header>
+<main><div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg><div id="legend"></div>
+<div id="tourbar"><button id="tp">← 上一步</button><div id="ttxt"></div><button id="tn">下一步 →</button><button id="tx">退出</button></div></div>
+<aside id="panel"></aside></main>
+<script>
+const ITEMS={"req":{"e":"📨","c":"#60a5fa","n":"请求"},"key":{"e":"🔑","c":"#facc15","n":"身份 / 执行凭据"},"rec":{"e":"🧾","c":"#a3e635","n":"读写一条记录"},"evt":{"e":"⚡","c":"#fb923c","n":"事件"},"job":{"e":"📦","c":"#2dd4bf","n":"任务"},"ok":{"e":"✅","c":"#4ade80","n":"结果 / 响应"},"tok":{"e":"💬","c":"#f472b6","n":"逐字输出"},"dsh":{"e":"📡","c":"#c084fc","n":"DSH 消息"},"ans":{"e":"🗣️","c":"#f9a8d4","n":"用户的回答"},"cln":{"e":"🧹","c":"#94a3b8","n":"清理"},"rep":{"e":"🔁","c":"#fbbf24","n":"续租 / 重提交"},"look":{"e":"🔍","c":"#93c5fd","n":"查询"},"tool":{"e":"🔧","c":"#f87171","n":"工具回调"},"eva":{"e":"🧪","c":"#86efac","n":"评估执行器请求"}};
+const M=[{"id":"G_BROWSER","z":"GATE","kind":"gate","icon":"🖥️","name":"浏览器","x":30,"y":160,"w":240,"h":120,"one":"用户在页面上操作；页面一直开着一条推送连接（SSE），平台有新消息就推过来。","ws":"","shape":"gate"},{"id":"G_APP","z":"GATE","kind":"gate","icon":"🏢","name":"接入应用","x":30,"y":420,"w":240,"h":120,"one":"行内其他业务系统，通过开放 API 替用户调用平台（凭据格式在开放 API 的 RFC 0017 里定）。","ws":"","shape":"gate"},{"id":"G_BRIDGE","z":"GATE","kind":"gate","icon":"🔌","name":"DSH 桥接插件","x":30,"y":700,"w":240,"h":120,"one":"装在 DSH 里的一段插件。Agent 要用平台的业务工具（比如取数）时，由它带上「DSH 会话编号 + 调用编号 + 签名」回调平台。","ws":"","shape":"gate"},{"id":"G_EVR","z":"GATE","kind":"gate","icon":"🧪","name":"评估执行器","x":30,"y":960,"w":240,"h":120,"one":"跑评估的 Python 程序。不直接连数据库，只调平台的内部接口领评估任务、交结果。","ws":"","shape":"gate"},{"id":"DSH","z":"GATE","kind":"gate","icon":"🛰️","name":"DSH 主机","x":20,"y":1260,"w":260,"h":300,"one":"Agent 运行的地方。一套 DSH 安装，每个用户一个 DSH 进程。","ws":"","shape":"dish"},{"id":"A_POOL","z":"API","kind":"pool","icon":"👷","name":"请求线程池（Tomcat）","x":480,"y":120,"w":1440,"h":70,"workers":200,"show":12,"one":"处理页面请求的线程（Spring Boot 自带的网页服务器 Tomcat），起步 200 个。请求里只做数据库操作和带超时的外部调用（调 DSH 最多等 10 秒）。","ref":"§6.4","code":"Spring Boot 内置 Tomcat","ws":"ws_pool","shape":"bench"},{"id":"A1","z":"API","kind":"machine","icon":"🔀","name":"请求分路","x":490,"y":520,"w":300,"h":300,"one":"给每个请求编号，按网址开头分到 5 类认证。","steps":["/api/v1 开头（页面请求）→ 网页认证","/open/v1 开头（接入应用）→ 开放 API 认证","/internal/tool/v1 开头（Agent 调业务工具）→ 工具回调核验","/internal/exec/v1 开头（桥接插件问额度等）→ 非工具回调","/internal/eval/v1 开头（评估执行器）→ 内部接口","每个请求编上请求编号和追踪编号，出问题时靠它在日志里把一个请求的所有记录串起来"],"ref":"§4.1","code":"backend/http/","ws":"ws_in","shape":"hopper"},{"id":"A2","z":"API","kind":"machine","icon":"🍪","name":"网页认证","x":930,"y":300,"w":460,"h":150,"one":"认出是哪个登录用户；写操作还要防跨站伪造。","steps":["按登录 cookie 向身份权限模块问「这是谁」，结果缓存 30 秒","本进程收到身份权限模块的变更通知（停用账号、改角色等）就立刻清缓存；其他副本最多 30 秒后生效","防跨站伪造（别的网站借用户的登录状态偷偷发请求）：平台下发一个页面能读到的 cookie，写请求要把它的值抄进请求头，两者一致才放行；别的网站读不到这个值","只认人，不判权限：能不能做由各模块自己判断"],"ref":"§4.2","code":"backend/http/auth/","ws":"ws_auth","shape":"gate"},{"id":"A3","z":"API","kind":"machine","icon":"🪪","name":"开放 API 认证","x":930,"y":500,"w":460,"h":150,"one":"核对接入应用的凭据，以及它替哪个用户调用；按应用限制调用频率。","steps":["调用次数在进程内存里计数；部署多个请求进程时，每个分到「总额度 ÷ 进程数」","超过额度返回「请求太多」（HTTP 状态码 429）","凭据格式、签名方式在开放 API 的 RFC（0017）里定"],"ref":"§4.3","code":"backend/http/open/","ws":"ws_auth","shape":"gate"},{"id":"A4","z":"API","kind":"machine","icon":"🛡️","name":"工具回调核验","x":930,"y":700,"w":460,"h":260,"one":"Agent 调业务工具（如取数）时的回调。核验三步都通过才交给模块。","steps":["① 验签：用这个 DSH 进程专属的服务密钥核对签名，时间误差不超过 60 秒；再在回调防重放表里登记这次回调，同一次回调重复来就直接返回上次的结果","② 向会话模块取执行凭据：这是谁的哪次执行、允许用哪些工具、额度还剩多少","③ 把核验结果打包成「可信执行上下文」交给对应模块，模块不再自己核验","原设计还有一步「等跟随器看到这次调用」，已去掉"],"ref":"§4.4","code":"backend/http/tool/","ws":"ws_auth","shape":"gate3"},{"id":"A5","z":"API","kind":"machine","icon":"📏","name":"非工具回调","x":930,"y":1010,"w":460,"h":140,"one":"桥接插件的其他回调：每轮问剩余额度、登记「预算用完、暂停」。","steps":["验签、防重放和工具回调一样","按 DSH 会话找到正在进行的那次执行（会话模块提供）","来自发布探测进程的回调，改问发布模块"],"ref":"§4.4","code":"backend/http/tool/","ws":"ws_auth","shape":"gate"},{"id":"A6","z":"API","kind":"machine","icon":"🎫","name":"内部接口（评估）","x":930,"y":1190,"w":460,"h":130,"one":"评估执行器用服务凭据调用。它不连数据库，由请求进程替它在任务表上领评估任务、续租约。","ref":"§2.1","code":"backend/http/internal/","ws":"ws_auth","shape":"gate"},{"id":"A7","z":"API","kind":"machine","icon":"📐","name":"契约校验","x":1530,"y":300,"w":380,"h":170,"one":"按事先约定的接口格式（OpenAPI 接口文档）检查请求，约定之外的字段一律拒绝。","ref":"§4.1","code":"backend/http/","ws":"ws_out","shape":"press"},{"id":"A8","z":"API","kind":"machine","icon":"📤","name":"交给模块 · 错误映射","x":1530,"y":560,"w":380,"h":210,"one":"把请求交给所属模块处理；把结果或业务错误转成统一格式的响应。","steps":["业务错误（找不到、没权限、冲突等）→ 对应的 HTTP 状态码和错误内容","程序没预料到的错误一律返回 500，只带请求编号，方便查日志","工具回调出错时，打包成 Agent 能看懂的工具错误"],"ref":"§4.5","code":"backend/http/","ws":"ws_out","shape":"press"},{"id":"S2","z":"API","kind":"machine","icon":"⏱️","name":"推送轮询","x":1520,"y":920,"w":250,"h":180,"workers":1,"show":1,"one":"每 0.5 秒问一次会话模块：本进程正在推送的会话，最大序号变了没有；变了就读出新事件交给推送连接。","ref":"§5.2","code":"backend/http/stream/","ws":"ws_push","shape":"clock"},{"id":"S1","z":"API","kind":"machine","icon":"📻","name":"浏览器推送连接（SSE）","x":1790,"y":920,"w":140,"h":400,"one":"和浏览器之间一直开着的连接，服务器单向往浏览器推消息（SSE）。先补发断线期间漏掉的，再实时推。","steps":["空闲的连接不占线程（异步处理）","每 15 秒发一次心跳，证明连接还活着；30 分钟主动断开一次，让浏览器重连","断线续读：浏览器重连时带上最后收到的平台序号，从下一条接着推","网关不支持长连接时，退为浏览器每秒来取一次"],"ref":"§5.2","code":"backend/http/stream/","ws":"ws_push","shape":"tower"},{"id":"S3","z":"API","kind":"machine","icon":"📥","name":"逐字增量接收","x":1520,"y":1140,"w":250,"h":180,"one":"接收后台进程直接推来的模型逐字输出，转给推送连接；丢了不补（完整回答存库后会替换掉）。","ref":"§5.2","code":"backend/http/stream/","ws":"ws_push","shape":"inlet"},{"id":"E1","z":"API","kind":"machine","icon":"📮","name":"事件投递","x":490,"y":990,"w":300,"h":210,"workers":4,"show":4,"one":"本进程的事务一提交，就把其中发出的事件送给订阅它的模块。","steps":["在订阅方的事务里先往已处理事件表插一行；插不进去（已经有了）说明处理过，直接算成功","要触发后台任务的事件：用事件编号当去重键建任务，重复触发也只建一个","线程忙不过来时不等，留给后台进程每分钟重新提交"],"ref":"§3.3","code":"backend/kernel/events/","ws":"ws_evt1","shape":"mailbox"},{"id":"K1","z":"API","kind":"kernel","icon":"⚙️","name":"内核 · 共享连接池","x":480,"y":1468,"w":1440,"h":110,"pipes":20,"one":"框架给各模块的公共服务。每个请求进程一套，连接池 10–20 条。","steps":["数据库访问：开事务；模块只能用自己前缀的表","发事件：和业务写入在同一个事务里登记","防重复提交：先占位，再做事","任务：提交、查询、取消","常用工具：时钟、编号生成、日志、追踪编号、读密钥"],"ref":"§2.3、§2.5","code":"backend/kernel/","ws":"ws_ker1","shape":"kernel"},{"id":"N_ID","z":"NB","kind":"nb","icon":"🪪","name":"身份权限模块","x":2140,"y":100,"w":480,"h":170,"one":"回答「这是谁」「能不能做」；停用账号、改角色时发变更通知。详细设计见 RFC-0006 和 0006 大图。","ws":"","shape":"house"},{"id":"N_CONV","z":"NB","kind":"nb","icon":"💭","name":"会话模块（嘉敏）","x":2140,"y":380,"w":480,"h":480,"one":"框架和它打交道最多：给工具回调核验执行凭据；把跟随器交来的 DSH 事件存库、编号；给推送轮询查序号；保管用户的回答；对账。","steps":["给工具回调核验提供执行凭据","收跟随器交来的 DSH 事件：存库、编平台序号","给推送轮询查最大序号、读新事件","把用户的回答标成「已回答、待发送」，给应答通道来取","对账任务：结果不明的执行，以及「已受理」超过 30 秒还没发出去的执行"],"ws":"","shape":"house"},{"id":"N_BIZ","z":"NB","kind":"nb","icon":"🏭","name":"业务模块处理器","x":2140,"y":960,"w":480,"h":220,"one":"取数、资源、文件、发布等模块的页面接口、工具回调、事件订阅、任务处理函数。它们用内核开事务、防重复、发事件。","ws":"","shape":"house"},{"id":"N_T04","z":"NB","kind":"nb","icon":"🔁","name":"DSH 适配层（闻洛）","x":2140,"y":1280,"w":480,"h":180,"one":"把平台的调用翻译成 DSH 的网络请求和长连接；按用户找到他的 DSH 进程。","ws":"","shape":"house"},{"id":"W1a","z":"WK","kind":"machine","icon":"🏗️","name":"普通执行池","x":2850,"y":140,"w":460,"h":240,"workers":8,"show":8,"one":"一般的后台任务在这里跑。空闲时每秒去任务表领一批到期的任务，交给线程执行。","steps":["领的时候跳过别人正锁着的行，不排队等（数据库的 SKIP LOCKED 写法）","同一个串行键（比如同一个 Agent 的发布）同时只跑一个，按提交先后排队","领一次，尝试次数加一；租约 60 秒","每个后台进程最多同时跑 8 个；2 个后台进程共 16 个"],"ref":"§3.4","code":"apps/platform-worker/","ws":"ws_claim","shape":"bench"},{"id":"W1b","z":"WK","kind":"machine","icon":"🏗️","name":"后台执行池","x":2850,"y":420,"w":460,"h":150,"workers":2,"show":2,"one":"自进化、评估这类又慢又多的任务。单独一个池，评估再多也挤不掉普通任务。","ref":"§3.4","code":"apps/platform-worker/","ws":"ws_claim","shape":"bench"},{"id":"W1c","z":"WK","kind":"machine","icon":"🏗️","name":"长任务执行池","x":2850,"y":610,"w":460,"h":170,"workers":"N","show":4,"one":"跟随器、应答通道这类一跑很久的任务。大部分时间在等 DSH 的消息，不独占线程；失败了不限次数重来。同时持有的上限 = DSH 进程数上限 × 2。","ref":"§3.4、§6.4","code":"apps/platform-worker/","ws":"ws_claim","shape":"bench"},{"id":"W9","z":"WK","kind":"machine","icon":"🔩","name":"任务处理器","x":3450,"y":140,"w":340,"h":180,"one":"各模块登记的处理函数，真正干活的地方（发布、评估、清理工作区…）。","steps":["必须能重复执行不出错（幂等）：租约被收回后，同一个任务可能再跑一次","写结果时核对代次：已经被别人接手的话，旧的写不进去","取消不是强行打断：续租时看到取消标记，处理函数自己找安全的地方收尾"],"ref":"§3.4","ws":"ws_run","shape":"press"},{"id":"W2","z":"WK","kind":"machine","icon":"🔁","name":"续租与收回","x":3930,"y":140,"w":380,"h":190,"workers":2,"show":2,"one":"正在跑的任务每 20 秒续一次租约；另外每 10 秒把租约过期（持有者可能挂了）的任务退回排队，重试次数用完的标为「放弃」并告警。","steps":["续租时一行都没改到 = 已经被别人接手，立刻停手","应答通道续租失败，立刻关掉和 DSH 的连接，避免两个后台进程同时应答"],"ref":"§3.4","code":"apps/platform-worker/","ws":"ws_sched","shape":"clock"},{"id":"W3","z":"WK","kind":"machine","icon":"⏰","name":"定时调度","x":3930,"y":370,"w":380,"h":190,"one":"每秒检查各模块登记的定时规则（按北京时间），到点就往任务表插一条任务。两个后台进程都会插，但去重键「规则名 + 计划时间」唯一，只进得去一条，所以不需要选一个主进程。","ref":"§3.4、§3.5","code":"apps/platform-worker/","ws":"ws_sched","shape":"clock"},{"id":"W4","z":"WK","kind":"machine","icon":"♻️","name":"事件重新提交","x":3930,"y":600,"w":380,"h":190,"one":"每分钟把超过 1 分钟还没送达的事件重新提交一次；超过 1 小时还没送达就告警。","ref":"§3.3","code":"apps/platform-worker/","ws":"ws_sched","shape":"clock"},{"id":"W5","z":"WK","kind":"machine","icon":"🧹","name":"清理任务","x":3930,"y":830,"w":380,"h":210,"one":"按保留期删过期数据，每批最多 1000 行，循环到删完（一次删太多会长时间锁表）。","steps":["任务：结束后 30 天","事件登记、已处理事件：30 天","防重复提交记录：24 小时","回调防重放记录：10 分钟","有序进度：最后更新后 30 天"],"ref":"§3.6","code":"apps/platform-worker/","ws":"ws_sched","shape":"broom"},{"id":"W8","z":"WK","kind":"machine","icon":"📮","name":"事件投递","x":3450,"y":480,"w":340,"h":180,"workers":4,"show":4,"one":"和请求进程里的一样：投递本进程发出的事件，以及被重新提交的事件。","steps":["有顺序要求的订阅（目前只有发布模块订阅「版本引用变更」）用有序进度表保证先处理 1 号再处理 2 号"],"ref":"§3.3","code":"backend/kernel/events/","ws":"ws_evt2","shape":"mailbox"},{"id":"W6","z":"WK","kind":"machine","icon":"🔭","name":"DSH 跟随器","x":2850,"y":930,"w":460,"h":190,"workers":"N","show":3,"one":"每个进行中的 DSH 会话一个长任务：盯着 DSH 的输出，把事件交给会话模块存库、编号；模型的逐字输出直接推给请求进程。","steps":["开始时从会话模块读上次处理到哪","断线自动重连，发现漏了就补齐","子 Agent 的会话一起盯","看到这一轮回答结束就退出"],"ref":"§6.2","code":"apps/platform-worker/ + 会话模块 jobs/","ws":"ws_long","shape":"scope"},{"id":"W7","z":"WK","kind":"machine","icon":"📞","name":"应答通道","x":2850,"y":1150,"w":460,"h":180,"workers":"N","show":3,"one":"Agent 向用户提问或请求审批时，经一条专门的连接等回答。每个 DSH 进程一条，由一个长任务持有，租约保证只有一个后台进程持有。","steps":["收到提问、审批 → 交给会话模块生成「待用户决定」的事项","每秒取一次「已回答、待发送」的回答，用同一条连接回复 DSH","发出后核对：如果 DSH 已经等超时了（30 秒），改用普通接口再答一次"],"ref":"§6.3","code":"apps/platform-worker/","ws":"ws_long","shape":"phone"},{"id":"W10","z":"WK","kind":"machine","icon":"🚀","name":"逐字增量直推","x":3450,"y":930,"w":340,"h":140,"one":"跟随器把逐字输出每 100 毫秒攒一批，直接发给请求进程；发失败就丢掉。","ref":"§5.2","code":"backend/kernel/stream/","ws":"ws_pushout","shape":"inlet"},{"id":"K2","z":"WK","kind":"kernel","icon":"⚙️","name":"内核 · 共享连接池","x":2840,"y":1468,"w":1480,"h":110,"pipes":10,"one":"和请求进程同一套。每个后台进程连接池 5–10 条，2 个共 10–20 条。","ref":"§2.3、§2.5","code":"backend/kernel/","ws":"ws_ker2","shape":"kernel","steps":["同上：数据库访问、发事件、防重复提交、任务、常用工具","线程数固定（普通 8、后台 2、事件投递 4、调度 2），每个线程只在执行很短的数据库操作时占一条连接，所以 5–10 条够用；这是起步估计，压测后再调"]},{"id":"T_JOBS","z":"DBZ","kind":"table","icon":"📦","name":"任务表 · platform_jobs","x":460,"y":1990,"w":460,"h":400,"cols":[["任务编号","id","job_ 开头，越新越大"],["任务类型","kind","「模块名.任务名」，后台进程按它找处理函数"],["执行池","pool","普通 / 后台 / 长任务，三选一"],["去重键","dedup_key","同一类型下唯一，同一件事只建一个任务"],["串行键","serial_key","同一个键的任务一次只跑一个"],["正在跑的串行键","running_serial_key","只在运行中时有值，配唯一约束保证同一个键只有一个在跑"],["状态","status","排队、运行、成功、失败、取消、放弃"],["最早执行时间","run_after","重试时往后推"],["已尝试 / 最多尝试","attempts · max_attempts","领一次加一；用完就标为放弃"],["租约到期时间","lease_until","到期没续，就退回排队给别人领"],["代次","lease_generation","每被领一次加一；续租、写结果时核对"],["取消标记","cancel_requested","处理函数看到后自己收尾"],["输入 / 结果 / 错误","payload · result · error","JSON 格式"],["发起人","owner_id","查任务时判断谁能看"],["排查信息","worker_id · trace_id","谁领的、追踪编号"],["创建 / 更新 / 结束时间","created_at · updated_at · finished_at","结束 30 天后删"]],"one":"所有后台任务都在这张表里：领取、租约、串行、去重、取消。框架自建。","steps":["唯一约束：同一类型的去重键；正在跑的串行键","索引：领任务（状态、执行池、执行时间）；收回过期租约（状态、租约到期时间）；串行排队（串行键、状态、创建时间）","保留：结束后 30 天"],"ref":"§3.4、§3.6","ws":"","shape":"store"},{"id":"T_CB","z":"DBZ","kind":"table","icon":"🔐","name":"回调防重放表 · platform_tool_callbacks","x":1000,"y":1990,"w":440,"h":300,"cols":[["回调标识（主键）","dsh_session_id · call_id · callback_seq","DSH 会话 + 调用编号 + 第几次回调"],["DSH 连接编号","dsh_connection_id","来自哪个 DSH 进程"],["回调路径","path","调的是哪个工具或接口"],["请求摘要","request_digest","由请求内容算出的指纹；同一标识内容不同就拒绝"],["状态","status","处理中 / 完成"],["结果","result","完成后存下，重复回调直接返回"],["创建 / 更新时间","created_at · updated_at","10 分钟后删"]],"one":"工具回调的防重放和结果复用。同一次回调重复来，直接返回上次结果；处理中超过 60 秒没更新，可以被接手重做。","steps":["保留 10 分钟"],"ref":"§4.4、§3.6","ws":"","shape":"store"},{"id":"T_IDEM","z":"DBZ","kind":"table","icon":"🧷","name":"防重复提交表 · platform_idempotency","x":1520,"y":1990,"w":400,"h":240,"cols":[["命令名","scope","哪个模块的哪个操作，如「发布 Agent」"],["防重复键","idem_key","前端每次提交带的唯一编号"],["请求摘要","request_digest","同一个键内容却不同 → 拒绝"],["结果","result","第一次做完的结果，重复请求直接拿走"],["创建时间","created_at","24 小时后删"]],"one":"防重复提交：业务事务的第一句先插一行占位，做完写结果，一起提交；重复的请求等前一个结束后直接拿结果。","steps":["主键：命令名 + 防重复键","保留 24 小时"],"ref":"§3.2","ws":"","shape":"store"},{"id":"T_EP","z":"DBZ","kind":"table","icon":"📜","name":"事件登记表 · event_publication","x":2000,"y":1990,"w":460,"h":240,"cols":[["登记编号 / 订阅方","id · listener_id","每个订阅方一行"],["事件类型 / 内容","event_type · serialized_event","内容存成文本"],["发出 / 完成时间","publication_date · completion_date","没完成的每分钟重新提交"],["状态 / 尝试次数","status · completion_attempts","Modulith 2.x 自带"]],"one":"Spring Modulith（框架用的开源事件库）自带的表：和业务写入同一事务插入，每个订阅方一行；送达后填完成时间。","steps":["表结构用 Modulith 自带的，不改列","保留：完成后 30 天"],"ref":"§3.3","ws":"","shape":"store"},{"id":"T_INBOX","z":"DBZ","kind":"table","icon":"📬","name":"已处理事件表 · platform_inbox","x":2540,"y":1990,"w":380,"h":190,"cols":[["订阅方 + 事件编号（主键）","listener · event_id","插不进去，就说明处理过了"],["处理时间","processed_at","30 天后删"]],"one":"记「哪个订阅方处理过哪条事件」，用来去重。所有订阅都用它。","steps":["订阅方事务的第一句插入；插不进去（主键重复）就直接算成功","事件至少送一次，加上这里按事件编号去重，效果上每条只处理一次","保留 30 天"],"ref":"§3.3","ws":"","shape":"store"},{"id":"T_CUR","z":"DBZ","kind":"table","icon":"🔢","name":"有序进度表 · platform_inbox_cursor","x":3000,"y":1990,"w":400,"h":190,"cols":[["订阅方 + 对象编号（主键）","listener · aggregate_id","每个订阅方对每个对象一行"],["已处理到第几号","last_sequence","只有它等于 n−1 时才能处理第 n 号"],["更新时间","updated_at","30 天没更新就删"]],"one":"记「某个对象的事件按顺序处理到第几号」，保证先处理 1 号再处理 2 号。目前只有发布模块订阅「版本引用变更」用它。","steps":["例子：Agent A 的 2 号变更先到，进度还是 0 → 先不处理，等重新提交；1 号处理完进度变 1；2 号再来就能处理","和已处理事件表不重复：那张管「处理过没有」，这张管「顺序」"],"ref":"§3.3","ws":"","shape":"store"},{"id":"T_BIZ","z":"DBZ","kind":"tableg","icon":"🗄️","name":"各模块的业务表（会话 conversations_*、身份 identity_*、Agent agents_* …）","x":1000,"y":2400,"w":1920,"h":260,"cols":[],"one":"每个模块只读写自己前缀的表；和防重复记录、事件登记在同一个事务里提交。","ws":"","shape":"storeg"},{"id":"T_DSHP","z":"DBZ","kind":"tableg","icon":"🛰️","name":"DSH 进程登记表 · platform_dsh_processes（DSH 适配层，闻洛）","x":3480,"y":1990,"w":820,"h":150,"cols":[],"one":"每个 DSH 进程的登记信息和它专属的服务密钥；工具回调验签时按连接编号查。","ws":"","shape":"storeg"}];
+const B=[["b_br","G_BROWSER","A1","req","页面请求"],["b_app","G_APP","A1","req","开放 API 请求"],["b_dshcb","DSH","G_BRIDGE","tool","Agent 调业务工具"],["b_brg","G_BRIDGE","A1","tool","工具回调、非工具回调"],["b_evr","G_EVR","A1","eva","评估执行器的请求"],["s_a2","A1","A2","req","网页请求"],["s_a3","A1","A3","req","开放 API"],["s_a4","A1","A4","tool","工具回调"],["s_a5","A1","A5","tool","非工具回调"],["s_a6","A1","A6","eva","评估执行器"],["k_a2","A2","N_ID","key","按登录 cookie 问「这是谁」"],["k_a3","A3","N_ID","key","校验接入应用的凭据"],["k_a4","A4","N_CONV","key","取执行凭据"],["k_a5","A5","N_CONV","key","找正在进行的执行"],["r_cb","A4","T_CB","rec","登记「处理中」/ 写「完成」/ 超时接手"],["r_cb5","A5","T_CB","rec","防重放记录"],["r_dshp","A4","T_DSHP","look","按连接 ID 查服务密钥"],["j_a6","A6","T_JOBS","job","代评估执行器领取、续租"],["v_a2","A2","A7","req","已认证"],["v_a3","A3","A7","req","已认证"],["v_a4","A4","A7","req","可信执行上下文"],["v_a5","A5","A7","req","已核验"],["v_a6","A6","A7","req","已认证"],["v_a8","A7","A8","req","校验通过"],["d_biz","A8","N_BIZ","req","交给模块处理器"],["d_back","N_BIZ","A8","ok","结果 / 领域错误"],["d_resp","A8","G_BROWSER","ok","响应"],["d_cbresp","A8","G_BRIDGE","ok","工具结果"],["m_idem","N_BIZ","T_IDEM","rec","先占位（同一事务）"],["m_ep","N_BIZ","T_EP","evt","发事件（同一事务登记）"],["m_biz","N_BIZ","T_BIZ","rec","业务写入（同一事务）"],["e_api","T_EP","E1","evt","提交后立即投递"],["e_inb","E1","T_INBOX","rec","插入去重"],["e_sub","E1","N_BIZ","evt","订阅方处理"],["e_job","E1","T_JOBS","job","按事件 ID 建任务（去重键）"],["e_wk","T_EP","W8","evt","后台进程里发出的事件"],["e_inb2","W8","T_INBOX","rec","插入去重"],["e_cur","W8","T_CUR","rec","有序订阅：更新处理进度"],["e_job2","W8","T_JOBS","job","建任务（去重键）"],["e_resub","W4","T_EP","rep","每分钟重新提交未完成的"],["j_a","T_JOBS","W1a","job","领任务（跳过别人锁着的）"],["j_b","T_JOBS","W1b","job","领任务（后台）"],["j_c","T_JOBS","W1c","job","领任务（长任务）"],["j_run","W1a","W9","job","交给处理器"],["j_run2","W1b","W9","job","交给处理器"],["j_done","W9","T_JOBS","ok","写结果（核对代次）"],["j_lease","W2","T_JOBS","rep","续租 / 收回过期"],["j_cron","W3","T_JOBS","job","插定时任务（去重键）"],["c_all","W5","DBZ","cln","分批删过期数据"],["l_f","W1c","W6","job","跟随任务"],["l_a","W1c","W7","job","应答通道任务"],["f_t04","W6","N_T04","dsh","订阅 DSH 输出"],["f_conv","W6","N_CONV","evt","交 DSH 事件（存库、编序号）"],["f_tok","W6","W10","tok","逐字输出"],["f_push","W10","S3","tok","直接推送"],["t_dsh","N_T04","DSH","dsh","网络请求、长连接"],["a_conv","W7","N_CONV","ans","每秒取「已回答、待发送」"],["a_t04","W7","N_T04","ans","经同一连接回复 DSH"],["c_store","N_CONV","T_BIZ","rec","会话事件表（带平台序号）"],["c_ep","N_CONV","T_EP","evt","执行已受理（发事件）"],["c_send","N_CONV","N_T04","dsh","把问题发给 DSH"],["p_look","S2","N_CONV","look","每 0.5 秒查最大序号"],["p_new","S2","S1","evt","新事件"],["p_tok","S3","S1","tok","逐字增量"],["p_out","S1","G_BROWSER","tok","推送给浏览器"],["p_sse","G_BROWSER","S1","req","打开推送连接（带上次读到的序号）"]];
+const TOURS=[{"id":"web","name":"① 一个页面请求","steps":[{"b":["b_br"],"m":["G_BROWSER","A1","A_POOL"],"t":"张三点了「发布 Agent」。请求进入请求进程；请求分路给它编上请求编号，按网址开头送到网页认证。"},{"b":["s_a2","k_a2"],"m":["A2","N_ID"],"t":"网页认证：按登录 cookie 查身份缓存（30 秒）；缓存里没有，就问身份权限模块「这是谁」。写操作还要核对防跨站的令牌。"},{"b":["v_a2","v_a8"],"m":["A7","A8"],"t":"按事先约定的接口格式检查请求内容，再交给所属模块。框架只认人、不判权限：「张三能不能发布」由发布模块自己判断。"},{"b":["d_biz","m_idem","m_biz","m_ep"],"m":["N_BIZ","K1","T_IDEM","T_BIZ","T_EP"],"t":"模块在一个事务里做三件事：防重复提交表先占位 → 写业务表 → 发事件（事件登记表插一行）。三件事一起生效，要么都不算。"},{"b":["d_back","d_resp"],"m":["A8","G_BROWSER"],"t":"结果或业务错误回到错误映射，转成统一格式的响应返回浏览器。如果张三双击了两次，第二个请求会等第一个提交，然后直接拿到同样的结果。"}]},{"id":"cb","name":"② 一次工具回调","steps":[{"b":["b_dshcb","b_brg"],"m":["DSH","G_BRIDGE","A1"],"t":"张三的 Agent 在 DSH 里调用「取数」工具。桥接插件带着 DSH 会话编号、调用编号和签名回调平台。"},{"b":["s_a4","r_dshp","r_cb"],"m":["A4","T_DSHP","T_CB"],"t":"① 验签：按连接编号查到这个 DSH 进程的服务密钥，核对签名和时间；再在回调防重放表插一行「处理中」。同一次回调重复来，直接返回上次结果。"},{"b":["k_a4"],"m":["A4","N_CONV"],"t":"② 向会话模块取执行凭据：这是张三的哪次执行、允许用哪些工具、额度还剩多少。这个会话没有进行中的执行，就拒绝。"},{"b":["v_a4","v_a8","d_biz"],"m":["A7","A8","N_BIZ"],"t":"③ 打包成「可信执行上下文」交给取数模块。取数模块只认这个上下文，不再自己核验。"},{"b":["d_back","r_cb","d_cbresp"],"m":["A8","T_CB","G_BRIDGE"],"t":"取数完成：回调防重放表写「完成」和结果，工具结果返回给 Agent。如果处理到一半进程挂了，60 秒后的重试可以接手重做，模块的防重复提交记录保证不会重复写。"}]},{"id":"evt","name":"③ 一个事件从发出到处理","steps":[{"b":["m_biz","m_ep"],"m":["N_BIZ","T_BIZ","T_EP"],"t":"模块在业务事务里发事件：业务写入和事件登记（每个订阅方一行）在同一个事务里提交。事务回滚，事件也就不存在。"},{"b":["e_api"],"m":["T_EP","E1"],"t":"提交后，本进程的事件投递马上把事件送出去（目标 1 秒内）。"},{"b":["e_inb","e_sub"],"m":["E1","T_INBOX","N_BIZ"],"t":"在订阅方的事务里先往已处理事件表插一行：插不进去，说明处理过了，直接算成功；否则交给订阅方处理。事件至少送一次，再按事件编号去重，效果上每条只处理一次。"},{"b":["e_job"],"m":["E1","T_JOBS"],"t":"如果这个事件要触发后台任务（比如建跟随任务），就用事件编号当去重键插入任务表，重复触发也只建一个。"},{"b":["e_resub","e_wk","e_cur"],"m":["W4","T_EP","W8","T_CUR"],"t":"投递失败或进程崩了：后台进程每分钟把超过 1 分钟还没送达的事件重新提交。有顺序要求的事件（版本引用变更）用有序进度表保证先处理 1 号、再处理 2 号。"}]},{"id":"job","name":"④ 一个任务从建立到结束","steps":[{"b":["e_job2","j_cron"],"m":["W8","W3","T_JOBS"],"t":"任务有两个来源：事件触发（用事件编号去重）和定时调度（用「规则名 + 计划时间」去重）。插入时撞上去重键，说明已经建过了。"},{"b":["j_a"],"m":["T_JOBS","W1a"],"t":"普通执行池每秒去任务表领一批：别人正锁着的行直接跳过；同一个串行键已有任务在跑的不领，同键有更早排队的也不领。领的时候尝试次数加一，租约 60 秒。"},{"b":["j_run"],"m":["W1a","W9"],"t":"执行池把任务交给模块登记的处理函数执行（每个后台进程的普通执行池最多同时 8 个）。"},{"b":["j_lease"],"m":["W2","T_JOBS"],"t":"执行期间每 20 秒续一次租约，续租时核对代次。一行都没改到，说明租约已被收回、别人接手了，立刻停手。"},{"b":["j_done"],"m":["W9","T_JOBS"],"t":"做完写结果、改成「成功」（同样核对代次）。如果后台进程中途挂了：续租与收回每 10 秒把租约过期的任务退回排队，另一个后台进程领走重做——所以处理函数必须能重复执行不出错。"}]},{"id":"tok","name":"⑤ 逐字回答怎么到浏览器","steps":[{"b":["c_send","t_dsh","c_ep"],"m":["N_CONV","N_T04","DSH","T_EP"],"t":"会话模块受理张三的问题，经 DSH 适配层发给 DSH，同时发出「执行已受理」事件。"},{"b":["e_job","j_c","l_f"],"m":["T_JOBS","W1c","W6"],"t":"这个事件触发建一个跟随任务，长任务执行池领走，变成一个 DSH 跟随器（它大部分时间在等消息，不占线程）。"},{"b":["f_t04","f_conv","c_store"],"m":["W6","N_T04","N_CONV","T_BIZ"],"t":"跟随器盯着 DSH 的输出，每批事件交给会话模块：存进会话事件表、编上平台序号。"},{"b":["p_sse","p_look","p_new","p_out"],"m":["G_BROWSER","S1","S2"],"t":"浏览器开着推送连接。推送轮询每 0.5 秒问一次最大序号，有新事件就读出来，经推送连接推给浏览器。"},{"b":["f_tok","f_push","p_tok","p_out"],"m":["W6","W10","S3","S1","G_BROWSER"],"t":"模型的逐字输出不存库：跟随器每 100 毫秒攒一批，直接推给请求进程，再经推送连接立刻推给浏览器。完整回答存库后，会替换掉逐字拼出来的文字。"}]},{"id":"one","name":"⑥ 只能一个实例做的事","steps":[{"b":["j_cron"],"m":["W3","T_JOBS"],"t":"定时任务：两个后台进程的定时调度到点都会插「清理任务 · 03:00」，但去重键唯一，只有一条进得去——所以不需要选一个主进程。"},{"b":["j_c","l_a"],"m":["T_JOBS","W1c","W7"],"t":"应答通道：每个 DSH 进程一个长任务，租约保证同一时刻只有一个后台进程持有。持有者挂了，租约过期，另一个后台进程接手重连。"},{"b":["a_conv"],"m":["W7","N_CONV"],"t":"张三在页面上回答了 Agent 的提问，会话模块把它标成「已回答、待发送」。持有通道的那个应答通道每秒来取一次。"},{"b":["a_t04","t_dsh"],"m":["W7","N_T04","DSH"],"t":"用同一条连接回复 DSH。发出后核对：如果 DSH 已经等超时了（30 秒），改用普通接口再答一次。"}]}];
+// 名词解释：图里出现、需要解释的词。新出现一个就加一条
+const GLOSSARY=[
+["进程","一个正在运行的程序。平台后端有两种：请求进程和后台进程。"],
+["请求进程（API 进程）","程序名 platform-api。接住所有外部请求（浏览器、接入应用、DSH 回调、评估执行器），处理完马上返回；也负责往浏览器推消息。可以部署多个。"],
+["后台进程（Worker）","程序名 platform-worker。不接外部请求，只在后台干活：跑任务、盯 DSH 输出、应答 DSH 的提问、定时清理。建议部署 2 个。"],
+["副本","同一种进程部署了好几份，比如 2 个后台进程。它们代码一样，靠数据库里的租约、去重键协调，不会重复干活。"],
+["线程","进程里同时干活的单位。一个线程同一时刻只做一件事；线程有上限，所以长时间等待的事尽量不占线程。"],
+["连接池","进程预先和数据库建好的一批连接，谁要查库就借一条，用完马上还。条数看「同一时刻有多少查询在跑」，和用户数无关。"],
+["事务","一组数据库操作，要么全部生效，要么全部不算。规定事务里不许调外部系统，否则外部一慢，连接就被一直占着。"],
+["内核","框架给各模块的公共服务：数据库访问、发事件、防重复提交、任务、时钟编号日志密钥等。每个进程一套。"],
+["模块 / 模块清单","平台按业务分成多个模块（会话、身份权限、取数……）。每个模块用一份清单声明自己的接口、订阅的事件、任务处理函数、定时规则，启动时框架照清单装配和检查。"],
+["表名前缀","全平台只有一个库，各模块的表靠前缀区分：platform_ 是框架的，identity_ 是身份权限的，conversations_ 是会话的……模块只能用自己前缀的表。"],
+["事件 / 订阅方","模块告诉别人「某件事发生了」的一条消息，比如「执行已受理」。关心这件事的模块叫订阅方。"],
+["事件登记","发事件时在事件登记表里插一行，和业务写入在同一个事务里。业务写入成功，事件就一定在；回滚了，事件也不存在。"],
+["至少送一次 + 去重","事件可能被送多次（重试、重新提交），订阅方用已处理事件表按事件编号去重，效果上每条只处理一次。"],
+["有序订阅","少数订阅要求同一对象的事件按顺序处理（目前只有发布模块订阅「版本引用变更」），用有序进度表保证。"],
+["任务 / 任务表","要在后台做的一件事，比如发布 Agent、跑评估、跟随 DSH 会话。全部记在任务表里，后台进程去领。"],
+["执行池","后台进程里按任务种类分开的几组线程：普通（8）、后台（2，自进化和评估）、长任务（跟随器、应答通道）。分开是为了评估再多也不挤掉普通任务。数字是每个后台进程的。"],
+["租约","领任务时约定的有效期（60 秒）。持有者每 20 秒续一次；不续了（比如进程挂了），到期后任务退回排队，别人可以接手。"],
+["代次","任务每被领一次加一。续租、写结果时核对代次：已经被别人接手的旧持有者，写不进去。"],
+["去重键","同一件事用同一个键，表上唯一，第二次插入会失败，所以只建一个任务。例：定时任务用「规则名 + 计划时间」。"],
+["串行键","同一个键的任务一次只跑一个，按提交先后排队。例：同一个 Agent 的发布用「agent-publish:Agent 编号」。"],
+["放弃（死信）","重试次数用完还失败的任务，状态标为放弃（dead），会告警，等人处理。"],
+["取消标记","运行中的任务不能强行打断，只置一个标记；处理函数续租时看到它，自己找安全的地方收尾。"],
+["幂等","同一件事做一次和做多次结果一样。任务处理函数、工具回调都要求幂等，因为可能被重做。"],
+["防重复提交","用户双击、网络重试时，同一个操作可能来两次。业务事务第一句先在防重复提交表占位，第二个请求会等第一个结束后直接拿到同样的结果。"],
+["防重放","同一次回调被重复发来时，不重复处理，直接返回上次的结果。"],
+["签名 / 验签","发送方用密钥给请求算一个签名，平台用同一把密钥核对，确认请求真是它发的、内容没被改过。每个 DSH 进程有一把专属的服务密钥。"],
+["执行凭据","会话模块给出的「这次工具调用属于谁的哪次执行、允许用哪些工具、额度还剩多少」。"],
+["可信执行上下文","工具回调核验通过后打包给模块的信息（是谁、哪次执行、能用什么）。模块只认它，不再自己核验。"],
+["契约 / 接口文档（OpenAPI）","事先约定好的接口格式。契约校验就是检查请求是否符合约定，约定外的字段一律拒绝。"],
+["业务错误","业务上的失败，比如找不到、没权限、冲突，区别于程序出错。错误映射把它们转成统一格式的响应。"],
+["cookie / 防跨站伪造","cookie 是浏览器替网站保存的小段数据，登录状态就存在里面。防跨站伪造：防止别的网站借用户的登录状态偷偷发请求。"],
+["限流","限制每个接入应用单位时间内的调用次数，超了返回「请求太多」。"],
+["推送连接（SSE）","浏览器和平台之间一直开着的连接，平台可以随时往浏览器推消息（单向）。"],
+["平台序号","会话模块给每个存库的会话事件编的递增号码。浏览器断线重连时报上最后收到的序号，平台从下一条接着推（断线续读）。"],
+["心跳","每隔一段时间发一条空消息，证明连接还活着，免得被网关当成空闲连接断掉。"],
+["逐字输出","模型一个字一个字地吐出回答。这部分不存库，直接推给浏览器；完整回答存库后替换掉。"],
+["DSH / DSH 进程 / DSH 会话","DSH 是 Agent 运行的系统。每个用户一个 DSH 进程；用户的一次对话在 DSH 里是一个会话。"],
+["桥接插件","装在 DSH 里的插件。Agent 要用平台的业务工具时，由它回调平台。"],
+["跟随器","每个进行中的 DSH 会话一个长任务，盯着 DSH 的输出，交给会话模块存库。"],
+["应答通道","Agent 向用户提问或请求审批时，DSH 经一条专门的连接等回答。每个 DSH 进程一条，由一个后台进程持有。"],
+["评估执行器","跑评估的 Python 程序，不连数据库，只调平台内部接口。"],
+["SKIP LOCKED","数据库的一种写法：领任务时跳过别人正锁着的行，不排队等。多个后台进程同时领任务时不会互相卡住。"],
+["定时规则（cron）","「每天 3 点」这类定时规则的标准写法，各模块在清单里登记。"],
+["Spring Modulith","框架用的一个开源库，负责模块边界检查和事件登记、投递。事件登记表就是它自带的。"],
+["Tomcat","Spring Boot 自带的网页服务器，请求线程池就是它的。"],
+["RFC","设计文档。RFC-0004 是后端框架这一篇；组件详情里的「RFC-0004 第 x 节」指草稿里的章节。"]];
+
+const SW_L=220; // 请求分路左侧文字区宽度
+const NAME_F=24, NAME_LH=30, DESC_F=18, DESC_LH=27, ITEM_GAP=44, SEC_PAD=24;
+const LAYOUT={
+ top:{y:70, cols:[{x:1380,w:470,items:["N_ID"]},{x:2020,w:700,items:["N_CONV"]},{x:3050,w:920,items:["N_BIZ"]},{x:5250,w:440,items:["N_T04"]},{x:5840,w:430,items:["DSH"]}]},
+ mid:{gap:240, cols:[
+   {x:40,w:340,items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"]},
+   {x:640,w:560,items:["A1","E1"]},
+   {x:1380,w:470,sec:{id:"s_auth",name:"认证（5 类路径）"},items:["A2","A3","A4","A5","A6"]},
+   {x:2020,w:420,secs:[{id:"s_out",name:"交给模块",items:["A7","A8"]},{id:"s_push",name:"实时推送给浏览器",items:["S2","S1","S3"]}]},
+   {x:2630,w:210,items:["K1"],full:true},
+   {x:3050,w:420,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB","T_DSHP"]},
+   {x:3610,w:420,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_BIZ","T_JOBS","T_INBOX","T_CUR"]},
+   {x:4230,w:210,items:["K2"],full:true},
+   {x:4650,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
+   {x:5250,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
+   {x:5840,w:430,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
+ regions:[
+   {id:"NB",name:"其他模块（只画对接口）",items:["N_ID","N_CONV","N_BIZ","N_T04"],cls:"r-nb"},
+   {id:"DSHR",name:"DSH",items:["DSH"],cls:"r-gate"},
+   {id:"GATE",name:"外部入口",items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"],cls:"r-gate"},
+   {id:"API",name:"请求进程（API）",sub:"接住所有外部请求 · 程序名 platform-api · 可部署多个 · 每个 200 个请求线程",items:["A1","E1","A2","A3","A4","A5","A6","A7","A8","S2","S1","S3","K1"],cls:"r-api",stack:true},
+   {id:"DBZ",name:"数据库 · MySQL 一个库（TDSQL）",items:["T_IDEM","T_EP","T_CB","T_DSHP","T_BIZ","T_JOBS","T_INBOX","T_CUR"],cls:"r-db"},
+   {id:"WK",name:"后台进程（Worker）",sub:"跑后台任务、盯 DSH、定时清理 · 程序名 platform-worker · 部署 2 个（叠影表示）",items:["K2","W1a","W1b","W1c","W6","W7","W9","W8","W10","W2","W3","W4","W5"],cls:"r-wk",stack:true}]
+};
+const SHAPES={G_BROWSER:"window",G_APP:"building",G_BRIDGE:"plug",G_EVR:"flask",DSH:"rack",A1:"switch",A2:"booth",A3:"booth",A4:"booth3",A5:"booth",A6:"booth",A7:"stamp",A8:"twoway",S2:"dial",S1:"tower",S3:"funnel",E1:"mailbox",K1:"kernel",N_ID:"house",N_CONV:"house",N_BIZ:"house",N_T04:"house",W1a:"tray",W1b:"tray",W1c:"tray",W6:"stack",W7:"stack",W9:"hex",W8:"mailbox",W10:"arrowL",W2:"pill",W3:"pill",W4:"pill",W5:"bin",K2:"kernel",T_IDEM:"cyl",T_EP:"cyl",T_CB:"cyl",T_DSHP:"cylg",T_BIZ:"cylg",T_JOBS:"cyl",T_INBOX:"cyl",T_CUR:"cyl"};
+const CAP={W1a:{n:8,t:"每个进程最多 8 个"},W1b:{n:2,t:"每个进程最多 2 个"},W1c:{n:0,t:"不占线程，按 DSH 进程数限量"}};
+const STACK_NOTE={W6:"每个活动 DSH 会话一个",W7:"每个 DSH 进程一个",DSH:"每个用户一个 DSH 进程"};
+
+</script><script>
+(function(){
+const $=s=>document.querySelector(s), $$=s=>Array.from(document.querySelectorAll(s));
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const NS='http://www.w3.org/2000/svg';
+const MM={}; M.forEach(m=>{ if(SHAPES[m.id]) { m.shape=SHAPES[m.id]; MM[m.id]=m; } });
+const BB=B.filter(b=>MM[b[1]]&&MM[b[2]]);
+const st={sel:null,selBelt:null,tour:null,step:0,vb:{x:0,y:0,w:100,h:100}};
+const units=s=>{ let u=0; for(const ch of String(s||'')) u+=/[\u0000-ÿ]/.test(ch)?0.56:1; return u; };
+const nLines=(s,w,f)=>Math.max(1,Math.ceil(units(s)*f*1.15/Math.max(40,w)));
+
+/* ---------- 外形参数：内容区内缩、装饰占位、额外高度 ---------- */
+const INS={window:{t:46,l:22,r:22,b:20},building:{t:20,l:22,r:22,b:20,deco:44},plug:{t:20,l:22,r:22,b:20},flask:{t:20,l:22,r:22,b:20,deco:46},
+ rack:{t:20,l:64,r:22,b:20,deco:30,ex:40},switch:{t:20,l:22,r:22,b:20},booth:{t:24,l:22,r:22,b:20},booth3:{t:24,l:22,r:22,b:20,ex:84},
+ stamp:{t:20,l:22,r:22,b:20,deco:52},twoway:{t:20,l:50,r:62,b:20},dial:{t:20,l:116,r:22,b:20},tower:{t:20,l:22,r:22,b:20,deco:96},
+ funnel:{t:28,l:64,r:22,b:28},mailbox:{t:20,l:22,r:22,b:20,deco:34},tray:{t:20,l:30,r:30,b:20,ex:56},hex:{t:20,l:56,r:56,b:20},
+ arrowL:{t:20,l:70,r:22,b:20},pill:{t:20,l:112,r:40,b:20},bin:{t:20,l:44,r:44,b:24,deco:26},stack:{t:20,l:22,r:22,b:20,deco:34,ex:40},
+ kernel:{t:20,l:18,r:18,b:20},cyl:{t:34,l:22,r:22,b:30,deco:24},cylg:{t:34,l:22,r:22,b:30,deco:24},house:{t:20,l:22,r:22,b:20,deco:54}};
+function measure(m){ const i=INS[m.shape]; const tw=m.w-i.l-i.r;
+  if(m.shape==='switch'){ const lw=SW_L-i.l; m.nameH=nLines(m.name,lw-44,NAME_F)*NAME_LH; m.descH=nLines(m.one,lw,DESC_F)*DESC_LH; m.h=Math.max(i.t+m.nameH+10+m.descH+i.b,5*48+30); return; }
+  if(m.shape==='cyl'){ m.nameH=nLines(m.name,tw,22)*28; m.descH=(m.cols||[]).length*28; m.h=i.t+m.nameH+10+m.descH+i.b; return; }
+  if(m.shape==='kernel'){ m.nameH=nLines(m.name,tw,NAME_F)*NAME_LH; m.descH=nLines(m.one,tw,DESC_F)*DESC_LH; m.h=0; return; }
+  m.nameH=nLines(m.name,tw-44,NAME_F)*NAME_LH; m.descH=nLines(m.one,tw,DESC_F)*DESC_LH; m.h=i.t+m.nameH+10+m.descH+(i.ex||0)+i.b; }
+
+/* ---------- 布局 ---------- */
+const SECS=[], REGIONS=[];
+(function(){
+  const place=(id,x,w,y)=>{ const m=MM[id]; m.x=x; m.w=w; measure(m); y+=(INS[m.shape].deco||0); m.y=y; return y+m.h+ITEM_GAP; };
+  let topBottom=0;
+  LAYOUT.top.cols.forEach(c=>{ let y=LAYOUT.top.y; c.items.forEach(id=>{ y=place(id,c.x,c.w,y); }); topBottom=Math.max(topBottom,y); });
+  const y0=topBottom+LAYOUT.mid.gap; let midBottom=y0;
+  const fulls=[];
+  LAYOUT.mid.cols.forEach(c=>{ let y=y0;
+    if(c.full){ fulls.push(c); return; }
+    const secs=c.secs||(c.sec?[{...c.sec,items:c.items}]:null);
+    if(secs){ secs.forEach(s=>{ const sy=y; y+=56; s.items.forEach(id=>{ y=place(id,c.x+SEC_PAD,c.w-SEC_PAD*2,y); }); y=y-ITEM_GAP+SEC_PAD; SECS.push({id:s.id,name:s.name,x:c.x,y:sy,w:c.w,h:y-sy}); y+=50; }); y-=50; }
+    else c.items.forEach(id=>{ y=place(id,c.x,c.w,y); });
+    midBottom=Math.max(midBottom,y); });
+  fulls.forEach(c=>{ const m=MM[c.items[0]]; m.x=c.x; m.w=c.w; measure(m); m.y=y0; m.h=midBottom-y0; });
+  LAYOUT.regions.forEach(r=>{ let x0=1e9,y1=1e9,x1=-1e9,y2=-1e9; r.items.forEach(id=>{ const m=MM[id]; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y1=Math.min(y1,m.y-d); x1=Math.max(x1,m.x+m.w+(m.shape==='booth'||m.shape==='booth3'||m.shape==='plug'?70:0)+(m.shape==='switch'?40:0)); y2=Math.max(y2,m.y+m.h); });
+    SECS.forEach(s=>{ if(r.items.some(id=>MM[id].x>=s.x&&MM[id].x<s.x+s.w&&MM[id].y>=s.y&&MM[id].y<s.y+s.h)){ x0=Math.min(x0,s.x); y1=Math.min(y1,s.y); x1=Math.max(x1,s.x+s.w); y2=Math.max(y2,s.y+s.h); } });
+    REGIONS.push({...r,x:x0-40,y:y1-96,w:x1-x0+80,h:y2-y1+96+40}); r.items.forEach(id=>MM[id].z=r.id); });
+})();
+const RR=Object.fromEntries(REGIONS.map(r=>[r.id,r])), SS=Object.fromEntries(SECS.map(s=>[s.id,s]));
+M.forEach(m=>{ if(MM[m.id]) m.ws=(SECS.find(s=>m.x>=s.x&&m.x<s.x+s.w&&m.y>=s.y&&m.y<s.y+s.h)||{}).id||''; });
+const WORLD=(()=>{ const xs=REGIONS.map(r=>r.x), xe=REGIONS.map(r=>r.x+r.w), ys=REGIONS.map(r=>r.y), ye=REGIONS.map(r=>r.y+r.h); return {x:Math.min(...xs)-200,y:Math.min(...ys)-220,w:Math.max(...xe)-Math.min(...xs)+400,h:Math.max(...ye)-Math.min(...ys)+400}; })();
+const nameOf=id=>(MM[id]||RR[id]||{}).name||id;
+
+/* ---------- 连线：正交走线，绕开组件、标题和管道 ---------- */
+const EXT={booth:[6,78],booth3:[6,78],plug:[0,60],switch:[16,44],stack:[0,32],rack:[0,28],tray:[10,10],bin:[8,8]};
+function ext(m){ const e=EXT[m.shape]||[0,0]; return [m.x-e[0],m.y-(INS[m.shape].deco||0),m.x+m.w+e[1],m.y+m.h]; }
+function titlePlates(){ const T=[];
+  REGIONS.forEach(r=>{ const tw=units(r.name)*32+50; T.push([r.x+24,r.y+18,r.x+24+tw,r.y+74]); if(r.sub) T.push([r.x+36+tw,r.y+28,r.x+36+tw+units(r.sub)*21+40,r.y+66]); });
+  SECS.forEach(c=>T.push([c.x+14,c.y+12,c.x+14+units(c.name)*22+40,c.y+50])); return T; }
+function pipeInfo(){ const db=RR.DBZ; return [['K1','r',db.x],['K2','l',db.x+db.w]].map(([k,sd,tx])=>{ const m=MM[k], my=m.y+m.h*0.5, x0=sd==='r'?m.x+m.w:m.x; return {k,my,x0,tx,lx:(x0+tx)/2}; }); }
+// 某条边上、坐标 v 处，外形真正的轮廓位置
+function edgeAt(m,sd,v){ const {x,y,w,h}=m, cx=x+w/2, cy=y+h/2, k=Math.min(1,Math.abs(v-cy)/(h/2)), u=Math.min(1,Math.abs(v-cx)/(w/2));
+  const rr=rx=>{ const d=Math.max(0,Math.abs(v-cy)-(h/2-rx)); return rx-Math.sqrt(Math.max(0,rx*rx-d*d)); };
+  if(sd==='l') switch(m.shape){ case 'twoway': return x+36*(1-k); case 'hex': return x+40*k; case 'arrowL': return x+54*k;
+    case 'funnel': return v<y+30?x+56*(1-(v-y)/30):v>y+h-30?x+56*(v-(y+h-30))/30:x;
+    case 'dial': return Math.abs(v-cy)<52?x+52-Math.sqrt(52*52-(v-cy)**2):x+48; case 'pill': return x+rr(Math.min(h/2,48)); default: return x; }
+  if(sd==='r') switch(m.shape){ case 'twoway': return x+w-50+50*(1-k); case 'hex': return x+w-40*k; case 'stack': return v<y+h-32?x+w+32:x+w; case 'rack': return v<y+h-28?x+w+28:x+w;
+    case 'pill': return x+w-rr(Math.min(h/2,48)); case 'dial': return x+w-rr(Math.min(h/2,40)); default: return x+w; }
+  if(sd==='t') switch(m.shape){ case 'house': { const hf=w/2-12, d=Math.abs(v-cx); return d<hf?y+2-52*(1-d/hf):y; }
+    case 'building': return v>x+30&&v<x+w*0.45?y-30:v>=x+w*0.45&&v<x+w*0.75?y-44:y;
+    case 'flask': return Math.abs(v-cx)<34?y-44:y; case 'stamp': return Math.abs(v-cx)<24?y-48:Math.abs(v-cx)<60?y-14:y;
+    case 'mailbox': return y-30+70*(1-Math.sqrt(Math.max(0,1-u*u)));
+    case 'stack': return v>x+32?y-32:y; case 'rack': return v>x+28?y-28:y;
+    case 'cyl': case 'cylg': return y-22*Math.sqrt(Math.max(0,1-u*u)); case 'bin': return Math.abs(v-cx)<30?y-34:y-22; default: return y; }
+  switch(m.shape){ case 'cyl': case 'cylg': return y+h-22+22*Math.sqrt(Math.max(0,1-u*u)); default: return y+h; } }
+// 某条边上允许接线的范围（避开栏杆、插脚、天线、出口箭头等）
+function sideRange(m,sd){ const {x,y,w,h}=m; const ex=[];
+  if(sd==='l'||sd==='r'){ if(sd==='r'&&m.shape==='switch') return null; let lo=y+14, hi=y+h-14; if(m.shape==='tray') hi=y+h-18; if(m.shape==='pill'||m.shape==='dial'){ lo=y+h/2-Math.max(10,h/2-40); hi=y+h/2+Math.max(10,h/2-40); }
+    if(sd==='r'&&(m.shape==='booth'||m.shape==='booth3')) ex.push([y+4,y+72]);
+    if(sd==='r'&&m.shape==='plug') ex.push([y+h*0.3-14,y+h*0.3+28],[y+h*0.6-14,y+h*0.6+28]);
+    return {lo,hi,ex}; }
+  let lo=x+16, hi=x+w-16; if(m.shape==='kernel') return null;
+  if(sd==='t'&&m.shape==='tower') ex.push([x+w/2-70,x+w/2+70]); if(sd==='b'&&m.shape==='bin'){ lo=x+44; hi=x+w-44; }
+  return {lo,hi,ex}; }
+const inRange=(R,v)=>R&&v>=R.lo&&v<=R.hi&&!R.ex.some(([a,b])=>v>a&&v<b);
+const OUT={l:1,r:0,t:3,b:2}, DV=[[1,0],[-1,0],[0,1],[0,-1]];
+function computeBelts(){
+  const bs=BB.map(([id,f,t,item,label],i)=>({id,f,t,item,label,i,rf:MM[f],rt:MM[t]}));
+  const CL=24, ST=20, BEND=160, CROSS=40, OVER=6, NEAR=36;
+  const nodes=Object.values(MM), TP=titlePlates(), PI=pipeInfo();
+  // 每条线被高亮时，可能和它同时亮着的组件：两端各自的邻居 + 走流程时同一步里的组件。只需避开这些
+  const nb={}; BB.forEach(x=>{ (nb[x[1]]=nb[x[1]]||new Set([x[1]])).add(x[2]); (nb[x[2]]=nb[x[2]]||new Set([x[2]])).add(x[1]); });
+  const co={}; bs.forEach(b=>{ co[b.id]=new Set([...nb[b.f],...nb[b.t]]); });
+  TOURS.forEach(t=>t.steps.forEach(s=>{ const ids=new Set(s.m.filter(id=>MM[id])); s.b.forEach(id=>{ const x=BB.find(y=>y[0]===id); if(x){ ids.add(x[1]); ids.add(x[2]); } }); s.b.forEach(id=>{ if(co[id]) ids.forEach(n=>co[id].add(n)); }); }));
+  const isK=id=>!!id&&MM[id].shape==='kernel';
+  // 障碍：组件（留出间隙）、标题牌、管道铭牌；内核只许横穿，管道只许竖穿
+  const obs=[];
+  nodes.forEach(m=>{ const e=ext(m); obs.push({r:[e[0]-CL,e[1]-CL,e[2]+CL,e[3]+CL],b:m.shape==='kernel'?2:3,id:m.id}); });
+  TP.forEach(t=>obs.push({r:[t[0]-10,t[1]-10,t[2]+10,t[3]+10],b:3,id:''}));
+  PI.forEach(p=>{ obs.push({r:[p.lx-100,p.my-90,p.lx+100,p.my-26],b:3,id:''}); obs.push({r:[Math.min(p.x0,p.tx),p.my-42,Math.max(p.x0,p.tx),p.my+42],b:1,id:''}); });
+  const hard=[...nodes.map(m=>{ const e=ext(m); return {r:[e[0]-12,e[1]-12,e[2]+12,e[3]+12],id:m.id}; }),...TP.map(t=>({r:t,id:''})),...PI.map(p=>({r:[p.lx-90,p.my-80,p.lx+90,p.my+40],id:''}))];
+  // 网格
+  const a1=MM.A1, exitY=k=>a1.y+30+k*48+12, xs=[], ys=[];
+  for(let x=WORLD.x;x<=WORLD.x+WORLD.w;x+=ST) xs.push(x);
+  for(let y=WORLD.y;y<=WORLD.y+WORLD.h;y+=ST) ys.push(y);
+  [0,1,2,3,4].forEach(k=>ys.push(exitY(k))); ys.sort((p,q)=>p-q);
+  const NX=xs.length, NY=ys.length, N=NX*ys.length;
+  const lb=(arr,v)=>{ let lo=0,hi=arr.length; while(lo<hi){ const mi=(lo+hi)>>1; if(arr[mi]<v) lo=mi+1; else hi=mi; } return lo; };
+  const raster=(arr,o)=>{ const [x0,y0,x1,y1]=o.r; for(let i=lb(xs,x0);i<NX&&xs[i]<x1;i++){ if(xs[i]<=x0) continue; for(let j=lb(ys,y0);j<NY&&ys[j]<y1;j++){ if(ys[j]<=y0) continue; arr[j*NX+i]|=o.b; } } };
+  const base=new Uint8Array(N); obs.filter(o=>!o.id||isK(o.id)).forEach(o=>raster(base,o));
+  const nodeObs=Object.fromEntries(obs.filter(o=>o.id&&!isK(o.id)).map(o=>[o.id,o]));
+  let code=base, cur=new Set();
+  const setBelt=b=>{ cur=co[b.id]; code=base.slice(); cur.forEach(id=>{ if(nodeObs[id]) raster(code,nodeObs[id]); }); };
+  const useH=new Uint8Array(N), useV=new Uint8Array(N), ptH=new Uint8Array(N), ptV=new Uint8Array(N);
+  const endUse={}; const nearUsed=(key,v)=>(endUse[key]||[]).some(u=>Math.abs(u-v)<NEAR);
+  const hitHard=(p,q,skip)=>{ const x0=Math.min(p[0],q[0]),x1=Math.max(p[0],q[0]),y0=Math.min(p[1],q[1]),y1=Math.max(p[1],q[1]);
+    return hard.some(o=>(!o.id||isK(o.id)||cur.has(o.id))&&!skip.includes(o.id)&&x1>o.r[0]&&x0<o.r[2]&&y1>o.r[1]&&y0<o.r[3]); };
+  const mark=P=>{ for(let k=0;k<P.length-1;k++){ const [p,q]=[P[k],P[k+1]];
+    if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); let i0=lb(xs,Math.min(p[0],q[0])), i1=lb(xs,Math.max(p[0],q[0])); for(let i=i0;i<i1&&i<NX;i++){ useH[j*NX+i]++; ptH[j*NX+i]=1; } }
+    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); let j0=lb(ys,Math.min(p[1],q[1])), j1=lb(ys,Math.max(p[1],q[1])); for(let j=j0;j<j1&&j<NY;j++){ useV[j*NX+i]++; ptV[j*NX+i]=1; } } } };
+  // 能直连就直连：两个组件正对、中间没有东西挡着
+  const straight=b=>{ const a=b.rf, z=b.rt, ea=ext(a), ez=ext(z); let sa,sz,lo,hi,vert;
+    if(ea[3]<=ez[1]){ sa='b'; sz='t'; vert=1; } else if(ez[3]<=ea[1]){ sa='t'; sz='b'; vert=1; } else if(ea[2]<=ez[0]){ sa='r'; sz='l'; vert=0; } else if(ez[2]<=ea[0]){ sa='l'; sz='r'; vert=0; } else return null;
+    const Ra=sideRange(a,sa), Rz=sideRange(z,sz); if(!Ra||!Rz) return null; lo=Math.max(Ra.lo,Rz.lo); hi=Math.min(Ra.hi,Rz.hi); if(hi<lo) return null;
+    const c=(lo+hi)/2, cand=[]; for(let d=0;d<=(hi-lo)/2;d+=10){ cand.push(c-d,c+d); }
+    for(const v of cand){ if(!inRange(Ra,v)||!inRange(Rz,v)||nearUsed(a.id+sa,v)||nearUsed(z.id+sz,v)) continue;
+      const p=vert?[v,edgeAt(a,sa,v)]:[edgeAt(a,sa,v),v], q=vert?[v,edgeAt(z,sz,v)]:[edgeAt(z,sz,v),v];
+      if(hitHard(p,q,[a.id,z.id])) continue;
+      const i=vert?lb(xs,v-ST/2):0, j=vert?0:lb(ys,v-ST/2); let busy=false;
+      if(vert){ for(let jj=lb(ys,Math.min(p[1],q[1]));jj<NY&&ys[jj]<Math.max(p[1],q[1]);jj++) if(useV[jj*NX+i]){ busy=true; break; } }
+      else { for(let ii=lb(xs,Math.min(p[0],q[0]));ii<NX&&xs[ii]<Math.max(p[0],q[0]);ii++) if(useH[j*NX+ii]){ busy=true; break; } }
+      if(busy) continue; b.sa=sa; b.sz=sz; return [p,q]; }
+    return null; };
+  // 某个组件可接线的网格点：沿每条边、紧贴间隙外侧
+  const portsOf=(m,role,other)=>{ const res=[], e=ext(m);
+    ['l','r','t','b'].forEach(sd=>{ const R=sideRange(m,sd); if(!R) return; const vert=sd==='t'||sd==='b';
+      let gi; if(sd==='l') gi=lb(xs,e[0]-CL+0.5)-1; else if(sd==='r') gi=lb(xs,e[2]+CL); else if(sd==='t') gi=lb(ys,e[1]-CL+0.5)-1; else gi=lb(ys,e[3]+CL);
+      const line=vert?xs:ys; for(let k=lb(line,R.lo);k<line.length&&line[k]<=R.hi;k++){ const v=line[k]; if(!inRange(R,v)) continue;
+        const i=vert?k:gi, j=vert?gi:k; if(i<0||j<0||i>=NX||j>=NY) continue; const p=j*NX+i; if(code[p]) continue;
+        const body=vert?[v,edgeAt(m,sd,v)]:[edgeAt(m,sd,v),v], grid=[xs[i],ys[j]]; if(hitHard(body,grid,[m.id])) continue;
+        const stub=Math.abs(body[0]-grid[0])+Math.abs(body[1]-grid[1]);
+        let pen=nearUsed(m.id+sd,v)?400:0; const oc=vert?other.x+other.w/2:other.y+other.h/2; pen+=Math.min(60,Math.abs(v-oc)*0.04);
+        res.push({p,dir:role==='a'?OUT[sd]:OUT[sd]^1,cost:stub+pen,body,sd,v}); } });
+    return res; };
+  // A*：带转弯惩罚、重叠惩罚、交叉惩罚
+  const G=new Float64Array(N*4), FR=new Int32Array(N*4), CLO=new Uint8Array(N*4);
+  let GOALBEST=null;
+  const runA=(starts,goals)=>{ GOALBEST=null; G.fill(Infinity); CLO.fill(0); FR.fill(-1);
+    const gm=new Map(); let gx0=1e9,gy0=1e9,gx1=-1e9,gy1=-1e9; goals.forEach((g,k)=>{ if(!gm.has(g.p)) gm.set(g.p,[]); gm.get(g.p).push(k); const x=xs[g.p%NX], y=ys[(g.p/NX)|0]; gx0=Math.min(gx0,x); gx1=Math.max(gx1,x); gy0=Math.min(gy0,y); gy1=Math.max(gy1,y); });
+    const H=p=>{ const x=xs[p%NX], y=ys[(p/NX)|0]; return Math.max(0,gx0-x,x-gx1)+Math.max(0,gy0-y,y-gy1); };
+    const hp=[]; const push=(f,s,g)=>{ hp.push([f,s,g]); let i=hp.length-1; while(i>0){ const pa=(i-1)>>1; if(hp[pa][0]<=hp[i][0]) break; [hp[pa],hp[i]]=[hp[i],hp[pa]]; i=pa; } };
+    const pop=()=>{ const top=hp[0], last=hp.pop(); if(hp.length){ hp[0]=last; let i=0; for(;;){ const l=2*i+1, r=l+1; let s=i; if(l<hp.length&&hp[l][0]<hp[s][0]) s=l; if(r<hp.length&&hp[r][0]<hp[s][0]) s=r; if(s===i) break; [hp[s],hp[i]]=[hp[i],hp[s]]; i=s; } } return top; };
+    const sk=new Map(); starts.forEach((s,k)=>{ const st=s.p*4+s.dir; if(s.cost<G[st]){ G[st]=s.cost; sk.set(st,k); push(s.cost+H(s.p),st,s.cost); } });
+    while(hp.length){ const [f,st,g]=pop(); if(st<0) break; if(CLO[st]||g>G[st]) continue; CLO[st]=1; const p=st>>2, d=st&3, i=p%NX, j=(p/NX)|0;
+      const gl=gm.get(p); if(gl) gl.forEach(k=>{ const tot=g+(goals[k].dir===d?0:BEND)+goals[k].cost; if(!GOALBEST||tot<GOALBEST[0]){ GOALBEST=[tot,k,st]; push(tot,-1,tot); } });
+      for(let nd=0;nd<4;nd++){ if(nd===(d^1)) continue; const ni=i+DV[nd][0], nj=j+DV[nd][1]; if(ni<0||nj<0||ni>=NX||nj>=NY) continue; const q=nj*NX+ni;
+        const hz=nd<2, bit=hz?1:2; if((code[p]&bit)||(code[q]&bit)) continue;
+        const len=hz?Math.abs(xs[ni]-xs[i]):Math.abs(ys[nj]-ys[j]), ep=Math.min(p,q);
+        const c=len+(nd!==d?BEND:0)+(hz?useH[ep]:useV[ep])*len*OVER+((hz?ptV[q]:ptH[q])?CROSS:0);
+        const ns=q*4+nd, ng=g+c; if(ng<G[ns]){ G[ns]=ng; FR[ns]=st; push(ng+H(q),ns,ng); } } }
+    if(!GOALBEST) return null; const path=[]; let st=GOALBEST[2], first=st; while(st>=0){ path.push(st>>2); first=st; st=FR[st]; }
+    path.reverse(); return {path,goal:goals[GOALBEST[1]],start:starts[sk.get(first)]};
+  };
+  const simplify=P=>{ const R=[P[0]]; for(let k=1;k<P.length;k++){ const q=P[k], p=R[R.length-1]; if(Math.abs(q[0]-p[0])<0.5&&Math.abs(q[1]-p[1])<0.5) continue;
+      if(R.length>=2){ const o=R[R.length-2]; if((Math.abs(o[0]-p[0])<0.5&&Math.abs(p[0]-q[0])<0.5)||(Math.abs(o[1]-p[1])<0.5&&Math.abs(p[1]-q[1])<0.5)){ R[R.length-1]=q; continue; } } R.push(q); } return R; };
+  const use=(m,sd,v)=>{ (endUse[m.id+sd]=endUse[m.id+sd]||[]).push(v); };
+  // 先直连，再按距离从近到远走线
+  const todo=[];
+  bs.forEach(b=>{ b.fixed=b.f==='A1'&&['A2','A3','A4','A5','A6'].includes(b.t); if(b.fixed){ todo.push(b); return; }
+    setBelt(b); const s=straight(b); if(s){ b.pts=s; mark(s); use(b.rf,b.sa,b.sa==='l'||b.sa==='r'?s[0][1]:s[0][0]); use(b.rt,b.sz,b.sz==='l'||b.sz==='r'?s[1][1]:s[1][0]); } else todo.push(b); });
+  const dist=b=>Math.abs(b.rf.x+b.rf.w/2-b.rt.x-b.rt.w/2)+Math.abs(b.rf.y+b.rf.h/2-b.rt.y-b.rt.h/2);
+  todo.sort((p,q)=>(q.fixed-p.fixed)||dist(p)-dist(q)).forEach(b=>{
+    setBelt(b); let starts;
+    if(b.fixed){ const k=['A2','A3','A4','A5','A6'].indexOf(b.t), y=exitY(k), x=a1.x+a1.w+44, j=ys.indexOf(y), i=lb(xs,ext(a1)[2]+CL); starts=[{p:j*NX+i,dir:0,cost:xs[i]-x,body:[x,y],sd:'r',v:y}]; }
+    else starts=portsOf(b.rf,'a',b.rt);
+    const goals=portsOf(b.rt,'z',b.rf); const R=runA(starts,goals);
+    if(!R){ const p=[b.rf.x+b.rf.w,b.rf.y+b.rf.h/2], q=[b.rt.x,b.rt.y+b.rt.h/2]; b.pts=[p,q]; return; }
+    const st0=R.start;
+    const P=[st0.body,...R.path.map(p=>[xs[p%NX],ys[(p/NX)|0]]),R.goal.body]; b.pts=simplify(P); b.sa=st0.sd; b.sz=R.goal.sd;
+    mark(b.pts); if(!b.fixed) use(b.rf,st0.sd,st0.v); use(b.rt,R.goal.sd,R.goal.v); });
+  // 圆角路径
+  bs.forEach(b=>{ const pts=b.pts; let d=`M${pts[0][0]},${pts[0][1]}`;
+    for(let i=1;i<pts.length-1;i++){ const p=pts[i-1],c=pts[i],n=pts[i+1]; const l1=Math.hypot(c[0]-p[0],c[1]-p[1])||1, l2=Math.hypot(n[0]-c[0],n[1]-c[1])||1, r=Math.min(18,l1/2,l2/2);
+      d+=` L${c[0]-(c[0]-p[0])/l1*r},${c[1]-(c[1]-p[1])/l1*r} Q${c[0]},${c[1]} ${c[0]+(n[0]-c[0])/l2*r},${c[1]+(n[1]-c[1])/l2*r}`; }
+    d+=` L${pts[pts.length-1][0]},${pts[pts.length-1][1]}`; b.d=d; });
+  // 标签：沿线找一个不压组件、不压标题、不压别的标签的位置
+  const ov=(a,o)=>Math.max(0,Math.min(a[2],o[2])-Math.max(a[0],o[0]))*Math.max(0,Math.min(a[3],o[3])-Math.max(a[1],o[1]));
+  const fixedAvoid=[...nodes.filter(m=>m.shape==='kernel').map(m=>[m.x,m.y,m.x+m.w,m.y+m.h]),...TP,...PI.map(p=>[p.lx-90,p.my-80,p.lx+90,p.my+40])], placed=[];
+  bs.forEach(b=>{ const avoid=[...fixedAvoid,...[...co[b.id]].map(id=>{ const e=ext(MM[id]); return [e[0]-8,e[1]-8,e[2]+8,e[3]+8]; })], lw=units(b.label)*19+60, P=b.pts; let best=null;
+    for(let k=0;k<P.length-1;k++){ const p=P[k], q=P[k+1], L=Math.hypot(q[0]-p[0],q[1]-p[1]), hz=Math.abs(q[1]-p[1])<1, n=Math.max(1,Math.floor(L/24));
+      for(let s=0;s<=n;s++){ const t=s/n, x=p[0]+(q[0]-p[0])*t, y=p[1]+(q[1]-p[1])*t;
+        (hz?[[x,y-26],[x,y+26]]:[[x,y],[x+lw/2+14,y],[x-lw/2-14,y]]).forEach(([cx,cy])=>{ const r=[cx-lw/2,cy-18,cx+lw/2,cy+18]; let sc=(hz?0:120)+Math.abs(t-0.5)*Math.min(L,400)*0.4;
+          avoid.forEach(o=>sc+=ov(r,o)*10); placed.forEach(o=>sc+=ov(r,o)*6); if(!best||sc<best.sc) best={sc,r,cx,cy}; }); } }
+    placed.push(best.r); b.lab=[best.cx,best.cy]; b.lw=lw; });
+  return bs; }
+
+/* ---------- 外形 ---------- */
+const fo=(x,y,w,h,html,cls)=>`<foreignObject x="${x}" y="${y}" width="${Math.max(10,w)}" height="${Math.max(10,h)}"><div xmlns="http://www.w3.org/1999/xhtml" class="${cls}">${html}</div></foreignObject>`;
+function text(m,x,y,w,iconOff){ const ic=iconOff===false?'':`<text class="ic" x="${x}" y="${y+28}">${m.icon||''}</text>`; const nx=iconOff===false?x:x+44;
+  return ic+fo(nx,y,w-(nx-x),m.nameH+4,`<b>${esc(m.name)}</b>`,'nm')+fo(x,y+m.nameH+10,w,m.descH+6,esc(m.one||''),'ds'); }
+function shape(m){
+  const {x,y,w,h}=m, i=INS[m.shape], tw=w-i.l-i.r, cx=x+i.l, cy=y+i.t; let s='';
+  const R=(cls,rx)=>`<rect class="body ${cls}" x="${x}" y="${y}" width="${w}" height="${h}" rx="${rx==null?14:rx}"/>`;
+  switch(m.shape){
+   case 'window': s=R('c-entry',10)+`<rect class="tbar" x="${x}" y="${y}" width="${w}" height="30" rx="10"/><circle cx="${x+20}" cy="${y+15}" r="6" fill="#f87171"/><circle cx="${x+40}" cy="${y+15}" r="6" fill="#fbbf24"/><circle cx="${x+60}" cy="${y+15}" r="6" fill="#4ade80"/>`+text(m,cx,cy,tw); break;
+   case 'building': s=`<path class="body c-entry" d="M${x+30},${y} L${x+30},${y-30} L${x+w*0.45},${y-30} L${x+w*0.45},${y-44} L${x+w*0.75},${y-44} L${x+w*0.75},${y} Z"/>`+R('c-entry',6)+text(m,cx,cy,tw); break;
+   case 'plug': s=`<rect class="prong" x="${x+w}" y="${y+h*0.3}" width="60" height="14" rx="4"/><rect class="prong" x="${x+w}" y="${y+h*0.6}" width="60" height="14" rx="4"/>`+R('c-plug',20)+text(m,cx,cy,tw); break;
+   case 'flask': s=`<path class="body c-flask" d="M${x+w/2-34},${y+2} L${x+w/2-34},${y-44} L${x+w/2+34},${y-44} L${x+w/2+34},${y+2} Z"/>`+R('c-flask',36)+text(m,cx,cy,tw); break;
+   case 'rack': s=`<rect class="back" x="${x+28}" y="${y-28}" width="${w}" height="${h}" rx="12"/><rect class="back" x="${x+14}" y="${y-14}" width="${w}" height="${h}" rx="12"/>`+R('c-rack',12);
+     for(let k=0;k<Math.floor((h-30)/26);k++) s+=`<rect class="slot" x="${x+14}" y="${y+18+k*26}" width="34" height="14" rx="3"/><circle cx="${x+42}" cy="${y+25+k*26}" r="3" class="led"/>`;
+     s+=text(m,cx,cy,tw)+`<text class="note" x="${cx}" y="${y+h-20}">↖ ${esc(STACK_NOTE[m.id]||'')}</text>`; break;
+   case 'switch': { const lw=SW_L; s=R('c-switch')+`<line class="rail" x1="${x+lw}" y1="${y+20}" x2="${x+lw}" y2="${y+h-20}"/>`+text(m,cx,cy,lw-i.l-10);
+     const lab=['页面请求 /api','接入应用 /open','工具回调 /internal/tool','非工具回调 /internal/exec','评估执行器 /internal/eval'];
+     lab.forEach((t,k)=>{ const ly=y+30+k*48+12; s+=`<path class="track" d="M${x+lw},${y+h/2} C${x+lw+40},${y+h/2} ${x+lw+20},${ly} ${x+lw+70},${ly} L${x+w+30},${ly}"/><polygon class="tip" points="${x+w+30},${ly-8} ${x+w+44},${ly} ${x+w+30},${ly+8}"/><text class="route" x="${x+lw+76}" y="${ly-8}">${esc(t)}</text>`; });
+     s+=`<polygon class="tip in" points="${x-16},${y+h/2-10} ${x},${y+h/2} ${x-16},${y+h/2+10}"/>`; break; }
+   case 'booth': case 'booth3': s=R('c-booth',8)+`<rect class="roofbar" x="${x-6}" y="${y-4}" width="${w+12}" height="14" rx="4"/><rect class="post" x="${x+w}" y="${y+16}" width="14" height="44" rx="3"/><rect class="arm" x="${x+w+8}" y="${y+22}" width="70" height="12" rx="4"/>`+text(m,cx,cy,tw);
+     if(m.shape==='booth3'){ const sw=(tw-20)/3; ['① 验签','② 取凭据','③ 交给模块'].forEach((t,k)=>{ const bx=cx+k*(sw+10), by=y+h-i.b-70; s+=`<rect class="mini" x="${bx}" y="${by}" width="${sw}" height="60" rx="6"/><rect class="roofbar" x="${bx-3}" y="${by-4}" width="${sw+6}" height="9" rx="3"/><text class="stg" x="${bx+sw/2}" y="${by+38}" text-anchor="middle">${t}</text>`; if(k<2) s+=`<text class="stg" x="${bx+sw+1}" y="${by+38}">›</text>`; }); } break;
+   case 'stamp': s=`<rect class="body c-stamp" x="${x+w/2-24}" y="${y-48}" width="48" height="36" rx="10"/><rect class="body c-stamp" x="${x+w/2-60}" y="${y-14}" width="120" height="18" rx="6"/>`+R('c-stamp',4)+text(m,cx,cy,tw); break;
+   case 'twoway': s=`<path class="body c-press" d="M${x},${y} L${x+w-50},${y} L${x+w},${y+h/2} L${x+w-50},${y+h} L${x},${y+h} L${x+36},${y+h/2} Z"/>`+text(m,cx,cy,tw); break;
+   case 'dial': s=`<rect class="body c-clock" x="${x+48}" y="${y}" width="${w-48}" height="${h}" rx="${Math.min(h/2,40)}"/><circle class="body c-clock" cx="${x+52}" cy="${y+h/2}" r="52"/><circle class="face" cx="${x+52}" cy="${y+h/2}" r="38"/><line class="hand" x1="${x+52}" y1="${y+h/2}" x2="${x+52}" y2="${y+h/2-28}"/><line class="hand" x1="${x+52}" y1="${y+h/2}" x2="${x+72}" y2="${y+h/2+8}"/>`+text(m,cx,cy,tw,false); break;
+   case 'tower': s=`<path class="mast" d="M${x+w/2-40},${y} L${x+w/2},${y-80} L${x+w/2+40},${y}"/><line class="mast" x1="${x+w/2-22}" y1="${y-40}" x2="${x+w/2+22}" y2="${y-40}"/><path class="wave" d="M${x+w/2+30},${y-110} Q${x+w/2+60},${y-80} ${x+w/2+30},${y-50}"/><path class="wave" d="M${x+w/2-30},${y-110} Q${x+w/2-60},${y-80} ${x+w/2-30},${y-50}"/><circle class="led" cx="${x+w/2}" cy="${y-84}" r="8"/>`+R('c-tower',12)+text(m,cx,cy,tw); break;
+   case 'funnel': s=`<path class="body c-tower" d="M${x},${y+30} L${x+56},${y} L${x+w},${y} L${x+w},${y+h} L${x+56},${y+h} L${x},${y+h-30} Z"/><path class="chev" d="M${x+w-10},${y+h/2-30} l-26,30 l26,30"/>`+text(m,cx,cy,tw); break;
+   case 'mailbox': s=`<path class="body c-mail" d="M${x},${y+40} Q${x},${y-30} ${x+w/2},${y-30} Q${x+w},${y-30} ${x+w},${y+40} L${x+w},${y+h} L${x},${y+h} Z"/><rect class="slotw" x="${x+w/2-50}" y="${y-8}" width="100" height="10" rx="5"/>`+text(m,cx,cy,tw); break;
+   case 'tray': { const c=CAP[m.id]; s=R('c-tray',6)+`<rect class="rail2" x="${x-10}" y="${y+h-12}" width="${w+20}" height="12" rx="6"/>`+text(m,cx,cy,tw);
+     const gy=y+h-i.b-34; if(c.n){ const sw=Math.min(40,(tw-units(c.t)*17-24)/c.n-4); for(let k=0;k<c.n;k++) s+=`<rect class="cap" x="${cx+k*(sw+4)}" y="${gy}" width="${sw}" height="22" rx="4"/>`; s+=`<text class="capt" x="${cx+c.n*(sw+4)+10}" y="${gy+18}">${esc(c.t)}</text>`; } else s+=`<text class="capt" x="${cx}" y="${gy+18}">∞ ${esc(c.t)}</text>`; break; }
+   case 'hex': s=`<path class="body c-press" d="M${x+40},${y} L${x+w-40},${y} L${x+w},${y+h/2} L${x+w-40},${y+h} L${x+40},${y+h} L${x},${y+h/2} Z"/>`+text(m,cx,cy,tw); break;
+   case 'arrowL': s=`<path class="body c-tower" d="M${x},${y+h/2} L${x+54},${y} L${x+w},${y} L${x+w},${y+h} L${x+54},${y+h} Z"/>`+text(m,cx,cy,tw); break;
+   case 'pill': s=R('c-clock',Math.min(h/2,48))+`<circle class="face" cx="${x+58}" cy="${y+h/2}" r="36"/><line class="hand" x1="${x+58}" y1="${y+h/2}" x2="${x+58}" y2="${y+h/2-26}"/><line class="hand" x1="${x+58}" y1="${y+h/2}" x2="${x+76}" y2="${y+h/2}"/>`+text(m,cx,cy,tw,false); break;
+   case 'bin': s=`<rect class="body c-clock" x="${x-8}" y="${y-22}" width="${w+16}" height="16" rx="6"/><rect class="body c-clock" x="${x+w/2-30}" y="${y-34}" width="60" height="14" rx="5"/><path class="body c-clock" d="M${x},${y} L${x+w},${y} L${x+w-34},${y+h} L${x+34},${y+h} Z"/>`+text(m,cx,cy,tw); break;
+   case 'stack': s=`<rect class="back" x="${x+32}" y="${y-32}" width="${w}" height="${h}" rx="14"/><rect class="back" x="${x+16}" y="${y-16}" width="${w}" height="${h}" rx="14"/>`+R('c-long')+text(m,cx,cy,tw)+`<text class="note" x="${cx}" y="${y+h-24}">× N　${esc(STACK_NOTE[m.id]||'')}</text>`; break;
+   case 'kernel': { s=R('c-ker',18)+text(m,cx,cy,tw,false); const chips=['数据库访问\n连接池 · 开事务','发事件\n和业务写入同一事务','防重复提交\n先占位再做事','任务\n提交 · 查询 · 取消','常用工具\n时钟 · 编号 · 日志 · 密钥'];
+     let yy=cy+m.nameH+m.descH+30; const ch=Math.min(110,(y+h-yy-20)/5-14); chips.forEach(t=>{ s+=`<rect class="chip" x="${cx}" y="${yy}" width="${tw}" height="${ch}" rx="12"/>`+fo(cx+10,yy+8,tw-20,ch-16,esc(t).replace('\n','<br>'),'cp'); yy+=ch+14; }); break; }
+   case 'cyl': case 'cylg': { const g=m.shape==='cylg', ry=22;
+     s=`<path class="body ${g?'c-cylg':'c-cyl'}" d="M${x},${y} L${x},${y+h-ry} A${w/2},${ry} 0 0 0 ${x+w},${y+h-ry} L${x+w},${y} Z"/><ellipse class="body ${g?'c-cylg':'c-cyl'} top" cx="${x+w/2}" cy="${y}" rx="${w/2}" ry="${ry}"/>`;
+     s+=fo(cx,cy,tw,m.nameH+4,`<b>${m.icon} ${esc(m.name)}</b>`,'nm tb');
+     if(g) s+=fo(cx,cy+m.nameH+10,tw,m.descH+6,esc(m.one||''),'ds'); else (m.cols||[]).forEach((c,k)=>{ const fit=units(c[0])*17+16+c[1].length*7.6<tw; s+=`<text class="colt" x="${cx}" y="${cy+m.nameH+30+k*28}">▪ ${esc(c[0])}${fit?`<tspan class="en" dx="10">${esc(c[1])}</tspan>`:''}</text>`; }); break; }
+   case 'house': s=`<path class="body c-house" d="M${x+12},${y+2} L${x+w/2},${y-50} L${x+w-12},${y+2}"/>`+R('c-house',8)+text(m,cx,cy,tw); break;
+  }
+  return `<g class="node" data-node="${m.id}">${s}</g>`; }
+
+/* ---------- 绘制 ---------- */
+function render(){
+  const bs=computeBelts(); st.bs=bs; let s='';
+  s+=`<defs><pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="#131c2c" stroke-width="1.2"/></pattern>
+   <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#64748b"/></marker></defs>
+   <rect x="-20000" y="-20000" width="60000" height="60000" fill="#0a101c"/><rect x="-20000" y="-20000" width="60000" height="60000" fill="url(#grid)"/>`;
+  REGIONS.forEach(r=>{ if(r.stack) s+=`<rect class="region ${r.cls} ghost" x="${r.x+22}" y="${r.y+22}" width="${r.w}" height="${r.h}" rx="30"/>`; s+=`<rect class="region ${r.cls}" x="${r.x}" y="${r.y}" width="${r.w}" height="${r.h}" rx="30"/>`; });
+  SECS.forEach(c=>{ s+=`<rect class="sec" x="${c.x}" y="${c.y}" width="${c.w}" height="${c.h}" rx="20"/>`; });
+  // 连接池：内核到数据库的粗管道
+  pipeInfo().forEach(({k,my,x0,tx,lx})=>{
+    [-26,0,26].forEach(o=>{ s+=`<line class="pipe" x1="${x0}" y1="${my+o}" x2="${tx}" y2="${my+o}"/>`; });
+    s+=`<rect class="pplate" x="${lx-90}" y="${my-80}" width="180" height="44" rx="10"/><text class="ptxt" x="${lx}" y="${my-64}" text-anchor="middle">共享连接池</text><text class="ptxt s" x="${lx}" y="${my-44}" text-anchor="middle">每个进程 ${k==='K1'?'10–20 条':'5–10 条'}</text>`; });
+  s+='<g id="belts">'+bs.map(b=>{ const it=ITEMS[b.item];
+    return `<g class="belt" data-belt="${b.id}"><path class="bh" d="${b.d}"/><path class="bb" d="${b.d}"/><path id="p_${b.id}" class="bm" d="${b.d}" style="--ic:${it.c}" marker-end="url(#ah)"/></g>`; }).join('')+'</g>';
+  s+='<g id="nodes">'+Object.values(MM).filter(m=>m.shape!=='kernel').map(shape).join('')+'</g><g id="titles">';
+  REGIONS.forEach(r=>{ const t=r.name, tw=units(t)*32+50; s+=`<rect class="tplate" x="${r.x+24}" y="${r.y+18}" width="${tw}" height="56" rx="12"/><text class="rt" x="${r.x+48}" y="${r.y+58}">${esc(t)}</text>`;
+    if(r.sub) s+=`<rect class="tplate s" x="${r.x+24+tw+12}" y="${r.y+28}" width="${units(r.sub)*21+40}" height="38" rx="10"/><text class="rs" x="${r.x+24+tw+32}" y="${r.y+55}">${esc(r.sub)}</text>`; });
+  SECS.forEach(c=>{ const tw=units(c.name)*22+40; s+=`<rect class="tplate w" x="${c.x+14}" y="${c.y+12}" width="${tw}" height="38" rx="9"/><text class="st" x="${c.x+32}" y="${c.y+39}">${esc(c.name)}</text>`; });
+  s+='</g><g id="beltsTop"></g><g id="items"></g><g id="kernels">'+Object.values(MM).filter(m=>m.shape==='kernel').map(shape).join('')+'</g><g id="labels">'+bs.map(b=>{ const it=ITEMS[b.item];
+    return `<g class="blab" data-belt="${b.id}"><rect x="${b.lab[0]-b.lw/2}" y="${b.lab[1]-18}" width="${b.lw}" height="36" rx="9"/><text x="${b.lab[0]}" y="${b.lab[1]+8}">${it.e} ${esc(b.label)}</text></g>`; }).join('')+'</g>';
+  $('#svg').innerHTML=s; setVB(); applyHL(); }
+function spawn(ids){ const g=$('#items'); g.innerHTML='';
+  ids.forEach(id=>{ const b=st.bs.find(x=>x.id===id), p=document.getElementById('p_'+id); if(!b||!p) return; const len=p.getTotalLength(), dur=Math.max(2.2,len/280).toFixed(2), it=ITEMS[b.item];
+    const e=document.createElementNS(NS,'g'); e.setAttribute('class','item'); e.innerHTML=`<circle r="16" fill="#0b1220" stroke="${it.c}" stroke-width="2.5"/><text y="7" text-anchor="middle" font-size="18">${it.e}</text><animateMotion dur="${dur}s" repeatCount="indefinite"><mpath href="#p_${id}"/></animateMotion>`; g.appendChild(e); }); }
+const curStep=()=>TOURS.find(x=>x.id===st.tour).steps[st.step];
+function focus(){
+  if(st.tour){ const s=curStep(); const n=new Set(s.m.filter(id=>MM[id])); const b=new Set(s.b.filter(id=>BB.find(x=>x[0]===id))); b.forEach(id=>{ const x=BB.find(y=>y[0]===id); n.add(x[1]); n.add(x[2]); }); return {n,b}; }
+  if(st.selBelt){ const x=BB.find(y=>y[0]===st.selBelt); return {n:new Set([x[1],x[2]]),b:new Set([st.selBelt])}; }
+  if(!st.sel) return null; const n=new Set([st.sel]), b=new Set(); BB.forEach(x=>{ if(x[1]===st.sel||x[2]===st.sel){ b.add(x[0]); n.add(x[1]); n.add(x[2]); } }); return {n,b}; }
+function applyHL(){ const fs=focus(), top=$('#beltsTop'), base=$('#belts'); Array.from(top.children).forEach(e=>base.appendChild(e));
+  $$('.node').forEach(e=>{ const id=e.dataset.node; e.classList.toggle('dim',!!fs&&!fs.n.has(id)); e.classList.toggle('hl',!!fs&&fs.n.has(id)); e.classList.toggle('sel',st.sel===id); });
+  $$('#belts .belt').forEach(e=>{ const on=!!fs&&fs.b.has(e.dataset.belt); e.classList.toggle('hl',on); e.classList.toggle('dim',!!fs&&!on); if(on) top.appendChild(e); });
+  $$('#labels .blab').forEach(e=>e.classList.toggle('on',!!fs&&fs.b.has(e.dataset.belt)));
+  spawn(fs?[...fs.b]:[]); }
+function setVB(){ const v=st.vb; $('#svg').setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`); }
+function animVB(to){ if(document.body.classList.contains('still')){ st.vb=to; setVB(); return; } const from={...st.vb}, t0=performance.now(), D=650;
+  (function f(t){ const k=Math.min(1,(t-t0)/D), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; st.vb={x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e,w:from.w+(to.w-from.w)*e,h:from.h+(to.h-from.h)*e}; setVB(); if(k<1) requestAnimationFrame(f); })(t0); }
+function boxFit(x0,y0,x1,y1,minW){ const r=$('#stage').getBoundingClientRect(); let w=Math.max(x1-x0,minW||1200), h=y1-y0; const ar=r.width/r.height; if(w/h>ar) h=w/ar; else w=h*ar; return {x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h}; }
+function zoomTo(ids){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const m=MM[id]; if(!m) return; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y0=Math.min(y0,m.y-d-40); x1=Math.max(x1,m.x+m.w); y1=Math.max(y1,m.y+m.h); }); if(x0>x1) return; animVB(boxFit(x0-140,y0-80,x1+140,y1+240)); }
+const goRegion=(...ids)=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const r=RR[id]; x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w+22); y1=Math.max(y1,r.y+r.h+22); }); animVB(boxFit(x0-60,y0-60,x1+60,y1+60,1)); };
+
+/* ---------- 详情 ---------- */
+function showNode(id){ const m=MM[id]; const ins=BB.filter(b=>b[2]===id), outs=BB.filter(b=>b[1]===id);
+  const li=(b,o)=>`<li data-belt="${b[0]}">${ITEMS[b[3]].e} ${o?'→ '+esc(nameOf(b[2])):'← '+esc(nameOf(b[1]))}：${esc(b[4])}</li>`;
+  let h=`<h2>${m.icon||''} ${esc(m.name)}</h2><p class="mut">位置：${esc(RR[m.z].name)}${m.ws?' › '+esc(SS[m.ws].name):''}</p><p>${esc(m.one||'')}</p>`;
+  if(m.steps) h+=`<h3>具体做什么</h3><ul>${m.steps.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`;
+  if(m.cols&&m.cols.length) h+=`<h3>列（中文名 · 列名 · 干什么用）</h3><ul class="cols">${m.cols.map(x=>`<li><b>${esc(x[0])}</b> <code>${esc(x[1])}</code><br>${esc(x[2])}</li>`).join('')}</ul>`;
+  if(CAP[id]) h+=`<h3>容量</h3><p>${esc(CAP[id].t)}</p>`; if(STACK_NOTE[id]) h+=`<h3>数量</h3><p>${esc(STACK_NOTE[id])}</p>`;
+  if(ins.length) h+=`<h3>连进来的</h3><ul class="bl">${ins.map(b=>li(b,0)).join('')}</ul>`;
+  if(outs.length) h+=`<h3>连出去的</h3><ul class="bl">${outs.map(b=>li(b,1)).join('')}</ul>`;
+  const meta=[m.ref?'RFC-0004 第 '+m.ref.replace(/§/g,'')+' 节':'',m.code?'代码目录：'+m.code:''].filter(Boolean).join('　'); if(meta) h+=`<p class="mut">${esc(meta)}</p>`;
+  $('#panel').innerHTML=h; }
+function showBelt(id){ const b=BB.find(x=>x[0]===id), it=ITEMS[b[3]]; $('#panel').innerHTML=`<h2>${it.e} ${esc(b[4])}</h2><p><b>${esc(nameOf(b[1]))}</b> → <b>${esc(nameOf(b[2]))}</b></p><p class="mut">传的是：${esc(it.n)}</p>`; }
+
+/* ---------- 交互：只在点击时高亮 ---------- */
+const stage=$('#stage'); let drag=null;
+stage.addEventListener('wheel',e=>{ e.preventDefault(); const r=stage.getBoundingClientRect(), v=st.vb, k=e.deltaY>0?1.13:1/1.13; const mx=v.x+(e.clientX-r.left)/r.width*v.w, my=v.y+(e.clientY-r.top)/r.height*v.h; v.w*=k; v.h*=k; v.x=mx-(e.clientX-r.left)/r.width*v.w; v.y=my-(e.clientY-r.top)/r.height*v.h; setVB(); },{passive:false});
+stage.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY,vx:st.vb.x,vy:st.vb.y,moved:false}; });
+window.addEventListener('pointermove',e=>{ if(!drag) return; const r=stage.getBoundingClientRect(), dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>5) drag.moved=true; if(drag.moved){ st.vb.x=drag.vx-dx/r.width*st.vb.w; st.vb.y=drag.vy-dy/r.height*st.vb.h; setVB(); stage.classList.add('grab'); } });
+window.addEventListener('pointerup',()=>{ if(drag&&drag.moved) stage.dataset.dragged='1'; drag=null; stage.classList.remove('grab'); });
+document.addEventListener('click',e=>{ if(stage.dataset.dragged){ delete stage.dataset.dragged; return; } const t=e.target;
+  const li=t.closest('li[data-belt]'); if(li){ if(st.tour) return; st.sel=null; st.selBelt=li.dataset.belt; showBelt(st.selBelt); applyHL(); return; }
+  const n=t.closest('.node'); if(n){ if(st.tour) return; st.selBelt=null; st.sel=n.dataset.node; showNode(st.sel); applyHL(); return; }
+  const b=t.closest('.belt,.blab'); if(b){ if(st.tour) return; st.sel=null; st.selBelt=b.dataset.belt; showBelt(st.selBelt); applyHL(); return; }
+  if(t.closest('#svg')&&!st.tour){ st.sel=null; st.selBelt=null; applyHL(); } });
+stage.addEventListener('dblclick',e=>{ const n=e.target.closest('.node'); if(n) zoomTo([n.dataset.node]); });
+$('#gall').onclick=()=>animVB(boxFit(WORLD.x,WORLD.y,WORLD.x+WORLD.w,WORLD.y+WORLD.h,1));
+$('#bgl').onclick=()=>{ document.body.classList.remove('nopanel'); $('#panel').innerHTML='<h2>名词解释</h2><dl class="gl">'+GLOSSARY.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>'; $('#panel').scrollTop=0; };
+$('#gapi').onclick=()=>goRegion('GATE','API'); $('#gtop').onclick=()=>goRegion('NB','DSHR'); $('#gdb').onclick=()=>goRegion('DBZ'); $('#gwk').onclick=()=>goRegion('WK');
+$('#bpanel').onclick=()=>{ document.body.classList.toggle('nopanel'); $('#bpanel').textContent=document.body.classList.contains('nopanel')?'显示右侧面板':'隐藏右侧面板'; };
+$('#tour').innerHTML='<option value="">▶ 走一遍…</option>'+TOURS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
+function tourGo(){ const t=TOURS.find(x=>x.id===st.tour), s=t.steps[st.step]; $('#tourbar').style.display='flex';
+  $('#ttxt').innerHTML=`<b>${esc(t.name)}</b>　第 ${st.step+1} / ${t.steps.length} 步<br>${esc(s.t)}`; $('#tp').disabled=st.step===0; $('#tn').disabled=st.step===t.steps.length-1;
+  st.sel=null; st.selBelt=null; applyHL(); const f=focus(); zoomTo([...f.n]); const main=s.m.find(id=>MM[id]&&MM[id].z!=='DBZ')||s.m.find(id=>MM[id]); if(main) showNode(main); }
+$('#tour').onchange=e=>{ if(!e.target.value) return endTour(); st.tour=e.target.value; st.step=0; tourGo(); };
+function endTour(){ st.tour=null; $('#tourbar').style.display='none'; $('#tour').value=''; applyHL(); }
+$('#tp').onclick=()=>{ st.step--; tourGo(); }; $('#tn').onclick=()=>{ st.step++; tourGo(); }; $('#tx').onclick=endTour;
+document.addEventListener('keydown',e=>{ if(!st.tour) return; if(e.key==='ArrowRight'&&!$('#tn').disabled){st.step++;tourGo();} if(e.key==='ArrowLeft'&&!$('#tp').disabled){st.step--;tourGo();} if(e.key==='Escape') endTour(); });
+$('#legend').innerHTML='<b>连线上传的内容</b>　'+Object.values(ITEMS).map(i=>`<span><i style="border-color:${i.c}">${i.e}</i>${esc(i.n)}</span>`).join('');
+$('#panel').innerHTML=`<h2>RFC-0004 后端框架</h2><ul>
+<li><b>两个进程</b>：平台后端是两个程序。<b>请求进程</b>（蓝框，程序名 platform-api）接住所有外部请求，处理完马上返回；<b>后台进程</b>（绿框，程序名 platform-worker）不接请求，只在后台跑任务、盯 DSH、定时清理。框后面的叠影表示可以部署多个（后台进程部署 2 个）。</li>
+<li><b>布局</b>：最上面一排是其他模块（只画和框架对接的地方）和 DSH；中间从左到右是外部入口 → 请求进程 → 数据库 → 后台进程。数据库夹在两个进程中间，左半是请求进程用的表，右半是后台进程用的表。</li>
+<li><b>内核</b>是两个进程里贴着数据库的紫色竖条：框架给各模块的公共服务。紫色粗管道是共享连接池，铭牌上的条数是<b>每个进程</b>的。</li>
+<li><b>外形</b>：岗亭（带黄黑栏杆）是认证；道岔是请求分路；表盘是定时类；天线塔是浏览器推送连接；托盘上的刻度是执行池的并发上限；叠在一起的卡片表示有很多个（每个会话 / 每个 DSH 进程一个）；圆柱是表，列的中文名后面灰色的是列名。</li>
+<li><b>看不懂的词</b>点顶部「名词解释」。</li>
+<li><b>点击</b>组件或连线才高亮：相关连线画到最上层、标出传的是什么，并有图标沿线走；点空白处取消。右侧会列出它具体做什么、表的每一列干什么用。</li>
+<li>双击组件放大；滚轮缩放、按住拖动；顶部「去看」跳到各区域；「▶ 走一遍」逐步讲 6 个场景，左右方向键翻页。</li></ul>`;
+const hh=new URLSearchParams(location.hash.slice(1)); if(hh.get('noanim')) document.body.classList.add('still');
+render(); st.vb=boxFit(WORLD.x,WORLD.y,WORLD.x+WORLD.w,WORLD.y+WORLD.h,1); setVB();
+if(hh.get('go')){ ({api:()=>$('#gapi').click(),wk:()=>$('#gwk').click(),db:()=>$('#gdb').click(),top:()=>$('#gtop').click()})[hh.get('go')](); }
+if(hh.get('tour')){ st.tour=hh.get('tour'); st.step=+(hh.get('step')||0); $('#tour').value=st.tour; tourGo(); }
+if(hh.get('gl')) $('#bgl').click();
+if(hh.get('sel')){ st.sel=hh.get('sel'); showNode(st.sel); applyHL(); }
+})();
+
+</script></body></html>

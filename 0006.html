@@ -1,0 +1,1102 @@
+<!DOCTYPE html><html lang="zh-CN"><head><meta name="robots" content="noindex,nofollow"><meta charset="utf-8"><title>RFC-0006 身份与权限大图</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;height:100vh;display:flex;flex-direction:column;background:#0a101c;color:#e2e8f0;font:14px/1.5 -apple-system,"PingFang SC","Microsoft YaHei","Segoe UI",sans-serif;overflow:hidden}
+header{display:flex;gap:8px;align-items:center;padding:8px 14px;background:#020617;border-bottom:1px solid #1e293b;flex-wrap:wrap;z-index:20}
+header h1{font-size:17px;margin:0 8px 0 0}
+header button,header select{font:inherit;padding:4px 11px;border-radius:7px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;cursor:pointer}
+.sep{width:1px;height:22px;background:#334155;margin:0 4px}.mut{color:#94a3b8}
+#stage{flex:1;position:relative;overflow:hidden;background-color:#0a101c;background-image:linear-gradient(#111a29 1px,transparent 1px),linear-gradient(90deg,#111a29 1px,transparent 1px);background-size:48px 48px}
+#stage.grab{cursor:grabbing}
+#world{position:absolute;left:0;top:0;transform-origin:0 0}
+.plat{position:absolute;border:3px dashed #2b3a55;border-radius:30px;background:rgba(37,99,235,.035)}
+.plat span{position:absolute;left:22px;top:10px;font-size:26px;color:#64748b;font-weight:700}
+/* 区 */
+.reg{position:absolute;z-index:1;border:3px solid var(--c);border-radius:20px;background:color-mix(in srgb,var(--c) 7%,#0b1220);overflow:hidden;cursor:pointer;transition:opacity .3s,box-shadow .3s,filter .3s}
+.reg .hd{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;gap:10px;padding:18px}
+.reg .t1{display:flex;align-items:center;gap:14px}
+.reg .ic{font-size:54px;line-height:1}
+.reg .nm{font-size:54px;font-weight:800;color:#f8fafc;line-height:1.2}
+.reg .one{font-size:29px;color:#cbd5e1;line-height:1.4;max-width:94%}
+.reg .cnt{font-size:22px;color:var(--c);margin-top:2px}
+.reg .bd{display:none}
+.reg.open .hd{position:static;align-items:flex-start;text-align:left;gap:2px;padding:12px 16px 4px}
+.reg.open .t1{gap:10px}.reg.open .ic{font-size:30px}.reg.open .nm{font-size:25px}.reg.open .one{font-size:16px;max-width:none}.reg.open .cnt{display:none}
+.reg.open .bd{display:block;padding:0 14px 14px}
+.reg.wide.open .bd{display:grid;grid-template-columns:2fr 1fr 1fr 1.25fr;gap:18px}
+.grp{margin-top:4px}.gh{font-size:15px;font-weight:700;color:var(--c);margin:6px 2px 5px;letter-spacing:.5px}
+.gi{display:flex;flex-wrap:wrap;gap:7px}
+.cards .gi{display:grid;grid-template-columns:1fr 1fr}
+.col .gi{flex-direction:column;flex-wrap:nowrap}
+.col2 .gi{display:grid;grid-template-columns:1fr 1fr}
+.chip{display:inline-flex;align-items:center;flex-wrap:wrap;gap:6px;font-size:18px;line-height:1.3;padding:6px 12px;border-radius:10px;background:#0f1a2e;border:1.5px solid color-mix(in srgb,var(--c) 55%,transparent);color:#e2e8f0;cursor:pointer}
+.chip .bdg{display:inline-flex;gap:4px;flex-wrap:wrap}
+.chip .bdg i{font:13px/1.5 Consolas,monospace;font-style:normal;padding:0 6px;border-radius:6px;background:color-mix(in srgb,var(--c) 22%,transparent);color:#f1f5f9}
+.chip.card{flex-direction:column;align-items:flex-start;gap:2px}
+.chip.card .cn{font:15px/1.35 Consolas,monospace;color:#ede9fe;word-break:break-all}
+.chip .sub{font-size:14px;color:#9fb0c6}
+.chip.table{flex-direction:column;align-items:flex-start;gap:0;border-left:6px solid var(--c);padding:4px 10px}
+.chip.table .cn{font:15.5px/1.35 Consolas,monospace;color:#fde9c4}
+.chip.q{border-style:dashed;border-radius:22px;padding:4px 14px;font-size:16.5px}
+.chip.hit{border:2.5px solid #facc15;background:#2a2205;box-shadow:0 0 0 3px rgba(250,204,21,.22)}
+.chip.cur{outline:3px solid #f8fafc;outline-offset:1px}
+/* 平台外的系统 */
+.ext{position:absolute;z-index:1;border:2.5px solid #64748b;border-radius:16px;background:#111827;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:12px;cursor:pointer;transition:opacity .3s}
+.ext .en{font-size:34px;font-weight:800;line-height:1.3}.ext .eo{font-size:21px;color:#94a3b8;white-space:pre-line;line-height:1.4}
+.ext.window{padding-top:34px}.ext .bar{position:absolute;left:0;right:0;top:0;height:26px;background:#1f2937;border-radius:13px 13px 0 0;display:flex;gap:7px;align-items:center;padding-left:12px}
+.ext .bar i{width:11px;height:11px;border-radius:50%;background:#f87171}.ext .bar i:nth-child(2){background:#fbbf24}.ext .bar i:nth-child(3){background:#4ade80}
+.ext.stack{box-shadow:9px 9px 0 -2px #111827,9px 9px 0 0 #475569,18px 18px 0 -2px #111827,18px 18px 0 0 #334155}
+.ext.dashed{border-style:dashed}
+.ext.on{border-color:#facc15}
+/* 连线 */
+#lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none;overflow:visible}
+.ln{fill:none;stroke:#64748b;stroke-width:3.5;marker-end:url(#ag);transition:opacity .3s}
+.ln.p4{stroke-dasharray:12 9}.ln.hid{display:none}
+.ln.on{display:inline;stroke:#facc15;stroke-width:5;marker-end:url(#ay);stroke-dasharray:14 10;animation:flow .9s linear infinite}
+@keyframes flow{to{stroke-dashoffset:-48}}
+.lbl{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:25px;line-height:1.3;color:#94a3b8;background:#0a101c;padding:2px 8px;border-radius:8px;white-space:pre;text-align:center;border:1px solid #1e293b;pointer-events:none;transition:opacity .3s}
+.lbl.hid{display:none}.lbl.on{display:block;color:#fde68a;border-color:#facc15;font-size:21px;background:#020617}
+.pill{position:absolute;z-index:3;display:none;align-items:center;justify-content:center;text-align:center;white-space:pre-line;font-size:19px;font-weight:700;line-height:1.3;color:#e2e8f0;background:#1e293b;border:2px dashed #94a3b8;border-radius:12px;pointer-events:none}
+.pill.vert{writing-mode:vertical-rl;letter-spacing:4px}.pill.show{display:flex}
+/* 聚焦时其余变暗 */
+body.focus .reg:not(.on):not(.near){opacity:.1}
+body.focus .reg.near{opacity:.5}
+body.split .reg:not(.on):not(.near){opacity:.3}body.split .reg .one,body.split .reg .cnt,body.split .lbl,body.split .pill,body.split #legend{display:none}
+body.focus .reg.on{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 30%,transparent),0 24px 60px rgba(0,0,0,.55)}
+body.focus .ext:not(.on):not(.near){opacity:.18}body.focus .ext.near{opacity:.6}
+body.focus .ln.def:not(.on),body.focus .lbl.def:not(.on){opacity:.08}
+/* 阶段 */
+.reg.future{filter:grayscale(1);opacity:.35}.ext.future{opacity:.35}
+.chip.future{opacity:.35;border-style:dashed}.ln.future:not(.on),.lbl.future:not(.on){opacity:.15}
+body.focus .reg.future.on{opacity:.75}
+/* 详细卡片 */
+#detail{position:absolute;right:0;top:0;bottom:0;width:64%;z-index:10;background:#0c1424;border-left:1px solid #1e293b;overflow:auto;transform:translateX(102%);transition:transform .35s;box-shadow:-16px 0 50px rgba(0,0,0,.45)}
+body.split #detail{transform:none}
+#dx{position:sticky;top:0;float:right;margin:12px 16px 0 0;font:inherit;font-size:14px;padding:4px 12px;border-radius:8px;border:1px solid #334155;background:#0f172a;color:#cbd5e1;cursor:pointer;z-index:2}
+#dbody{padding:22px 40px 60px;max-width:1200px}
+.dh{display:flex;gap:16px;align-items:center;border-left:6px solid var(--c);padding:4px 0 4px 16px}
+.dh .ic{font-size:44px}.dn{font-size:30px;font-weight:800;color:#f8fafc}.dl{font-size:18px;color:#cbd5e1;line-height:1.6}
+#detail h3{font-size:18px;color:var(--c);margin:26px 0 12px;padding-bottom:6px;border-bottom:1px solid #1e293b}
+.pt{background:#101b30;border:1px solid #1e2a44;border-radius:12px;padding:14px 18px;margin-bottom:12px}
+.pq{font-size:18px;font-weight:700;color:#f8fafc;display:flex;gap:10px;align-items:baseline;line-height:1.5}
+.pq .n{flex:none;width:28px;height:28px;border-radius:50%;background:var(--c);color:#0b1220;font-size:15px;display:inline-flex;align-items:center;justify-content:center}
+.pa{font-size:16.5px;line-height:1.75;color:#dbe4f0;margin:6px 0 0 38px}
+.pt details{margin:8px 0 0 38px}.pt summary{cursor:pointer;color:#93c5fd;font-size:14.5px}.pt details p{font-size:15.5px;line-height:1.7;color:#cbd5e1;margin:6px 0}
+.ps{margin:6px 0 0 38px;font-size:12.5px;color:#64748b}
+#detail code{font:13px Consolas,monospace;color:#94a3b8;background:#0b1220;border:1px solid #243049;border-radius:5px;padding:0 5px;margin:0 3px}
+#detail em{font-style:normal;color:#fde68a}
+.todo{background:#1f1a0b;border:1px dashed #a16207;color:#fde68a;padding:8px 14px;border-radius:8px;margin:16px 0 0}
+.links{list-style:none;padding:0;margin:0}.links li{font-size:15.5px;padding:7px 12px;border-radius:8px;background:#101b30;margin:6px 0}.links li[data-go]{cursor:pointer}.links .dir{color:var(--c);margin-right:8px;font-weight:700}
+.dg{background:#0a1120;border:1px solid #1e293b;border-radius:14px;padding:16px}
+.d1{display:grid;grid-template-columns:1fr 34px 1.35fr 34px 1.6fr;gap:10px 0;align-items:stretch}
+.d1 .h{font-size:14px;color:#94a3b8;font-weight:700}
+.ent{background:#111827;border:2px solid #475569;border-radius:10px;padding:10px 12px;font-size:16.5px;font-weight:700}.ent small{display:block;font-weight:400;font-size:14px;color:#94a3b8;line-height:1.5}
+.ar{display:flex;align-items:center;justify-content:center;color:var(--c);font-size:26px}
+.pr{background:color-mix(in srgb,var(--c) 12%,#0b1220);border:2px solid var(--c);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:3px}
+.pr b{font-size:17px}.pr span{font-size:14.5px;color:#cbd5e1;line-height:1.55}.pr code{align-self:flex-start}
+.p4{opacity:.6;border-style:dashed}
+.capbox{grid-row:2 / span 4;grid-column:5;border:2px solid var(--c);border-radius:12px;padding:12px;background:#0e1830;display:flex;flex-direction:column;gap:10px}
+.capbox table{border-collapse:collapse;width:100%}.capbox th,.capbox td{border-bottom:1px solid #243049;padding:7px 6px;font-size:14.5px;text-align:left;vertical-align:top;line-height:1.5}.capbox th{color:#94a3b8;font-size:13.5px}.capbox td:first-child{white-space:nowrap;font-weight:700;padding-right:12px}
+.capbox tr.hl td{color:#fde68a}.capbox p{margin:0;font-size:14px;color:#94a3b8}
+.foot{margin:12px 0 0;font-size:14px;color:#94a3b8}
+.src{background:#0e1830;border:1px dashed var(--c);border-radius:10px;padding:10px 12px;font-size:14.5px;color:#dbe4f0;line-height:1.55}
+.roles td:first-child{white-space:nowrap;font-weight:700;width:110px}.cap{display:inline-block;font-size:13.5px;padding:2px 8px;margin:3px 6px 3px 0;border-radius:6px;background:color-mix(in srgb,var(--c) 16%,transparent);border:1px solid color-mix(in srgb,var(--c) 45%,transparent)}
+.exc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}.exc>div{border:1px solid #a16207;background:#1f1a0b;border-radius:10px;padding:10px 12px;font-size:14.5px;line-height:1.6;color:#e7e2cf}.exc b{color:#fde68a}
+.note{margin:0 0 12px;padding:8px 12px;border-radius:8px;background:#16213a;font-size:14.5px;color:#dbe4f0}.note b{color:var(--c)}
+.gl{margin-top:16px}.gl .k{white-space:nowrap}
+.flow{display:flex;align-items:stretch}.flow .st{flex:1 1 0;min-width:0}.flow .ar{flex:0 0 24px}
+.dsub{font-size:14.5px;color:#94a3b8;font-weight:700;margin:16px 0 8px}.dg>.dsub:first-child{margin-top:0}
+.kv{display:grid;grid-template-columns:200px 1fr;border:1px solid #243049;border-radius:10px;overflow:hidden}
+.kv .k,.kv .v{padding:8px 12px;border-bottom:1px solid #1c2740;font-size:15px;line-height:1.55}.kv .k{background:#121d33;font-weight:700}.kv .k small{font-weight:400;color:#94a3b8}.kv .k code{display:block;margin:2px 0 0;width:max-content}.kv .v{color:#dbe4f0}
+.tree td.ok{color:#86efac}.tree td.no{color:#fca5a5}
+.paths{display:grid;grid-template-columns:150px 1fr;gap:10px 14px;align-items:center}
+.paths .lab{font-weight:700;font-size:16px}.paths .lab small{display:block;font-weight:400;font-size:13.5px;color:#94a3b8}
+.chain{display:flex;flex-wrap:wrap;align-items:center;gap:6px;color:var(--c);font-size:18px}
+.chain span{background:#101b30;border:1px solid #2a3a5c;border-radius:8px;padding:6px 10px;font-size:14.5px;color:#e2e8f0}.chain span small{display:block;font-size:12.5px;color:#94a3b8}
+.chain span.end{border-color:var(--c)}.chain em{font-style:normal;font-size:13.5px;color:#fde68a;margin-left:6px}
+.cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:6px}.cols ul{margin:0;padding-left:18px}.cols li{font-size:14.5px;line-height:1.7;color:#cbd5e1}
+.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.tiles>div{background:#101b30;border:1px solid #2a3a5c;border-left:5px solid var(--c);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:4px}
+.tiles code{margin:0!important;width:max-content;max-width:100%;overflow:hidden;text-overflow:ellipsis}.tiles b{font-size:16px}.tiles span{font-size:14px;color:#cbd5e1;line-height:1.5}.tiles small{font-size:13px;color:#94a3b8}
+.tiles>div.p4{opacity:.6;border-style:dashed}
+.st{background:#101b30;border:1px solid #1e2a44;border-top:4px solid var(--c);border-radius:10px;padding:10px 12px}
+.st i{font-style:normal;display:inline-flex;width:24px;height:24px;border-radius:50%;background:var(--c);color:#0b1220;font-weight:800;font-size:14px;align-items:center;justify-content:center;margin-right:6px}
+.st b{font-size:16px}.st ul{margin:8px 0 0;padding-left:18px}.st li{font-size:14.5px;line-height:1.6;color:#cbd5e1}
+.band{margin-top:14px;background:#101b30;border:1px dashed var(--c);border-radius:10px;padding:12px 16px;display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.band b{font-size:15.5px;margin-right:6px}.band .tg{font-size:14.5px;padding:3px 10px;border-radius:8px;background:color-mix(in srgb,var(--c) 18%,transparent);border:1px solid var(--c)}.band .tg small{color:#cbd5e1}
+.band .then{width:100%;font-size:14.5px;color:#cbd5e1}
+.tb{border-collapse:collapse;width:100%;margin-top:10px}.tb th,.tb td{border:1px solid #243049;padding:5px 8px;font-size:14px;text-align:left;vertical-align:top;line-height:1.5}.tb th{background:#16213a;color:#94a3b8}
+/* 走一遍 */
+#tourbar{display:none;position:absolute;left:24px;right:24px;bottom:14px;z-index:11;margin:auto;max-width:1040px;background:#020617;border:2px solid #facc15;border-radius:14px;padding:10px 14px;gap:12px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+body.touring #tourbar{display:flex}
+#tourbar button{font:inherit;padding:6px 14px;border-radius:8px;border:0;background:#facc15;color:#111;cursor:pointer;font-weight:700}#tourbar button:disabled{opacity:.35}
+#ttxt{flex:1;font-size:15.5px;line-height:1.6}
+#legend{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(2,6,23,.88);border:1px solid #1e293b;border-radius:10px;padding:5px 10px;font-size:12.5px;color:#94a3b8}
+body.touring #legend{display:none}
+#chk{position:fixed;left:0;top:0;z-index:99;margin:0;background:#b91c1c;color:#fff;padding:4px 8px}
+body.still *{transition:none!important;animation:none!important}
+</style></head><body>
+<header><h1>RFC-0006 身份与权限 · 大图</h1>
+<button id="home">全景</button><button id="gloss">名词解释</button><select id="tour"></select><span class="sep"></span>
+<span class="mut">阶段：</span><select id="phase"><option value="9">全部</option><option value="0">P0 结束时</option><option value="1">P1 结束时</option><option value="2">P2 结束时</option><option value="3">P3 结束时</option></select><span class="sep"></span>
+<span class="mut" style="font-size:12.5px">点区域看讲解 · Esc 返回全图 · 滚轮缩放 · 按住拖动 · 数据截至 <span id="date"></span></span></header>
+<div id="stage"><div id="world"></div>
+<div id="legend">灰线：主要的调用关系　虚线：P4 才做（P0–P4 是开发阶段）　点任意区域看讲解　看不懂的词点顶部「名词解释」</div>
+<aside id="detail"><button id="dx">✕ 返回全图（Esc）</button><div id="dbody"></div></aside>
+<div id="tourbar"><button id="tp">← 上一步</button><div id="ttxt"></div><button id="tn">下一步 →</button><button id="tx">退出</button></div></div>
+<script>
+// RFC-0006 大图的内容。字段：n 标签名；h 怎么设计；y 为什么；a 没选的做法；s RFC 节；p 阶段（默认 1）；tb 表格；sub 副标题；badges 标签内小徽章；k 外形（card / table / q）
+const DATE = '2026-11-16';
+
+const REGIONS = [
+{ id:'r1', no:'①', ic:'🪪', name:'主体与能力', color:'#a78bfa', p:0,
+  one:'平台先认出是谁在操作，再看他有没有做这件事的能力',
+  groups:[
+  { g:'核心', items:[
+    { id:'r1.core', n:'凭证进门，换成主体', p:0,
+      h:'浏览器用登录 cookie、开放 API 用应用凭据、DSH 进程用进程令牌，各自校验后都换成主体（Principal）。判权一律针对主体，不针对凭证。',
+      y:'各模块只认一种「这是谁」，不用关心对方怎么进门；以后加一种进门方式，只改 M07 和请求入口。', s:'摘要 1、第 1.1 节' } ]},
+  { g:'四种主体', cls:'cards', items:[
+    { id:'r1.user', k:'card', n:'UserPrincipal(userId)', sub:'张三在页面提问 · 登录 cookie',
+      h:'用户。进门凭证是登录 cookie，校验接口 resolveWebSession。', s:'第 1.1 节' },
+    { id:'r1.app', k:'card', n:'AppPrincipal(appId, actingUserId)', sub:'CRM 替李四问 · P4', p:4,
+      h:'接入应用 + 实际用户。进门凭证是应用凭据 + 声明的实际用户，校验接口 resolveAppCall（P4）。', s:'第 1.1、7 节' },
+    { id:'r1.eval', k:'card', n:'EvalAccountPrincipal(evalAccountId, tier)', sub:'二档评估账号跑被测会话 · P3', p:3,
+      h:'评估账号。不能登录，只出现在评估会话的执行凭据和进程令牌里。', s:'第 1.1、6 节' },
+    { id:'r1.svc', k:'card', n:'ServicePrincipal(service, actingAdminId)', sub:'王经理发起的自进化；评分、模拟用户、探测',
+      h:'服务（后台任务）。自进化时 actingAdminId 是发起的管理员；平台自己的评分、模拟用户、探测没有发起人（actingAdminId 为空）。由 T03 的任务记录构造，或来自进程令牌。', s:'第 1.1、2.3 节' } ]},
+  { g:'判权', items:[
+    { id:'r1.cap', n:'判能力，不判角色', p:0,
+      h:'两种角色（使用者、全站管理员）到 10 种能力的对应，是代码里一张固定表（RoleCapabilities），不建表。各模块和前端只看能力。',
+      y:'以后加角色只改这张表，其他模块和前端不用改。', a:'各模块判角色：加一种角色要改所有模块和前端。', s:'第 2.2 节' },
+    { id:'r1.table', n:'角色 → 能力对照', s:'第 2.2 节',
+      h:'使用者只有 chat.use；全站管理员有全部管理能力；files.export 两种角色都不自带，按人授予。',
+      tb:[['能力','使用者','全站管理员'],['chat.use 对话、上传、下载本人文件','✓','✓'],['agents.manage Agent 配置与发布','','✓'],['resources.manage 知识包、Skill 库、MCP 连接','','✓'],['evolution.view / evolution.manage 自进化','','✓'],['identity.manage 账号、角色、导出权限、评估账号','','✓'],['apps.manage 接入应用','','✓'],['operations.manage 模型、连接、限额、推荐问题','','✓'],['audit.view 日志与审计','','✓'],['files.export 生成数据导出','按人授予','按人授予']] },
+    { id:'r1.export', n:'files.export 按人授予',
+      h:'不跟角色走，只看账号的「允许数据导出」，管理员也不自动拥有。M02 导出时调 checkCapability(FILES_EXPORT)。',
+      y:'PRD v8 OH-IAM-F008 要求按人设置数据导出权限。', s:'第 2.2 节' },
+    { id:'r1.must', n:'必须改密 → 能力为空',
+      h:'首次登录、被重置密码后，用网页登录时能力清单为空，改密前所有判权自然拒绝。前端从 GET /me 得知要改密，只显示改密页。接入应用替他调用时不看这一项（P4）：只在业务系统里用平台的人可能从不登录网页，应用调用也用不到他的密码。',
+      y:'不另写拦截，也不给接口加字段。', s:'第 2.2、8.1 节' },
+    { id:'r1.nocache', n:'checkCapability 不缓存',
+      h:'每次按主键查一次账号，角色变化对判权立刻生效。',
+      y:'判权要准，一次主键查询代价很小。认证缓存 30 秒只影响「这是谁」，不影响「能不能做」。', s:'第 2.3 节' },
+    { id:'r1.show', n:'显示用 getCapabilities，执行用 checkCapability',
+      h:'决定页面显示什么时用 getCapabilities；真要执行操作时才用 checkCapability。checkCapability 拒绝时由 M07 统一发访问拒绝审计。',
+      y:'用 checkCapability 决定显示，会产生大量无意义的拒绝审计。', s:'第 2.3 节' },
+    { id:'r1.ctx', n:'只针对 ctx.principal',
+      h:'判权一律针对 ctx.principal，入参里不传「替谁判」。', y:'调用方没法替别人判权。', s:'第 2.3 节' },
+    { id:'r1.r10', n:'自进化按发起人当前能力（R10）',
+      h:'ServicePrincipal(EVOLUTION, actingAdminId) 按发起人当前的能力判；发起人已失权、停用或为空时一律拒绝。例：管理员发起一小时的评估，半小时时被降级，后续判权拒绝。', s:'第 2.3 节' },
+    { id:'r1.platform', n:'平台服务主体一律拒绝',
+      h:'评分、模拟用户、探测没有发起人，checkCapability 一律拒绝；它们能做什么由令牌种类限定（EVAL_AUX、PROBE）。', s:'第 2.3、5.1 节' } ]} ]},
+
+{ id:'r2', no:'②', ic:'👥', name:'账号', color:'#60a5fa', p:1,
+  one:'角色、状态、能否导出、取数用的 uid，都记在账号上',
+  groups:[
+  { g:'标识与状态', items:[
+    { id:'r2.id', n:'用户 ID 与工号分开',
+      h:'用户 ID 是 usr_ 前缀的 ULID，全平台各表按它记归属；工号登录时输入，可以更正（OH-IAM-F011）。',
+      y:'PRD v8：「修改姓名或更正工号不改变对话、文件和 memory 的归属」。', a:'工号直接当用户 ID：工号改一次，要改全平台存归属的表。', s:'第 1.1、2.1 节' },
+    { id:'r2.empno', n:'工号规范化、未移除中唯一',
+      h:'写入前去空格、转大写；在未移除的账号中唯一（生成列 employee_no_active + 唯一索引，移除后为 NULL）；姓名可以重复。', s:'第 2.1、9 节' },
+    { id:'r2.disable', n:'启用 / 停用',
+      h:'停用后不能登录、不能继续操作，历史保留，可以再启用。同一事务作废他的会话和进程令牌，随后发 C20。', s:'第 2.1、3.4 节' },
+    { id:'r2.remove', n:'移除 = 标记删除',
+      h:'不再出现在列表、不能再用，对话、文件仍归它。同一事务：清空网关 uid（审计记原值）、删除密码行、作废会话和进程令牌。移除后同一工号可以再建新账号。', s:'第 2.1 节' } ]},
+  { g:'修改规则', items:[
+    { id:'r2.lastadmin', n:'至少一个启用的管理员',
+      h:'停用、移除、降级管理员时，同一事务里先用 SELECT … FOR UPDATE 锁住所有启用的管理员行（走 ix_identity_users_role），确认操作后仍至少剩一个，否则返回 identity.last-admin。',
+      y:'读已提交下只查数量会被插队：两个管理员同时互相降级，最后可能一个都不剩。', s:'第 2.1 节' },
+    { id:'r2.optlock', n:'乐观锁',
+      h:'修改带修改版本号；两个管理员同时编辑同一账号，后保存的收到 common.conflict。', s:'第 2.1 节' },
+    { id:'r2.patch', n:'编辑账号一个接口',
+      h:'PATCH /users/{id}（姓名、工号、角色、允许数据导出、网关 uid）。后端比较前后值，角色、导出权限、uid、状态各自发对应的审计和 C20；降级时检查「至少一个管理员」。', s:'第 8.2 节' } ]},
+  { g:'密码与初始化', items:[
+    { id:'r2.initpw', n:'随机初始密码',
+      h:'新建、重置密码时系统生成随机密码，只在那一次响应里返回给管理员，由管理员转告；用户首次登录必须改密。',
+      y:'PRD v8 添加用户只填工号、姓名、角色。', s:'第 2.1 节' },
+    { id:'r2.initadmin', n:'初始管理员',
+      h:'进程启动时如果没有启用的管理员，按部署配置里的工号和初始密码建一个（必须改密）。两个进程同时建，工号唯一约束挡住第二个。',
+      y:'已知限制：唯一的管理员忘记密码就没人能重置，部署要求至少建两个管理员。', s:'第 2.1、10.2 节' } ]} ]},
+
+{ id:'r3', no:'③', ic:'🚪', name:'登录与会话', color:'#34d399', p:1,
+  one:'浏览器用工号和密码登录，之后每个请求靠 cookie 认出是谁',
+  groups:[
+  { g:'流程', items:[
+    { id:'r3.flow', n:'登录流程',
+      h:'1. GET /me 未登录返回 401，显示登录页。2. 提交工号和密码：工号规范化 → 找未移除的账号（找不到按失败处理）→ 锁定期内的拒绝 → bcrypt 比对 → 密码对但账号已停用，提示「账号已停用」。账号不存在、密码错一律提示「工号或密码错误」。3. 成功：失败次数清零，生成会话，返回本人信息、能力、是否必须改密。4. 必须改密时只显示改密页。5. 之后每个请求 T02 按 cookie 哈希查缓存，没有再调 resolveWebSession。6. 退出。7. 会话到期返回 401，前端跳登录页。', s:'第 3.1 节' },
+    { id:'r3.unified', n:'统一提示「工号或密码错误」',
+      h:'登录失败统一返回 identity.login-failed，不透露账号是否存在。', s:'第 3.1 节' },
+    { id:'r3.logout', n:'退出不停执行',
+      h:'写会话作废时间、清 cookie、清本进程缓存。正在运行的对话执行不受影响。', y:'PRD v8：登录状态与 Agent session 分别管理。', s:'第 3.1 节' } ]},
+  { g:'会话', items:[
+    { id:'r3.hash', n:'会话存库，只存 SHA-256',
+      h:'cookie 值是 32 字节随机串，库里（identity_web_sessions）只存它的 SHA-256，按哈希走唯一索引。',
+      y:'库泄露也拿不到能用的 cookie；随机串猜不出来，SHA-256 就够。', a:'签名令牌（JWT）不存库：作废不了，退出、停用、重置密码后，被盗的令牌一直能用到过期。', s:'第 3.1、9、10.1 节' },
+    { id:'r3.12h', n:'固定 12 小时',
+      h:'会话时长固定 12 小时，不做闲置超时（组长 11-16 答复后保留）。', y:'一个工作日；闲置超时要每个请求写库更新时间。', a:'闲置超时自动退出：行内有硬性要求时再加。', s:'第 3.2 节' },
+    { id:'r3.revoke', n:'何时作废全部会话',
+      h:'停用、移除、管理员重置密码、本人改密（保留当前会话）。一条 UPDATE … WHERE user_id = ? AND revoked_at IS NULL，与状态变更同一事务，随后发 C20。',
+      y:'不作废的话：密码泄露后重置，已登录的人还能用到会话到期；停用后再启用，旧电脑上的登录又能用了。', s:'第 3.4 节' },
+    { id:'r3.cache', n:'T02 认证缓存 30 秒',
+      h:'T02 按 cookie 哈希缓存主体和能力 30 秒；收到 C20 立刻清。实现在 RFC-0004 第 4.2 节。', s:'第 3.1、8.3 节' } ]},
+  { g:'密码', items:[
+    { id:'r3.bcrypt', n:'密码 bcrypt',
+      h:'密码是人起的、能猜，用故意慢的 bcrypt。', s:'第 9 节' },
+    { id:'r3.lock', n:'5 次失败锁 15 分钟',
+      h:'连续 5 次失败锁 15 分钟，自动解锁；管理员重置密码立即解锁。', y:'防猜密码，又不用管理员介入。缺点：可以被人故意触发，把别人锁 15 分钟。', s:'第 3.2、10.2 节' },
+    { id:'r3.policy', n:'密码规则',
+      h:'至少 8 位，含字母和数字；改密要输旧密码；不强制定期改密。', y:'组长 11-16 答复：要有一定复杂度、不要求定期换。先用这条最简单的规则，行内要求更严时上线前只改这一处。', s:'第 3.2 节' } ]},
+  { g:'浏览器安全', items:[
+    { id:'r3.cookie', n:'cookie 属性',
+      h:'HttpOnly（页面脚本读不到）、Secure（只走 HTTPS，固定开启）、SameSite=Lax。', y:'组长 11-16 答复行内部署用 HTTPS，所以 Secure 固定开，不做成配置项。', s:'第 3.3 节' },
+    { id:'r3.csrf', n:'防跨站：cookie 双提交',
+      h:'后端下发页面脚本可读的 XSRF-TOKEN cookie，前端写请求把它抄进 X-XSRF-TOKEN 请求头，入口比对两者（Spring Security 的 CookieCsrfTokenRepository）。',
+      y:'别的站点读不到本域的 cookie，抄不出来；不用存库；前端常用请求库默认支持。SameSite=Lax 挡不住同一主域名下的其他系统，所以这一层不能省。',
+      a:'防跨站令牌与会话绑定、存库：多一列和比对代码。只靠 SameSite：同一主域名下的其他系统挡不住。', s:'第 3.3 节' } ]} ]},
+
+{ id:'r4', no:'④', ic:'📤', name:'取数身份', color:'#fbbf24', p:1,
+  one:'取数时告诉取数网关「这是谁」：用账号上登记的 uid，没登记就不让取',
+  groups:[
+  { g:'映射', items:[
+    { id:'r4.col', n:'uid 是账号表的一列',
+      h:'账号表、评估账号表各有一列 gateway_user_id，管理员编辑账号时填写。', a:'单独的身份映射表：一对一，多一张表、一个「两个外键恰有一个非空」的约束和一次联表。', s:'第 4、10.1 节' },
+    { id:'r4.uniq', n:'uid 全表唯一',
+      h:'同一个 uid 不能绑给两个主体。各表有唯一索引；账号表和评估账号表之间，由 M07 在同一事务里查另一张表。', y:'否则一个人能用另一个人的数据权限取数。', s:'第 4、9 节' },
+    { id:'r4.audit', n:'改 uid 发审计', h:'改 uid 等于改数据权限，发审计。', s:'第 4 节' },
+    { id:'r4.kb', n:'知识服务 uid 本期不存',
+      h:'PRD v8 本期用本地知识文件。接入知识平台、确定它要什么身份时，加一个可空列和 Mapped 的一个字段（Q5）。', s:'第 4 节' } ]},
+  { g:'getGatewayIdentity', items:[
+    { id:'r4.only', n:'只在 tool 回调里能调',
+      h:'前提是 ctx.execution 存在，按执行凭据里的主体返回。主体来自入口核验过的执行凭据，不是模型填的参数。', y:'Agent 没法替别人要 uid。', s:'第 4 节' },
+    { id:'r4.ret', n:'三种返回', badges:['Mapped','Unmapped','NotAllowed'],
+      h:'用户、接入应用（按实际用户）、评估账号：有 uid → Mapped(uid)；没有 → Unmapped；已停用或移除 → NotAllowed。服务主体 → NotAllowed。', s:'第 4 节' },
+    { id:'r4.noguess', n:'不猜 uid',
+      h:'没有映射时不拿工号或别的值顶替。Unmapped 不能真实取数，tool 返回「账号还没开通取数身份，请联系管理员」。', a:'没有映射时默认拿工号当 uid：猜错就是用别人的数据权限取数。', s:'第 4 节' },
+    { id:'r4.svc', n:'服务主体不能取数', h:'自进化不继承管理员的数据权限；评分、探测不取数。', s:'第 4 节' },
+    { id:'r4.nocache', n:'每次查，不缓存', h:'每次 tool 调用按主键查一次。', s:'第 4 节' } ]},
+  { g:'边界', items:[
+    { id:'r4.scope', n:'数据范围由网关判',
+      h:'取数网关按 uid 判断数据范围。平台不维护部门授权，管理员角色不扩大取数权限（PRD v8 OH-IAM-F016）。', s:'第 1、4 节' } ]} ]},
+
+{ id:'r5', no:'⑤', ic:'🔑', name:'进程令牌', color:'#f472b6', p:1,
+  one:'每个 DSH 进程带一把令牌，调 MCP 时 MCP 代理靠它认出是谁',
+  groups:[
+  { g:'为什么', items:[
+    { id:'r5.why', n:'为什么要进程令牌',
+      h:'DSH 里的 Agent 调平台有两条路。调业务 tool：经桥接插件回调，平台按 DSH 会话 ID 查出执行凭据，精确到「这一次执行」。调 MCP：进程直接发给 M05 的 MCP 代理，只能带环境变量里的东西，所以靠进程令牌，精确到「这个进程」。',
+      y:'代理要知道是谁在调，才能判断能否用这条连接和 tool、向 mem0 传用户身份、记调用日志。DSH 不能把平台令牌带进 tool 调用（DSH 能力核验结论）。', s:'第 1.1、5 节' } ]},
+  { g:'签发与校验', items:[
+    { id:'r5.route', n:'按路由键签发',
+      h:'T04 要为路由键起进程时，经装配层调 issueProcessToken(routeKey)。M07 解析路由键得到种类和代表对象；代表对象已停用（或自进化的管理员没有 evolution.manage）则拒绝。路由键是 DSH 进程的门牌号，一个路由键一个进程，用户进程的路由键就是用户 ID。', s:'第 1.1、5.2 节' },
+    { id:'r5.kinds', n:'五种令牌', badges:['USER','EVOLUTION','EVAL_ACCOUNT','EVAL_AUX','PROBE'],
+      h:'种类由路由键决定；MCP 代理按种类放行（RFC-0010）。', s:'第 5.1 节',
+      tb:[['种类','路由键','主体','MCP 代理放行什么'],['USER','用户 ID','UserPrincipal','按资源模块的对象授权；可向 mem0 传用户身份'],['EVOLUTION','evolution:<管理员 ID>','ServicePrincipal(EVOLUTION, 管理员 ID)','只放该自进化 Agent 版本勾选的 tool；不放 mem0；签发和校验时管理员须有 evolution.manage'],['EVAL_ACCOUNT','评估账号 ID','EvalAccountPrincipal','不放 mem0'],['EVAL_AUX','eval-aux:<评估 ID>','ServicePrincipal(PLATFORM, null)','不放 MCP tool；只用于同一次评估的评分与模拟用户会话'],['PROBE','system:probe','ServicePrincipal(PLATFORM, null)','只能列 tool，不能调']] },
+    { id:'r5.env', n:'放进程环境变量',
+      h:'生成 32 字节随机令牌，明文只返回这一次；T04 把明文交给守护程序放进进程环境变量，令牌 ID 记在 platform_dsh_processes。MCP 配置把它读进请求头。', s:'第 5、5.2 节' },
+    { id:'r5.hash', n:'只存 SHA-256', h:'库里存令牌的 SHA-256、种类、路由键、代表对象。', s:'第 5.2、9 节' },
+    { id:'r5.withroute', n:'校验结果带路由键',
+      h:'verifyCallerToken 返回令牌 ID、种类、路由键、主体（代理缓存 30 秒，收到 C20 清）。', y:'M05 的 MCP 调用记录按路由键存；EVAL_AUX 的评估 ID 只在路由键里，主体里没有。', a:'签发入参改成明确类型、表里去掉路由键：评估 ID 就丢了；解析五种前缀只有十几行。', s:'第 5.1、10.1 节' },
+    { id:'r5.internal', n:'令牌不外发',
+      h:'进程令牌只在平台内部使用；MCP 代理访问外部 MCP 服务用的是连接自己的凭据（RFC-0010）。', s:'第 1.1 节' } ]},
+  { g:'失效', items:[
+    { id:'r5.noexp', n:'不设过期',
+      h:'令牌随进程有效，不设过期时间。', y:'DSH 进程可能连续运行多天，运行中的进程的环境变量从外部改不了，令牌过期只能重启进程。', a:'进程令牌设短期过期。', s:'第 5.3 节' },
+    { id:'r5.two', n:'两道保险',
+      h:'用户停用、移除，评估账号停用，管理员失去 evolution.manage 时，M07 在同一事务里作废对应的全部令牌，然后发 C20，代理清缓存，MCP 调用立刻失败。校验时仍核对代表对象的当前状态，作为第二道保险。',
+      a:'停用时不批量作废、只靠校验时查状态：停用应当立刻干净地失败，批量作废只多一条 UPDATE，库里也能直接看出令牌已作废。', s:'第 5.2、10.1 节' },
+    { id:'r5.recycle', n:'回收即作废',
+      h:'进程回收时 T04 调 revokeProcessToken（重复调用结果相同）；失败由 T04 的清理任务重试。作废超过 7 天的行由每日清理删除。', s:'第 5.2 节' } ]},
+  { g:'已知风险', items:[
+    { id:'r5.environ', n:'主进程能读到令牌',
+      h:'Agent 主进程的读文件工具不经沙箱，能读到 /proc/self/environ 里的令牌；但读到也只能以同一身份经代理调用，代理照样判权，不扩大权限（DSH 测试用例 V15）。沙箱里执行的命令读不到（沙箱清掉名字含 TOKEN 的环境变量）。', s:'第 5.3 节' },
+    { id:'r5.dev', n:'开发环境单进程共用',
+      h:'只起一个 DSH 进程时所有用户共用一把令牌，代理认成同一个人，只用于没有真实数据的环境。生产按用户分进程，前提是 V16（多个进程各带各的令牌、代理能区分）复测通过；不通过时，要按人判权的 MCP 服务改成平台业务 tool。', s:'第 5.4 节' } ]} ]},
+
+{ id:'r6', no:'⑥', ic:'🧪', name:'评估账号', color:'#22d3ee', p:3,
+  one:'数据平台开的测试账号（分三个权限档），评估 Agent 的修改时拿来取数',
+  groups:[
+  { g:'', items:[
+    { id:'r6.why', n:'为什么要评估账号',
+      h:'自进化的修改要先评估再采纳：同一批用例用现行版本和修改后版本各跑一遍。取数结果取决于谁在问，所以用三档评估账号来跑，既看口径对不对，也看受限账号是否按预期被拒。', y:'PRD v8：「受限账号按预期拒绝访问记为权限行为通过」。', s:'第 6 节' },
+    { id:'r6.table', n:'不是人，单独一张表',
+      h:'评估账号不能登录、不进用户列表、不参与判能力，所以单独一张表 identity_eval_accounts。', a:'放进账号表、加「类型」列：登录、用户列表、判权处处要排除它。', s:'第 6、10.1 节' },
+    { id:'r6.tier', n:'三档、不限数量', badges:['TIER_1','TIER_2','TIER_3'], h:'档位 TIER_1 / TIER_2 / TIER_3；不限制每档的账号数。', s:'第 6、9 节' },
+    { id:'r6.page', n:'页面维护，不删除',
+      h:'管理员在用户管理里查看档位和开通状态（即是否填了 uid），可新增、编辑（名称、档位、uid）、启停；不删除，用停用代替。', y:'生产库手工执行 SQL 要申请权限。', a:'评估账号由迁移脚本预置。', s:'第 6 节' },
+    { id:'r6.use', n:'怎么用',
+      h:'M06 选账号时调 listEvalAccounts、getEvalAccount；M01 建评估会话时再校验一次；被测会话跑在路由键 = 评估账号 ID 的进程里（令牌种类 EVAL_ACCOUNT）；取数时 getGatewayIdentity 返回该账号的 uid。', s:'第 6 节' },
+    { id:'r6.disable', n:'停用', h:'同一事务作废它的进程令牌，发 C20。', s:'第 6 节' } ]} ]},
+
+{ id:'r7', no:'⑦', ic:'🔌', name:'接入应用（P4）', color:'#94a3b8', p:4,
+  one:'行内业务系统（比如 CRM）替某个用户调用平台',
+  groups:[
+  { g:'', items:[
+    { id:'r7.onbehalf', n:'只做代用户调用', p:4,
+      h:'主体 AppPrincipal(应用 ID, 实际用户 ID)：会话、文件归实际用户，取数用实际用户的 uid，审计里同时有应用和实际用户。应用只被授予调用资格，不被赋予业务数据范围。', y:'PRD v8 OH-API-F002、OH-IAM-F015。', s:'第 7 节' },
+    { id:'r7.inter', n:'实际用户的能力 + 场景检查', p:4, h:'请求入口先查这个接口标的场景在不在应用的调用资格里（四个场景：嵌入分析、成果取得、资源管理、管理自动化），之后模块照常按实际用户的能力判权。两道合起来，应用最多能做「勾选的场景 × 实际用户本来能做的事」。', s:'第 2.3 节；RFC-0017 第 5 节' },
+    { id:'r7.resolve', n:'resolveAppCall', p:4,
+      h:'校验：凭据有效、未撤销、未过期；应用启用、未移除；实际用户存在且启用。返回主体、实际用户的能力、应用的调用资格（场景，请求入口查接口用）和每分钟限流额度。结果缓存 30 秒；应用停用、启用、移除，凭据撤销，调用资格变更时发 C20。', s:'第 7、8.1 节' },
+    { id:'r7.cred', n:'应用凭据', p:4,
+      h:'平台生成的随机密钥，应用专属，有有效期（默认 1 年），明文只在生成时显示一次，库里只存哈希（OH-API-F005）。生成新凭据时，同一应用其他有效凭据的有效期缩到 7 天内，期间新旧并存（业务系统逐台换配置不中断）；怀疑泄露时撤销，立即作废。平台内部凭据不发给业务系统。', s:'第 7、9 节；RFC-0017 第 3 节' },
+    { id:'r7.0017', n:'实际用户：工号声明', p:4,
+      h:'应用在请求头 X-Acting-User 里填实际用户的工号，平台信任已登记的应用；工号必须对应一个启用的本地账号。是否复用行内已有的接入能力，等组长答复（RFC-0017 Q1）。', s:'第 7 节；RFC-0017 第 4 节' },
+    { id:'r7.self', n:'应用自主调用：本期不做', p:4, h:'应用用自己的身份、任务归应用，本期不做。', s:'第 7 节' } ]} ]},
+
+{ id:'r8', no:'⑧', ic:'📡', name:'变更通知与审计', color:'#fb923c', p:1,
+  one:'账号一变就通知各处清缓存；关键操作记审计',
+  groups:[
+  { g:'C20 identity.principal-changed', items:[
+    { id:'r8.speed', n:'事件是加速，30 秒是兜底',
+      h:'本进程的 T02、M05 收到 C20 立刻清缓存；其他 API 进程靠缓存 30 秒到期。MVP 只有一个 API 进程，所以立刻生效。事件处理失败也只退回「最多 30 秒」，不需要额外的重试保障。',
+      a:'不发 C20、只靠 30 秒缓存：MVP 单进程时 C20 能让停用立刻生效，成本只是一个事件、两处订阅。跨进程广播清缓存：要额外的广播机制，30 秒对行内场景够用。', s:'第 8.3、10.1 节' },
+    { id:'r8.tx', n:'同一事务登记', h:'C20 与业务修改在同一事务里登记到事件登记表（RFC-0004 第 3.3 节），改成功才发。', s:'第 8.3 节' },
+    { id:'r8.subject', n:'四种 subject', badges:['User','App','EvalAccount','EvolutionToken'],
+      h:'UserSubject、AppSubject、EvalAccountSubject、EvolutionTokenSubject。最后一种用于管理员失去 evolution.manage 时，作废他的 EVOLUTION 令牌。', s:'第 8.3 节' },
+    { id:'r8.change', n:'八种变更',
+      h:'DISABLED、ENABLED、REMOVED、ROLE_CHANGED、EXPORT_PERMISSION_CHANGED、SESSIONS_REVOKED、APP_CREDENTIAL_REVOKED、APP_SCOPE_CHANGED。SESSIONS_REVOKED：重置密码、本人改密时作废了会话，T02 据此清缓存，M05 忽略。', s:'第 8.3 节' },
+    { id:'r8.sub', n:'谁订阅', h:'T02 清认证缓存；M05 清令牌校验缓存。', s:'第 8.3 节' } ]},
+  { g:'C17 审计', items:[
+    { id:'r8.list', n:'审计清单',
+      h:'用户管理：新建、编辑基本信息、角色、导出权限、网关 uid、停用、启用、移除、重置密码。本人：登录失败、改密。评估账号：新建、编辑、停用、启用。接入应用（P4）。判权：checkCapability 拒绝。启动：建初始管理员。', s:'第 8.3 节' },
+    { id:'r8.loginfail', n:'登录只记失败', h:'登录成功不记。', y:'PRD v8 OH-IAM-F017 没有要求记录登录成功；行内要求时补发一条审计即可。', s:'第 3.2 节' },
+    { id:'r8.detached', n:'拒绝类审计独立事务',
+      h:'登录失败、访问拒绝用 events.publishDetached 在独立事务里发，业务回滚也留下；成功的变更与业务一起登记。', s:'第 8.3 节' },
+    { id:'r8.r11', n:'审计不放凭据',
+      h:'审计里不放密码、cookie、令牌、凭据（R11）。登录失败时主体为空，对象记规范化后的工号。', s:'第 8.3 节' } ]} ]},
+
+{ id:'r9', no:'⑨', ic:'🗄️', name:'数据表与实现', color:'#c8b08a', p:0,
+  one:'七张表、分几步开发、还没定的问题',
+  groups:[
+  { g:'七张表（P0 一次建完）', cls:'col2', items:[
+    { id:'t.users', k:'table', n:'identity_users', p:0, sub:'usr_ · 账号',
+      h:'工号、姓名、角色、状态、导出权限、网关 uid；可更新（乐观锁）；长期保留，停用不删，移除为标记删除。索引：employee_no_active 唯一（未移除的工号唯一）、gateway_user_id 唯一、(role, status)（锁管理员行）、(created_at, id)（翻页）。', s:'第 9 节' },
+    { id:'t.cred', k:'table', n:'identity_user_credentials', p:0, sub:'主键 user_id · 密码',
+      h:'密码哈希、必须改密、失败次数、锁定到；随账号，移除时删除。', s:'第 9 节' },
+    { id:'t.sess', k:'table', n:'identity_web_sessions', p:0, sub:'wss_ · 登录会话',
+      h:'只存 cookie 的哈希（唯一索引）；(user_id, revoked_at) 服务作废全部会话；expires_at 服务每日清理；过期或作废 7 天后删除。', s:'第 9 节' },
+    { id:'t.tok', k:'table', n:'identity_process_tokens', p:0, sub:'ptk_ · 进程令牌',
+      h:'只存哈希；(kind, subject_id, revoked_at) 服务停用时批量作废，revoked_at 服务每日清理。subject_id 不建外键（可能指向已移除的账号）；本表不存进程信息，T04 在 platform_dsh_processes 记令牌 ID。作废 7 天后删除。', s:'第 9 节' },
+    { id:'t.eval', k:'table', n:'identity_eval_accounts', p:0, sub:'eac_ · 评估账号',
+      h:'名称、档位、状态、网关 uid（唯一）；乐观锁；长期保留，停用不删。', s:'第 9 节' },
+    { id:'t.apps', k:'table', n:'identity_integration_apps', p:0, sub:'app_ · 接入应用',
+      h:'调用资格（JSON）、限流额度、启停；乐观锁；移除为标记删除。说明列写用途、负责人及联系方式；调用资格存场景值数组。', s:'第 9 节' },
+    { id:'t.acred', k:'table', n:'identity_app_credentials', p:0, sub:'acr_ · 应用凭据',
+      h:'只存哈希、状态、有效期 expires_at；作废或过期 7 天后删除。生成新凭据时把同一应用其他有效凭据的 expires_at 缩到 7 天内。', s:'第 9 节' } ]},
+  { g:'约定', cls:'col', items:[
+    { id:'d.conv', n:'通用约定', p:0,
+      h:'全平台一个库（TDSQL MySQL），表名前缀 identity_；ID 是带前缀的 ULID（ascii_bin）；时间存 UTC DATETIME(3)；排序规则 utf8mb4_bin；迁移在 backend/migrations/identity/。', s:'第 9 节' },
+    { id:'d.hash', n:'哈希怎么选', p:0,
+      h:'密码用 bcrypt（人起的、能猜，故意慢）；cookie、进程令牌、应用凭据是 32 字节随机数，猜不出来，用 SHA-256，查找时直接按哈希走唯一索引。', s:'第 9 节' },
+    { id:'d.genidx', n:'生成列代替部分唯一索引', p:0,
+      h:'MySQL 没有带条件的唯一索引：用生成列 employee_no_active（未移除时等于工号，移除后为 NULL）建唯一索引，NULL 不参与唯一判断。已在 TDSQL 测试实例实测（2026-11-13）。', s:'第 9 节' },
+    { id:'d.clean', n:'每日清理',
+      h:'IdentityCleanup 每天删除作废或过期超过 7 天的会话、令牌、应用凭据，分批，每批不超过 1000 行。保留天数是 RFC-0001 Q14 的本模块默认值（Q7）。', s:'第 9 节' } ]},
+  { g:'阶段与工程', cls:'col', items:[
+    { id:'e.p0', n:'P0：接口 + 表 + 假实现', p:0,
+      h:'接口冻结，七张表建好；假实现只在 dev 配置下装配：所有请求认成一个开发用户（全站管理员、允许数据导出、网关 uid 从配置读），进程令牌随机生成、校验时认成这个开发用户，评估账号返回空列表，resolveAppCall 返回未实现。', y:'让其他模块跑通「网页 → 平台 → DSH」最小链路。', s:'第 11.1、11.2 节' },
+    { id:'e.phase', n:'阶段 P0–P4', p:0,
+      h:'P0：I1 接口与假实现、I2 七张表。P1：I3 账号与登录、I4 取数身份、令牌与事件。P2：I5 令牌校验与 M05 联调。P3：I6 评估账号。P4：I7 接入应用（与 RFC-0017 一起）。', s:'第 11.1、11.2 节' },
+    { id:'e.files', n:'文件结构', p:0,
+      h:'backend/modules/identity/ 下：api/（六个接口及类型）、events/（PrincipalChanged）、domain/（RoleCapabilities、PasswordPolicy、RouteKeys、IdentityAudit）、store/（七个 jOOQ Store）、http/（LoginController、UserAdminController、EvalAccountController、IntegrationAppController）、jobs/（IdentityCleanup、InitialAdmin）、mock/（假实现）；backend/migrations/identity/。', s:'第 11.3 节' },
+    { id:'e.api', n:'页面接口',
+      h:'前缀 /api/v1/identity：POST /login、POST /logout、GET /me、POST /me/password；GET/POST /users、PATCH /users/{id}、disable / enable、reset-password、DELETE（移除）；评估账号（P3）；接入应用（P4）。写请求都带 X-XSRF-TOKEN。', s:'第 8.2 节' },
+    { id:'e.test', n:'测试',
+      h:'单元：角色 → 能力、路由键解析、密码规则与锁定、Decision 原因。集成（Testcontainers 起 MySQL 8.0.24）：I3、I4 验收用例；并发：两个管理员互相降级、两个进程同时建初始管理员、同一工号并发建号。安全检查：库里没有明文凭据、审计不含凭据、登录失败不区分账号是否存在。', s:'第 12 节' } ]},
+  { g:'未决问题与缺点', cls:'wrapq', items:[
+    { id:'q1', k:'q', n:'Q1 行内登录安全要求（已答复）', h:'锁定、会话时长、密码规则；以后是否接统一认证。', y:'组长 11-16 答复：密码要有一定复杂度、不要求定期换；先用工号密码，以后接统一认证。按第 3.2 节。', s:'第 13 节' },
+    { id:'q2', k:'q', n:'Q2 网关 uid 由谁提供（已答复）', h:'网关 uid 由谁提供、是否就是工号（RFC-0001 Q04）。', y:'组长 11-16 答复：一般就是工号。新建账号时默认填工号，管理员可改，见第 4 节。', s:'第 13 节' },
+    { id:'q3', k:'q', n:'Q3 HTTPS 还是 HTTP（已答复）', h:'行内部署是 HTTPS 还是 HTTP。', y:'组长 11-16 答复：用 HTTPS，Secure 固定开启。', s:'第 13 节' },
+    { id:'q4', k:'q', n:'Q4 接入应用凭据（已定）', p:4, h:'凭据形式、实际用户的证明方式、换凭据时新旧并存多久（RFC-0001 Q13、Q25）。', y:'已在 RFC-0017 定（11-16）：随机密钥只存哈希、工号声明、生成新凭据后旧的 7 天内失效。是否复用行内已有接入能力见 RFC-0017 Q1，等组长答复。', s:'第 13 节' },
+    { id:'q5', k:'q', n:'Q5 知识平台要什么身份', h:'接入知识平台时，它是否按用户判断可见范围、需要什么身份（RFC-0001 Q24）。', y:'本文建议：本期不存知识服务 uid；需要时加一列和 Mapped 的一个字段。谁定：知识平台。', s:'第 13 节' },
+    { id:'q6', k:'q', n:'Q6 停用后停不停执行', h:'用户停用后，是否停掉他正在运行的执行、回收他的 DSH 进程。', y:'本文建议：由 RFC-0012 决定；本文保证发 C20。谁定：会话模块。', s:'第 13 节' },
+    { id:'q7', k:'q', n:'Q7 各表保留期', h:'本模块各表的保留期（RFC-0001 Q14）。', y:'本文建议：会话、令牌、应用凭据作废或过期 7 天后删除；账号长期保留。谁定：技术负责人。', s:'第 13 节' },
+    { id:'e.cons', n:'缺点（第 10.2 节）',
+      h:'1. 多个 API 进程时，停用、降级在其他进程上最多 30 秒后生效（checkCapability 不缓存，判权本身立刻生效）。2. 唯一的管理员忘记密码就没人能重置。3. 失败锁定可以被人故意触发。4. 进程令牌能被 Agent 主进程的读文件工具读到，但不扩大权限。5. 开发环境单进程时所有用户共用一把令牌。6. 用户停用后，他正在运行的执行和 DSH 进程不会自动停止（Q6）。', s:'第 10.2 节' } ]} ]}
+];
+
+// 平台外的系统
+const EXTS = [
+  { id:'browser', k:'window', name:'浏览器', one:'工号 + 密码登录', h:'用户在浏览器里登录、提问。进门凭证是登录 cookie。' },
+  { id:'biz', k:'dashed', name:'行内业务系统', one:'经开放 API 调用（P4）', p:4, h:'例如 CRM。用应用凭据调开放 API，声明实际用户（P4，开放 API 的 RFC 里定）。' },
+  { id:'dsh', k:'stack', name:'DSH 进程', one:'Agent 在这里运行\n每个用户一个进程', h:'调业务 tool 走桥接插件回调（执行凭据）；调 MCP 直接发给 MCP 代理（进程令牌）。' },
+  { id:'mcp', k:'box', name:'MCP 服务', one:'mem0、行内 MCP 服务', h:'MCP 代理用连接自己的凭据访问它们；进程令牌不外发。' },
+  { id:'gw', k:'box', name:'取数网关', one:'按 uid 判数据范围', h:'平台把网关 uid 交给取数网关，数据范围由网关判断。' }
+];
+
+// 用到 M07 的其他模块（默认不显示，相关时出现）
+const PILLS = [
+  { id:'T02', name:'请求入口', vertical:true },
+  { id:'M05', name:'MCP 代理' },
+  { id:'T04', name:'DSH\n适配层' },
+  { id:'M03', name:'数据访问模块' },
+  { id:'M09', name:'审计模块' },
+  { id:'BIZ', name:'各业务模块' },
+  { id:'M16', name:'会话、自进化模块' }
+];
+
+// 连线：def 默认显示；from/to 用于判断和哪个区相关；pills 是这条线经过的模块；p 阶段；at 标签位置（不填按弯线中点，t 是弯线上的位置 0–1）
+const LINES = [
+  { id:'L1', from:'browser', to:'r3', def:1, label:'登录 cookie', pills:['T02'] },
+  { id:'L2', from:'biz', to:'r7', def:1, label:'应用凭据\n+ 实际用户', pills:['T02'], p:4 },
+  { id:'L3', from:'dsh', to:'r5', def:1, label:'MCP 调用\n带进程令牌', pills:['M05'], p:2 },
+  { id:'L4', from:'r5', to:'mcp', def:1, label:'代理转发：用连接自己的凭据，令牌不外发', pills:['M05'], p:2 },
+  { id:'L5', from:'dsh', to:'r4', def:1, label:'tool 回调：按执行凭据认人（不用令牌）', pills:['M03'] },
+  { id:'L6', from:'r4', to:'gw', def:1, label:'网关 uid' },
+  { id:'L7', from:'r3', to:'r1', def:1, label:'用户主体\n+ 能力' },
+  { id:'L8', from:'r7', to:'r1', def:1, label:'应用主体', p:4 },
+  { id:'L9', from:'r2', to:'r1', def:1, label:'角色、状态\n导出权限' },
+  { id:'L10', from:'r6', to:'r1', def:1, label:'评估账号\n主体', p:3 },
+  { id:'H1', from:'r5', to:'r1', label:'校验后得到主体' },
+  { id:'H2', from:'T04', to:'r5', label:'签发、作废令牌', pills:['T04'], at:[490,1428] },
+  { id:'H3', from:'T04', to:'dsh', label:'令牌放进环境变量', pills:['T04'] },
+  { id:'H4', from:'r2', to:'r3', label:'停用、移除、重置：作废会话' },
+  { id:'H5', from:'r2', to:'r5', label:'停用、移除：作废令牌' },
+  { id:'H6', from:'r2', to:'r4', label:'uid 是账号表的一列' },
+  { id:'H7', from:'r6', to:'r4', label:'评估账号的 uid', p:3 },
+  { id:'H8', from:'r6', to:'r5', label:'评估账号令牌', p:3, t:0.72 },
+  { id:'H9', from:'r2', to:'r8', label:'发变更通知、记审计' },
+  { id:'H10', from:'r6', to:'r8', label:'停用、启用时发变更通知', p:3 },
+  { id:'H11', from:'r7', to:'r8', label:'停用、换凭据、改资格时发变更通知', p:4 },
+  { id:'H12', from:'r8', to:'T02', label:'变更通知：请求入口清缓存', pills:['T02'] },
+  { id:'H13', from:'r8', to:'M05', label:'变更通知：MCP 代理清缓存', pills:['M05'], p:2 },
+  { id:'H14', from:'r8', to:'M09', label:'审计记录', pills:['M09'] },
+  { id:'H15', from:'BIZ', to:'r1', label:'判权、查能力清单', pills:['BIZ'] },
+  { id:'H16', from:'M16', to:'r6', label:'选账号、校验', pills:['M16'], p:3, at:[2385,585] }
+];
+
+// 走一遍：每步点亮哪些区（open 的区展开标签），hit 标签，亮哪些线和模块
+const TOURS = [
+ { id:'t1', name:'张三登录、提问、取数', steps:[
+  { open:['r3'], hit:['r3.flow','r3.bcrypt','r3.hash'], lines:['L1'], ext:['browser'],
+    t:'张三在浏览器输入工号和密码。平台把工号去空格、转大写，再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。' },
+  { open:['r3','r1'], hit:['r3.cache','r1.user','r1.cap'], lines:['L1','L7'], ext:['browser'],
+    t:'之后每个请求浏览器都自动带上 cookie。请求入口先看 30 秒内有没有认过这个 cookie（缓存），没有再问身份与权限模块，认出是「用户张三」，并拿到他的能力清单。' },
+  { open:['r5'], hit:['r5.route','r5.kinds','r5.env'], lines:['H2','H3'], ext:['dsh'],
+    t:'张三提问。DSH 适配层要给张三起一个 DSH 进程（路由键就是张三的用户 ID），先向身份与权限模块要一把用户令牌，放进这个进程的环境变量。' },
+  { open:['r5'], hit:['r5.why','r5.withroute','r5.internal'], lines:['L3','L4','H1'], ext:['dsh','mcp'],
+    t:'Agent 调 mem0（个人记忆）：请求带着进程令牌发给 MCP 代理。代理拿令牌问身份与权限模块，认出是张三，再用这条连接自己的凭据去访问 mem0。令牌只在平台内部用，不发给 mem0。' },
+  { open:['r4'], hit:['r4.only','r4.ret','r4.col'], lines:['L5','L6'], ext:['dsh','gw'],
+    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 查到这次执行的执行凭据（替张三干活）。数据访问模块向身份与权限模块要张三的网关 uid，交给取数网关，网关按 uid 决定张三能看哪些数据。' } ]},
+ { id:'t2', name:'管理员停用李四', steps:[
+  { open:['r2'], hit:['r2.disable','r2.patch'], lines:[],
+    t:'管理员在用户管理里停用李四（管理员要有「管理账号」这项能力）。' },
+  { open:['r2'], hit:['r2.disable'], also:['r3','r5'], lines:['H4','H5'],
+    t:'在同一个事务里：李四的账号改为停用，作废他的全部登录会话和进程令牌，并登记一条变更通知。' },
+  { open:['r8'], hit:['r8.speed','r8.sub','r8.tx'], also:['r3','r5'], lines:['H12','H13'],
+    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。李四的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。' },
+  { open:['r8'], hit:['r8.list','r8.speed'], lines:['H14'],
+    t:'这次停用记一条审计。如果平台后端同时跑了多个副本，其他副本收不到这条通知，要等缓存到期，最多晚 30 秒生效。' } ]},
+ { id:'t3', name:'王经理跑自进化评估', steps:[
+  { open:['r1'], hit:['r1.svc','r1.r10'], lines:[],
+    t:'王经理（全站管理员）发起自进化。这个后台任务的主体是「服务：自进化，发起人王经理」，之后每一步判权都按王经理当时的能力算。' },
+  { open:['r5'], hit:['r5.kinds','r5.route'], lines:['H2'],
+    t:'自进化的 Agent 跑在王经理名下的自进化进程里（路由键 evolution:王经理的用户 ID），带自进化令牌：只放这个 Agent 版本勾选的 tool，不放 mem0。签发令牌时王经理必须有「管理自进化」这项能力。' },
+  { open:['r6'], hit:['r6.use','r6.why'], also:['r4','r5'], lines:['H7','H8','H16'],
+    t:'评估时用三档评估账号跑测试题：被测会话的进程路由键就是评估账号 ID，带评估账号令牌，取数用评估账号自己的 uid。打分、模拟用户提问的会话用评估辅助令牌，不能调 MCP 工具。' },
+  { open:['r1','r5'], hit:['r1.r10','r5.two'], also:['r8'], lines:['H1'],
+    t:'评估跑到一半王经理被降级：同一个事务里作废他的自进化令牌并发变更通知；之后的判权按他现在的能力算，一律拒绝。' } ]},
+ { id:'t4', name:'新人首次登录', steps:[
+  { open:['r2'], hit:['r2.initpw','r2.empno'], lines:[],
+    t:'管理员新建账号（工号、姓名、角色）。系统生成随机初始密码，只在这次响应里显示，由管理员转告。' },
+  { open:['r3','r1'], hit:['r3.flow','r1.must'], lines:['L1','L7'], ext:['browser'],
+    t:'新人用初始密码登录成功，但必须先改密：这时他的能力清单是空的，做什么都会被拒；前端打开页面时会问后端「我是谁」，看到要改密就只显示改密页。' },
+  { open:['r3'], hit:['r3.policy','r3.revoke'], lines:['L1'], ext:['browser'],
+    t:'改密（输旧密码，新密码至少 8 位、含字母和数字）后，其他会话作废、当前会话保留，能力恢复。' } ]},
+ { id:'t5', name:'CRM 替李四问（P4）', steps:[
+  { open:['r7'], hit:['r7.resolve','r7.cred'], lines:['L2'], ext:['biz'],
+    t:'CRM 用应用凭据调开放 API，声明实际用户是李四。请求入口找身份与权限模块校验。' },
+  { open:['r7','r1'], hit:['r7.onbehalf','r7.inter','r1.app'], lines:['L2','L8'], ext:['biz'],
+    t:'主体是「接入应用 CRM + 实际用户李四」。能做的事：李四能做的事里，管理员允许 CRM 调用的那部分。' },
+  { open:['r4'], hit:['r4.ret'], lines:['L6'], ext:['gw'],
+    t:'取数用李四的 uid；会话、文件归李四；审计里同时记 CRM 和李四。' } ]}
+];
+
+</script><script>
+// 点开一个区后右侧的讲解页，九个区都在 DETAIL 里（data.js 的标签只在某区没有 DETAIL 时自动列出，现在不显示）。
+// 要点字段：q 问题；a 回答（可含 <code>）；y 为什么；alt 没选的做法；s RFC 节
+const CODE = s => `<code>${s}</code>`;
+// flow：一排带编号的步骤；tbl：表格（第一行是表头）
+const flow = steps => `<div class="flow">${steps.map((s, i) => `${i ? '<div class="ar">→</div>' : ''}<div class="st"><i>${i + 1}</i><b>${s[0]}</b><ul>${s[1].map(x => `<li>${x}</li>`).join('')}</ul></div>`).join('')}</div>`;
+const tbl = rows => `<table class="tb">${rows.map((r, k) => `<tr>${r.map(x => k ? `<td>${x}</td>` : `<th>${x}</th>`).join('')}</tr>`).join('')}</table>`;
+const sub = t => `<div class="dsub">${t}</div>`;
+
+const DETAIL = {
+r1: {
+  lead: '每个请求进来，平台先认出「是谁在操作」，再看他有没有做这件事的能力。认出来的结果统一叫「主体」，一共四种。',
+  diagram: sub('是谁在操作：四种主体') + `
+  <div class="d1">
+    <div class="h">请求从哪来</div><div></div><div class="h">认成哪种主体</div><div></div><div class="h">能做什么</div>
+    <div class="ent">浏览器<small>用户登录后，每个请求带着登录 cookie</small></div><div class="ar">→</div>
+    <div class="pr"><b>用户</b><span>张三在网页上提问</span>${CODE('UserPrincipal')}</div><div class="ar">→</div>
+    <div class="src">由他的角色决定，另有两个例外（见下面的表）</div>
+    <div class="ent p4">行内业务系统<small>带应用凭据，声明替谁调用（P4 才做）</small></div><div class="ar">→</div>
+    <div class="pr p4"><b>接入应用 + 实际用户</b><span>CRM 替李四提问</span>${CODE('AppPrincipal')}</div><div class="ar">→</div>
+    <div class="src p4">李四能做的事里，管理员允许 CRM 调用的那部分</div>
+    <div class="ent">评估任务<small>评估 Agent 的修改时，平台用测试账号跑测试题（P3 才做）</small></div><div class="ar">→</div>
+    <div class="pr"><b>评估账号</b><span>数据平台开的测试账号，分三个权限档；不能登录</span>${CODE('EvalAccountPrincipal')}</div><div class="ar">→</div>
+    <div class="src">不能做任何管理操作，只当取数身份用</div>
+    <div class="ent">后台任务<small>没人在网页上操作，平台自己在跑</small></div><div class="ar">→</div>
+    <div class="pr"><b>服务</b><span>王经理发起的自进化；平台自己的打分、探测等</span>${CODE('ServicePrincipal')}</div><div class="ar">→</div>
+    <div class="src">自进化：每一步按王经理<em>当时</em>的能力算，他中途被降级，后面的操作就被拒<br>平台自己的任务：没有发起人，不能做任何管理操作</div>
+  </div>
+  <p class="foot">Agent 调 MCP 服务时带的是进程令牌，平台校验后同样认成上面某一种主体（见 ⑤ 进程令牌）。</p>`
+  + sub('用户能做什么：由角色决定，另有两个例外') + `
+  <table class="tb roles">
+    <tr><th>角色</th><th>有哪些能力（一项能力就是一件能做的事）</th></tr>
+    <tr><td>使用者</td><td><span class="cap">对话、上传、下载本人文件</span></td></tr>
+    <tr><td>全站管理员</td><td><span class="cap">对话、上传、下载本人文件</span><span class="cap">配置和发布 Agent</span><span class="cap">管理知识包、Skill、MCP 连接</span><span class="cap">查看和管理自进化</span><span class="cap">管理账号和评估账号</span><span class="cap">管理接入应用</span><span class="cap">运营设置（模型、限额等）</span><span class="cap">查看日志和审计</span></td></tr>
+  </table>
+  <div class="exc">
+    <div><b>例外一：数据导出</b><br>不跟角色走。要在账号上单独打开「允许数据导出」，管理员也不自带。</div>
+    <div><b>例外二：还没改初始密码</b><br>不管什么角色，用网页登录时一项能力都没有，只能先去改密。（接入应用替他调用时不受影响，P4）</div>
+  </div>
+  <p class="foot">各业务模块执行操作前，都先问身份与权限模块：「他有没有这项能力？」（接口名 ${CODE('checkCapability')}）</p>`,
+  points: [
+    { q:'判断「能不能做」看什么？', a:'只看能力，不看角色。两种角色各对应一组能力，这张对应表写在代码里，不建表。各模块和前端只问「有没有这项能力」。',
+      y:'以后加一种角色只改这张表，其他模块和前端都不用改。', alt:'各模块直接判角色：加一种角色，要改所有模块和前端。', s:'第 2.2 节' },
+    { q:'管理员能导出数据吗？', a:'不一定。数据导出不跟角色走，要在账号上单独打开「允许数据导出」，管理员也一样。',
+      y:'PRD v8 要求按人设置数据导出权限。', s:'第 2.2 节' },
+    { q:'角色刚被改掉，多久生效？', a:'立刻。每次判权都重新查一次账号，不用缓存。（平台只把「这个 cookie 是谁」缓存最多 30 秒，「他能做什么」每次现查。）',
+      y:'判权要准；按主键查一次代价很小。', s:'第 2.3 节' },
+    { q:'新人还没改初始密码，能做什么？', a:'在网页上什么都不能做。必须改密的账号登录后能力清单是空的，所有判权自然拒绝；前端打开页面时会问后端「我是谁」，看到要改密就只显示改密页。接入应用替他调用时不看这一项（P4）：只在业务系统里用平台的人可能从不登录网页。',
+      y:'不用在每个接口另写拦截，也不用给接口加字段。', s:'第 2.2 节' },
+    { q:'后台任务算谁的权限？', a:'管理员发起的自进化，每一步按这位管理员<em>当时</em>的能力判：他中途被降级或停用，后续操作就被拒。平台自己的任务（打分、模拟用户、探测）没有发起人，判权一律拒绝，它们能做的事由各自的进程令牌种类限定（见 ⑤）。',
+      s:'第 2.3 节' },
+    { q:'页面显示和真正执行，用同一个接口吗？', a:`不是。决定菜单显示什么，用「查能力清单」${CODE('getCapabilities')}；真要执行前，用「判权」${CODE('checkCapability')}，被拒会记一条审计。`,
+      y:'如果显示也用判权，每打开一次页面都会产生一堆无意义的拒绝审计。', s:'第 2.3 节' }
+  ]
+},
+
+r3: {
+  lead: '浏览器用工号和密码登录，平台发一个 cookie；之后每个请求都靠这个 cookie 认出是谁。',
+  diagram: `
+  <div class="flow">
+    <div class="st"><i>1</i><b>输入工号和密码</b><ul><li>工号去空格、转大写</li><li>按工号找账号（已移除的不算）</li></ul></div><div class="ar">→</div>
+    <div class="st"><i>2</i><b>校验</b><ul><li>连续错 5 次锁 15 分钟</li><li>用 bcrypt 比对密码</li><li>账号不存在或密码错：统一提示「工号或密码错误」</li><li>密码对但账号已停用：提示「账号已停用」</li></ul></div><div class="ar">→</div>
+    <div class="st"><i>3</i><b>发登录 cookie</b><ul><li>32 字节随机串</li><li>库里只存它的哈希</li><li>固定有效 12 小时</li><li>页面脚本读不到（HttpOnly）</li></ul></div><div class="ar">→</div>
+    <div class="st"><i>4</i><b>之后每个请求</b><ul><li>请求入口先看 30 秒内认过这个 cookie 没有（缓存）</li><li>没认过再问身份与权限模块</li><li>得到用户主体和能力（见 ①）</li></ul></div><div class="ar">→</div>
+    <div class="st"><i>5</i><b>失效</b><ul><li>退出、到期或被作废</li><li>请求被拒，返回 401（未登录）</li><li>前端回到登录页</li></ul></div>
+  </div>
+  <div class="band"><b>什么时候把一个人的会话全部作废</b>
+    <span class="tg">管理员停用</span><span class="tg">管理员移除</span><span class="tg">管理员重置密码</span><span class="tg">本人改密<small>（保留当前这个）</small></span>
+    <span class="then">→ 和这次修改在同一个事务里作废，然后发变更通知，请求入口立刻清缓存（见 ⑧）</span></div>`,
+  points: [
+    { q:'会话为什么存在库里？', a:'存库才能作废。退出、停用、重置密码后，库里标记作废，旧 cookie 在下一个请求就失效。',
+      alt:'签名令牌（JWT）不存库：作废不了，被盗的令牌一直能用到过期。', s:'第 3.1、10.1 节' },
+    { q:'库里为什么只存哈希？', a:'数据库泄露了，拿到的也只是哈希，当不了 cookie 用。cookie 是 32 字节随机串，猜不出来，用 SHA-256 就够；密码是人起的、能猜，才用故意算得很慢的 bcrypt。',
+      s:'第 9 节' },
+    { q:'为什么固定 12 小时，不做「闲置多久自动退出」？', a:'12 小时是一个工作日。闲置超时要每个请求都写库更新时间。组长答复里没有这项要求，先不做。',
+      s:'第 3.2 节' },
+    { q:'连续输错密码会怎样？', a:'连续 5 次锁 15 分钟，到时自动解锁；管理员重置密码立即解锁。',
+      y:'防猜密码，又不用管理员介入。缺点：别人可以故意输错，把你锁 15 分钟。', s:'第 3.2、10.2 节' },
+    { q:'怎么防止别的网站冒用你的登录？', a:'风险是这样的：你登录着平台，又打开了一个恶意网页，它偷偷让你的浏览器给平台发一个写请求（比如改设置），浏览器会自动带上你的登录 cookie，平台以为是你本人。平台挡两层：① 登录 cookie 设成「别的网站发起的写请求不带它」（SameSite=Lax）；② 平台另给页面一串页面脚本能读的随机数（XSRF-TOKEN），平台自己的页面发写请求时把它抄进请求头，入口核对一致才放行；别的网站读不到这串数，抄不出来。',
+      y:'第一层挡不住同一主域名下的其他行内系统，所以第二层不能省。第二层不用存库，所用的框架（Spring Security）自带。', alt:'把防跨站随机数和登录会话绑定、存进库里：多一列和比对代码。', s:'第 3.3 节' },
+    { q:'退出登录会停掉正在跑的对话吗？', a:'不会。登录状态和 Agent 的执行分开管理（PRD v8）。', s:'第 3.1 节' }
+  ]
+}
+};
+
+// ---------- 其余七个区 ----------
+
+
+Object.assign(DETAIL, {
+r2: {
+  lead: '一个人在平台上的身份信息都记在账号上：用永久不变的用户 ID 认人，工号可以改。',
+  diagram: sub('一个账号上有什么') + `
+  <div class="kv">
+    <div class="k">用户 ID<code>usr_01J…</code></div><div class="v">永久不变。对话、文件、记忆（memory）都按它记归属</div>
+    <div class="k">工号</div><div class="v">登录时输入；<em>可以更正</em>；存之前去空格、转大写；未移除的账号里不能重复</div>
+    <div class="k">姓名</div><div class="v">可以重名</div>
+    <div class="k">角色</div><div class="v">使用者 / 全站管理员，决定有哪些能力（见 ①）</div>
+    <div class="k">状态</div><div class="v">启用 / 停用。停用后不能登录，会话和令牌立刻作废；可以再启用。不再用的账号可以「移除」（见下面）</div>
+    <div class="k">允许数据导出</div><div class="v">唯一一项按人单独打开的能力，管理员也不自带</div>
+    <div class="k">网关 uid</div><div class="v">取数网关认的身份（见 ④）。新建时默认填工号，管理员可改；为空就不能真实取数</div>
+    <div class="k">密码<small>（另一张表）</small></div><div class="v">bcrypt 哈希、是否必须改密、连续失败次数、锁到几点</div>
+  </div>` + sub('一个账号的一生') + flow([
+    ['新建', ['管理员填工号、姓名、角色', '网关 uid 默认填工号', '系统生成随机初始密码，只显示这一次']],
+    ['首次登录', ['必须先改密', '改密前什么能力都没有']],
+    ['正常使用', ['管理员可改姓名、工号、角色、导出权限、uid', '可以重置密码']],
+    ['停用 ⇄ 启用', ['停用：会话、令牌立刻作废', '历史都保留']],
+    ['移除', ['从用户列表消失，不能再用', '历史对话、文件仍归这个用户 ID', '清掉 uid、删掉密码、作废会话和令牌', '同一工号可以再建新账号']]
+  ]),
+  points: [
+    { q:'为什么用户 ID 和工号分开？', a:'工号可能录错、要更正。如果拿工号当编号，改一次就要改全平台所有记归属的表；用永久的用户 ID，改工号只改账号这一行。',
+      y:'PRD v8：修改姓名或更正工号不改变对话、文件和 memory 的归属。', alt:'工号直接当用户 ID。', s:'第 2.1 节' },
+    { q:'两个管理员同时把对方降级，会不会一个管理员都不剩？', a:'不会。停用、移除、降级管理员时，先把所有启用的管理员行锁住再数，保证操作后至少还剩一个，否则提示「至少保留一个管理员」。',
+      y:'如果只数不锁：两个请求同时数到 2，各自降级对方，最后剩 0。', s:'第 2.1 节' },
+    { q:'两个管理员同时编辑同一个账号呢？', a:'后保存的那个会收到「已被别人修改」，刷新后再改（靠账号上的修改版本号）。', s:'第 2.1 节' },
+    { q:'新建账号的密码从哪来？', a:'系统随机生成，只在这一次显示给管理员，由管理员转告；用户第一次登录必须改密。重置密码也一样。',
+      y:'PRD v8 添加用户只填工号、姓名、角色，没有设密码这一步。', s:'第 2.1 节' },
+    { q:'平台刚部署，第一个管理员从哪来？', a:'进程启动时发现没有启用的管理员，就按部署配置里的工号和初始密码建一个（必须改密）。两个进程同时启动也只会建出一个（工号唯一挡住第二个）。',
+      y:'已知限制：唯一的管理员忘了密码就没人能重置，所以部署时要求至少建两个管理员。', s:'第 2.1、10.2 节' },
+    { q:'改一个账号会产生哪些连带动作？', a:'编辑账号是一个接口、一个表单。后端比较改前改后：角色、导出权限、uid、状态各自记对应的审计并发变更通知（见 ⑧）；降级管理员时检查「至少一个管理员」。', s:'第 8.2 节' }
+  ]
+},
+
+r4: {
+  lead: '取数网关按 uid 决定一个人能看哪些数据。平台只负责回答「这次是谁在取数、他的 uid 是什么」：用账号上登记的，没登记就不让取，绝不猜。',
+  diagram: sub('取数时发生了什么') + flow([
+    ['Agent 调取数 tool', ['经桥接插件回调平台']],
+    ['平台找到执行凭据', ['按 DSH 会话 ID 查', '里面有这次执行的主体']],
+    ['数据访问模块要 uid', ['向身份与权限模块要', '只能在 tool 回调里要']],
+    ['交给取数网关', ['网关按 uid 判断能看哪些数据']]
+  ]) + sub('身份与权限模块怎么回答') + `
+  <table class="tb tree">
+    <tr><th>这次是谁</th><th>情况</th><th>返回</th></tr>
+    <tr><td rowspan="3">用户<br>接入应用（按实际用户算）<br>评估账号</td><td>账号上填了 uid</td><td class="ok">✓ 能取数：把 uid 交给取数网关</td></tr>
+    <tr><td>没填 uid</td><td class="no">✗ 未开通：tool 提示「账号还没开通取数身份，请联系管理员」</td></tr>
+    <tr><td>账号已停用或移除</td><td class="no">✗ 不允许</td></tr>
+    <tr><td>服务（自进化、打分、探测）</td><td>—</td><td class="no">✗ 不允许：自进化不沿用发起管理员的数据权限；打分、探测不取数</td></tr>
+  </table>`,
+  points: [
+    { q:'Agent 能冒充别人去取数吗？', a:'不能。主体来自平台入口核验过的执行凭据（按 DSH 会话 ID 查到），不是模型填的参数，所以 Agent 没法替别人要 uid。也因此这个接口只能在 tool 回调里调用。', s:'第 4 节' },
+    { q:'uid 从哪来？为空时为什么不临时拿工号顶上？', a:'组长答复 uid 一般就是工号，所以新建账号时默认填工号，管理员看得见、改得了；之后更正工号，uid 不跟着变，由管理员决定（uid 一变就是数据权限变，不能悄悄改）。但取数时如果 uid 是空的（比如被管理员清掉了），不临时拿工号顶上：猜错就是用别人的数据权限取数，宁可不让取，提示去找管理员。',
+      alt:'没有映射时默认拿工号当 uid。', s:'第 4 节' },
+    { q:'一个 uid 能绑给两个人吗？', a:'不能，否则一个人能用另一个人的数据权限。账号表、评估账号表各自不许重复；两张表之间由身份与权限模块在写入时同一事务里互查。改 uid 等于改数据权限，每次改都记审计。', s:'第 4、9 节' },
+    { q:'uid 为什么直接放在账号表里？', a:'一个账号对应一个 uid，一对一。单独建映射表要多一张表、多一个约束、每次多联一次表。以后真要一人多个外部身份，改动也只在身份与权限模块内部。',
+      alt:'单独的身份映射表（用户 / 评估账号 → uid）。', s:'第 10.1 节' },
+    { q:'管理员能取到更多数据吗？', a:'不能。数据范围由取数网关按 uid 判断，平台不维护部门授权，管理员角色不扩大取数权限（PRD v8）。', s:'第 1、4 节' },
+    { q:'为什么每次都查库、不缓存？', a:'每次 tool 调用按主键查一次，代价很小；停用、改 uid 后立刻生效。', s:'第 4 节' },
+    { q:'知识服务也要 uid 吗？', a:'本期不存。PRD v8 本期用本地知识文件；接入知识平台、确定它要什么身份时，账号表加一列即可（还没定，见 ⑨）。', s:'第 4 节' }
+  ]
+},
+
+r5: {
+  lead: 'Agent 调业务 tool（比如取数）时，请求经桥接插件转回平台，平台查得到这次是替谁干活；但调 MCP 服务（比如 mem0）时，请求直接发给 MCP 代理，代理本来不知道是谁在调。所以平台给每个 DSH 进程发一把令牌，放在进程的环境变量里，代理靠它认人。',
+  diagram: `<p class="note">先认识一个词：<b>路由键</b>是 DSH 进程的门牌号，一个路由键对应一个进程。用户的进程，路由键就是用户 ID。</p>` + sub('Agent 调平台的两条路') + `
+  <div class="paths">
+    <div class="lab">调业务 tool<small>比如取数</small></div><div class="chain"><span>DSH 进程</span>→<span>桥接插件回调平台</span>→<span>按 DSH 会话 ID 查执行凭据</span>→<span class="end">认出「这一次执行」的主体</span><em>不用令牌</em></div>
+    <div class="lab">调 MCP<small>比如 mem0</small></div><div class="chain"><span>DSH 进程</span>→<span>直接发给 MCP 代理<small>只能带环境变量里的东西</small></span>→<span>代理拿令牌问身份与权限模块</span>→<span class="end">认出「这个进程」的主体</span><em>用进程令牌</em></div>
+  </div>` + sub('一把令牌的一生') + flow([
+    ['签发', ['DSH 适配层起进程前，按路由键要一把令牌', '代表的人已停用就拒绝']],
+    ['放好', ['明文只给这一次', 'DSH 适配层把它放进进程环境变量', '库里只存哈希']],
+    ['使用', ['Agent 调 MCP，请求头带令牌', '代理校验得到主体（缓存 30 秒）']],
+    ['作废', ['进程回收时 DSH 适配层作废', '人被停用时立刻作废他的全部令牌']],
+    ['清理', ['作废 7 天后删除']]
+  ]) + sub('五种令牌：种类由路由键决定') + tbl([
+    ['种类', '哪个进程（路由键）', '代表谁', 'MCP 代理放行什么'],
+    ['用户令牌<br><code>USER</code>', '用户的进程（用户 ID）', '这个用户', '按管理员在资源管理里给这个用户的授权放行；可以把用户身份传给 mem0（记忆按人分开）'],
+    ['自进化令牌<br><code>EVOLUTION</code>', '某位管理员的自进化进程（evolution:管理员 ID）', '服务，审计记在这位管理员身上', '只放该 Agent 版本勾选的 tool；不放 mem0；签发时管理员须有「管理自进化」能力'],
+    ['评估账号令牌<br><code>EVAL_ACCOUNT</code>', '评估被测会话的进程（评估账号 ID）', '评估账号', '不放 mem0'],
+    ['评估辅助令牌<br><code>EVAL_AUX</code>', '同一次评估的打分、模拟用户进程（eval-aux:评估 ID）', '平台服务（没有发起人）', '不放 MCP tool'],
+    ['探测令牌<br><code>PROBE</code>', '探测进程（system:probe）', '平台服务（没有发起人）', '只能列 tool，不能调']
+  ]),
+  points: [
+    { q:'令牌为什么不设过期时间？', a:'DSH 进程可能连续跑好几天，运行中进程的环境变量从外面改不了，令牌一过期就只能重启进程。所以令牌跟着进程走，进程回收时作废。',
+      alt:'进程令牌设短期过期。', s:'第 5.3 节' },
+    { q:'一个人被停用，他的 MCP 调用多快失败？', a:'立刻。两道保险：停用时同一事务把他的全部令牌作废并发变更通知，代理立刻清缓存；代理校验时还会再查一次这个人当前的状态。',
+      alt:'停用时不批量作废、只靠校验时查状态：不能立刻干净地失败，库里也看不出令牌已作废。', s:'第 5.2、10.1 节' },
+    { q:'校验结果为什么要带路由键？', a:'MCP 调用记录按路由键存；打分、模拟用户进程「属于哪次评估」只写在路由键里（eval-aux:评估 ID），主体里没有。', s:'第 5.1 节' },
+    { q:'令牌会被拿去访问外部服务吗？', a:'不会。令牌只在平台内部用；MCP 代理访问 mem0、行内 MCP 服务用的是连接自己的凭据。', s:'第 1.1 节' },
+    { q:'Agent 能读到自己进程的令牌吗？', a:'可能能，还没测。Agent 主进程的读文件工具不经沙箱，也许能读到进程的环境变量（/proc/self/environ），要等 DSH 测试用例 V15 确认。就算读到了，也只能以同一身份经代理调用，代理照样判权，不扩大权限。沙箱里执行的命令读不到（DSH 已测：沙箱清掉名字含 TOKEN 的环境变量）。', s:'第 5.3 节' },
+    { q:'开发环境只起一个 DSH 进程怎么办？', a:'所有用户共用一把令牌，代理认成同一个人，只能用在没有真实数据的环境。生产按用户分进程，前提是 DSH 复测「多个进程各带各的令牌、代理能区分开」通过；不通过时，要按人判权的 MCP 服务改成平台业务 tool。', s:'第 5.4 节' }
+  ]
+},
+
+r6: {
+  lead: '自进化改了 Agent 之后要先评估再采纳。取数结果取决于谁在问，所以用数据平台开的三档账号来跑，既看答得对不对，也看受限账号有没有被正确拒绝。',
+  diagram: sub('评估账号怎么用上') + flow([
+    ['管理员登记', ['在用户管理里新增', '填名称、档位、uid']],
+    ['自进化模块选账号', ['发起评估时选用哪些账号']],
+    ['会话模块再校验', ['建评估会话时确认账号可用']],
+    ['跑被测会话', ['进程路由键 = 评估账号 ID', '带评估账号令牌（见 ⑤）']],
+    ['取数', ['用这个评估账号的 uid', '权限小的账号被按预期拒绝，也算通过']]
+  ]) + `<div class="band"><b>三个权限档位（数据平台开通）</b><span class="tg">一档</span><span class="tg">二档</span><span class="tg">三档</span><span class="then">每档可以登记多个账号。用户管理里显示的「开通状态」，就是有没有填 uid。</span></div>`,
+  points: [
+    { q:'为什么不放进账号表？', a:'评估账号不是人：不能登录、不进用户列表、不参与判能力。放进账号表加「类型」列，登录、用户列表、判权处处都要把它排除。',
+      alt:'评估账号放进账号表、加「类型」列。', s:'第 6、10.1 节' },
+    { q:'为什么在页面上维护，不用脚本预置？', a:'生产库手工执行 SQL 要申请权限，页面维护更省事。管理员可以新增、编辑（名称、档位、uid）、启停。',
+      alt:'评估账号由迁移脚本预置。', s:'第 6 节' },
+    { q:'评估账号能删吗？', a:'不能删，用停用代替。停用时同一事务作废它的进程令牌，并发变更通知。', s:'第 6 节' },
+    { q:'评估账号有什么能力？', a:'没有任何管理能力，只用作评估会话的取数身份。', s:'第 2.3 节' }
+  ]
+},
+
+r7: {
+  lead: '行内业务系统（比如 CRM）通过开放 API 替某个用户调用平台。这一期只做「替用户调用」这一种，排在 P4（最后一个开发阶段）；凭据长什么样、怎么说明替谁调用、调用资格怎么分，在开放 API 的 RFC（0017）里已定。',
+  diagram: sub('CRM 替李四提问') + flow([
+    ['CRM 发请求', ['带凭据（平台生成的随机密钥）', '请求头里填李四的工号']],
+    ['请求入口校验', ['凭据有效、没撤销、没过期？', '应用启用？', '李四存在且启用？', '这个接口在 CRM 勾选的场景里？（管理员允许它调哪几类功能）']],
+    ['得到主体', ['接入应用 CRM + 实际用户李四', '之后模块按李四的能力判权：最多能做李四本来能做、又在勾选场景里的事']],
+    ['之后', ['会话、文件归李四', '取数用李四的 uid', '审计同时记 CRM 和李四']]
+  ]),
+  points: [
+    { q:'应用自己有数据权限吗？', a:'没有。应用只被授予「能调哪些功能」的调用资格，不被赋予数据范围；取数用实际用户的 uid（PRD v8）。', s:'第 7 节' },
+    { q:'应用凭据怎么管？', a:'平台生成随机密钥，明文只在生成时显示一次，库里只存哈希。换凭据时生成新的，旧的自动在 7 天内失效，期间两把都能用，业务系统可以逐台换配置；怀疑泄露就撤销，立即作废。平台内部的凭据不发给业务系统。', s:'第 7 节' },
+    { q:'每次调用都校验吗？', a:'是。结果缓存 30 秒；应用停用、启用、移除，凭据撤销，资格变更时发变更通知立刻清缓存。校验结果里还有每分钟限流额度，给请求入口限流用。', s:'第 7 节' },
+    { q:'还有什么没定？', a:'是否复用行内已有的接入能力（等组长答复）；第一期开放哪些接口（各模块 RFC 定稿后补）。都在开放 API 的 RFC（0017）里。', s:'第 7 节' },
+    { q:'应用能用自己的身份调用吗？', a:'本期不做（应用用自己的身份、任务归应用的「自主调用」）。', s:'第 7 节' }
+  ]
+},
+
+r8: {
+  lead: '账号一变（停用、改角色、重置密码……），身份与权限模块发一条变更通知，让手里有缓存的地方（请求入口、MCP 代理）立刻清掉；关键操作和被拒绝的操作记审计。',
+  diagram: sub('以「管理员停用李四」为例') + flow([
+    ['管理员点停用', ['需要账号管理能力']],
+    ['同一个事务里', ['改状态', '作废李四的全部会话和令牌', '登记变更通知和审计']],
+    ['事务提交后', ['发出变更通知']],
+    ['本进程立刻生效', ['请求入口清掉认人的缓存', 'MCP 代理清掉令牌的缓存', '李四下一个请求被当作未登录（401），MCP 调用失败']],
+    ['其他副本', ['平台后端同时跑多个副本时，其他副本收不到这条通知', '缓存最多 30 秒后到期，也生效']]
+  ]) + `<div class="cols">
+    <div><div class="dsub">变更通知什么时候发</div><ul>
+      <li>账号停用、启用、移除</li><li>角色、导出权限变更</li><li>重置密码、本人改密（会话被作废）</li>
+      <li>管理员失去自进化管理能力（作废他的自进化令牌）</li><li>评估账号停用、启用</li><li>接入应用停用、启用、移除，凭据撤销，资格变更（P4）</li></ul></div>
+    <div><div class="dsub">审计记哪些</div><ul>
+      <li>用户管理的各种修改（含改 uid；移除时记下原来的 uid）</li><li>登录失败、本人改密</li><li>评估账号新增、编辑、启停</li>
+      <li>接入应用的各种操作（P4）</li><li>判权被拒绝</li><li>启动时建初始管理员</li></ul></div>
+  </div>`,
+  points: [
+    { q:'收不到通知会怎样？', a:'最多晚 30 秒。缓存本来就最多存 30 秒，通知只是让它提前清掉。所以通知处理失败也不需要额外重试。',
+      alt:'不发通知、只等 30 秒缓存到期：第一版平台后端只跑一个副本，发通知就能让停用立刻生效，代价只是一种事件、两处接收。让所有副本互相广播清缓存：要另加广播机制，晚 30 秒对行内场景够用。', s:'第 8.3、10.1 节' },
+    { q:'会不会修改失败了却发了通知？', a:'不会。通知和修改在同一个事务里登记，改成功才发。', s:'第 8.3 节' },
+    { q:'通知里写了什么？', a:'「谁变了」（用户 / 接入应用 / 评估账号 / 某位管理员的自进化令牌）+「怎么变的」（停用、启用、移除、改角色、改导出权限、会话被作废、凭据撤销、资格变更）。请求入口和 MCP 代理据此清掉对应的缓存。', s:'第 8.3 节' },
+    { q:'登录成功记不记审计？', a:'不记，只记失败。PRD v8 和组长都没要求记录登录成功；以后要求时补一条即可。', s:'第 3.2 节' },
+    { q:'业务回滚了，拒绝的审计还在吗？', a:'在。登录失败、判权被拒用独立事务发出，业务回滚也留下；成功的修改和业务一起登记。', s:'第 8.3 节' },
+    { q:'审计里会不会出现密码？', a:'不会。审计里不放密码、cookie、令牌、凭据；登录失败时记的是输入的工号。', s:'第 8.3 节' }
+  ]
+},
+
+r9: {
+  lead: '身份与权限模块一共七张表，P0 一次建完。这里也列出实现阶段、还没定的问题和已知缺点。',
+  diagram: sub('七张表') + `
+  <div class="tiles">
+    <div><code>identity_users</code><b>账号</b><span>工号、姓名、角色、状态、导出权限、网关 uid</span><small>长期保留；移除只做标记</small></div>
+    <div><code>identity_user_credentials</code><b>密码</b><span>密码哈希、必须改密、失败次数、锁到几点</span><small>移除账号时删除</small></div>
+    <div><code>identity_web_sessions</code><b>登录会话</b><span>cookie 的哈希、到期时间、作废时间</span><small>过期或作废 7 天后删除</small></div>
+    <div><code>identity_process_tokens</code><b>进程令牌</b><span>令牌哈希、种类、路由键、代表谁</span><small>作废 7 天后删除</small></div>
+    <div><code>identity_eval_accounts</code><b>评估账号</b><span>名称、档位、状态、网关 uid</span><small>长期保留；停用不删</small></div>
+    <div class="p4"><code>identity_integration_apps</code><b>接入应用（P4）</b><span>调用资格、限流额度、启停</span><small>长期保留；移除为标记删除</small></div>
+    <div class="p4"><code>identity_app_credentials</code><b>应用凭据（P4）</b><span>凭据哈希、有效期</span><small>作废或过期 7 天后删除</small></div>
+  </div>` + sub('实现阶段') + flow([
+    ['P0', ['各模块之间的接口定下来、七张表建好', '先用假实现：开发环境里所有请求都当作同一个开发管理员']],
+    ['P1', ['真实登录、用户管理、判权', '取数身份、签发令牌', '变更通知与审计']],
+    ['P2', ['MCP 代理开始校验令牌']],
+    ['P3', ['评估账号']],
+    ['P4', ['接入应用（和开放 API 一起）']]
+  ]) + sub('还没定的问题（登录安全、uid 来源、HTTPS 三项组长已答复；接入应用凭据已在开放 API 的 RFC 里定，11-16）') + tbl([
+    ['', '问题', '本文先这样定', '谁定'],
+    ['1', '接入知识平台时它要什么身份', '本期不存；需要时加一列', '知识平台'],
+    ['2', '用户停用后，要不要停掉他正在跑的执行、回收他的 DSH 进程', '由会话模块决定；身份与权限模块保证发变更通知', '会话模块'],
+    ['3', '各表保留多久', '会话、令牌、应用凭据作废或过期 7 天后删；账号长期保留', '技术负责人']
+  ]),
+  points: [
+    { q:'哈希为什么有两种？', a:'密码用 bcrypt：人起的密码能猜，要故意算得慢。cookie、进程令牌、应用凭据用 SHA-256：它们是 32 字节随机数，猜不出来，查找时按哈希直接走唯一索引。', s:'第 9 节' },
+    { q:'「未移除的账号里工号不能重复」怎么做到？', a:'MySQL 不支持「只在一部分行里不重复」的索引。办法：加一列，账号未移除时等于工号、移除后为空，在这一列上建唯一索引（空值不算重复）。已在行内 TDSQL 测试实例上实测（2026-11-13）。', s:'第 9 节' },
+    { q:'表的通用写法？', a:'全平台一个库，本模块的表名都以 identity_ 开头；ID 带类型前缀（比如 usr_），按生成时间排序；时间统一按 UTC 存到毫秒；比较字符串时区分大小写。', s:'第 9 节' },
+    { q:'过期的会话和令牌谁来删？', a:'每日清理任务：删除作废或过期超过 7 天的会话、令牌、应用凭据，分批删，每批最多 1000 行。', s:'第 9 节' },
+    { q:'已知缺点有哪些？', a:'平台后端跑多个副本时，停用在其他副本上最多晚 30 秒生效（判权本身不缓存，降级立刻生效）；唯一的管理员忘了密码没人能重置；失败锁定可以被人故意触发；进程令牌可能被 Agent 主进程读到（不扩大权限，待 DSH 测试确认）；开发环境单进程时所有人共用一把令牌；用户停用后，他正在跑的执行和 DSH 进程不会自动停（还没定，见 ⑨）。', s:'第 10.2 节' }
+  ]
+}
+});
+
+// 名词解释（顶部按钮打开）
+const GLOSSARY = [
+  ['主体', '平台认出来的「是谁在操作」。可能是一个用户，也可能是替用户调用的业务系统、评估用的测试账号，或平台的后台任务，共四种。见 ①。'],
+  ['停用 / 移除', '停用：暂时不能用，可以再启用。移除：账号不再用，从列表消失，但历史对话、文件仍归它。'],
+  ['副本', '平台后端可以同时跑几份一样的程序，分担请求，每一份叫一个副本。第一版只跑一个。'],
+  ['能力', '一件能做的事，比如「对话」「管理账号」「导出数据」。判断能不能做，只看有没有这项能力。'],
+  ['角色', '使用者或全站管理员。角色决定一个用户默认有哪些能力。'],
+  ['Agent', '帮用户回答问题、调用工具的 AI 程序。'],
+  ['DSH / DSH 进程', 'DSH 是外部提供的 Agent 运行程序（Node 应用），Agent 在它里面跑。平台给每个用户起一个 DSH 进程。'],
+  ['路由键', 'DSH 进程的门牌号，一个路由键对应一个进程。用户的进程，路由键就是用户 ID。'],
+  ['tool / 业务 tool', 'Agent 能调用的功能。业务 tool（比如取数）由平台提供。'],
+  ['桥接插件', '装在 DSH 里的插件。Agent 调业务 tool 时，由它把请求转回平台。'],
+  ['执行凭据', '平台给每次 Agent 执行记下的「这次替谁干活」。tool 回调时，平台按 DSH 会话 ID 查到它。'],
+  ['MCP / MCP 服务', '一种让 Agent 调外部工具的通用协议。mem0（个人记忆）和行内的一些服务按这个协议提供工具。'],
+  ['MCP 代理', '平台里转发 MCP 调用的组件，负责判断谁能用哪个工具，再去调真正的 MCP 服务。'],
+  ['进程令牌', '平台发给每个 DSH 进程的一串密钥，放在进程环境变量里，MCP 代理靠它认出是谁在调。见 ⑤。'],
+  ['取数网关 / uid', '行内的取数服务。它按 uid（它认识的用户编号）决定一个人能查哪些数据。见 ④。'],
+  ['请求入口', '平台后端接收每个请求的第一关：认出是谁、限流、防跨站请求。'],
+  ['DSH 适配层', '平台里负责起停 DSH 进程、把请求交给对应进程的部分。'],
+  ['变更通知', '账号变化后平台内部发的一条消息，让请求入口和 MCP 代理立刻清掉缓存。见 ⑧。'],
+  ['缓存', '把查过的结果暂存一会儿，少查数据库。这里最长存 30 秒。'],
+  ['事务', '一组数据库修改，要么全部成功，要么全部不做。'],
+  ['哈希', '把一串内容算成一个固定长度的「指纹」，从指纹推不回原文。bcrypt 是故意算得慢的哈希（用于密码），SHA-256 是普通的快哈希。'],
+  ['cookie', '浏览器替网站保存的一小段数据，之后每个请求自动带上。登录 cookie 里就是一串随机的会话编号。'],
+  ['401', '后端的回复码，意思是「你还没登录，或者登录已失效」。'],
+  ['自进化 / 评估', '自进化：平台分析对话记录，提出对 Agent 的修改建议。评估：采纳前用同一批测试用例对比新旧版本。'],
+  ['接入应用 / 开放 API', '行内业务系统（比如 CRM）通过开放 API 调用平台。P4 才做。'],
+  ['P0–P4', '开发阶段。P0 最先（接口和表，打通最小链路），P1 真实登录和用户管理，P2 MCP 代理校验令牌，P3 评估账号，P4 接入应用。']
+];
+
+</script><script>
+// 布局：所有坐标在这里
+const W = 2940, H = 1960;
+const G = {
+  plat:{x:320,y:30,w:2270,h:1900},
+  r3:{x:580,y:110,w:620,h:450},  r1:{x:1320,y:140,w:500,h:720}, r2:{x:1940,y:110,w:500,h:440},
+  r7:{x:580,y:620,w:620,h:240},                                  r6:{x:1940,y:620,w:500,h:240},
+  r5:{x:580,y:920,w:620,h:530},  r8:{x:1320,y:920,w:500,h:530},  r4:{x:1940,y:920,w:500,h:530},
+  r9:{x:580,y:1540,w:1860,h:350},
+  browser:{x:40,y:270,w:240,h:130}, biz:{x:40,y:675,w:240,h:130}, dsh:{x:40,y:1080,w:240,h:210},
+  mcp:{x:2640,y:825,w:260,h:130}, gw:{x:2640,y:1120,w:260,h:130},
+  T02:{x:455,y:270,w:70,h:530}, M05:{x:425,y:1150,w:130,h:70}, T04:{x:425,y:1330,w:130,h:70},
+  M03:{x:2080,y:1473,w:150,h:44}, M09:{x:2455,y:1300,w:125,h:44}, BIZ:{x:1470,y:60,w:200,h:44}, M16:{x:2090,y:563,w:200,h:44}
+};
+// 默认主线的走法和标签位置
+const ROUTE = {
+  L1:{pts:[[280,335],[580,335]], at:[365,298]},
+  L2:{pts:[[280,740],[580,740]], at:[368,680]},
+  L3:{pts:[[280,1185],[580,1185]], at:[362,1122]},
+  L4:{pts:[[1100,920],[1100,890],[2640,890]], at:[1570,890]},
+  L5:{pts:[[160,1290],[160,1495],[2360,1495],[2360,1450]], at:[900,1495]},
+  L6:{pts:[[2440,1185],[2640,1185]], at:[2540,1148]},
+  L7:{pts:[[1200,335],[1320,335]], at:[1260,282]},
+  L8:{pts:[[1200,740],[1320,740]], at:[1260,700]},
+  L9:{pts:[[1940,335],[1820,335]], at:[1880,282]},
+  L10:{pts:[[1940,740],[1820,740]], at:[1880,700]}
+};
+
+const $ = s => document.querySelector(s), $$ = s => [...document.querySelectorAll(s)];
+const esc = s => String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const HASH = Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(kv => kv.split('=').map(decodeURIComponent)));
+const NOANIM = HASH.noanim === '1';
+if (NOANIM) document.body.classList.add('still');
+
+const world = $('#world'), stage = $('#stage');
+world.style.width = W + 'px'; world.style.height = H + 'px';
+const ITEM = {}, REG = {};
+REGIONS.forEach(r => { REG[r.id] = r; r.groups.forEach(g => g.items.forEach(it => { it.reg = r; it.p = it.p ?? (r.p > 1 ? r.p : 1); ITEM[it.id] = it; })); });
+EXTS.forEach(e => { e.p = e.p ?? 0; });
+
+// ---------- 画全图 ----------
+function box(el, b) { Object.assign(el.style, {left:b.x+'px', top:b.y+'px', width:b.w+'px', height:b.h+'px'}); }
+function build() {
+  const plat = document.createElement('div'); plat.className = 'plat'; box(plat, G.plat);
+  plat.innerHTML = '<span>OntoHelm 平台 · 平台 API 进程（身份与权限模块，以及用到它的模块）</span>'; world.appendChild(plat);
+
+  REGIONS.forEach(r => {
+    const d = document.createElement('div'); d.className = 'reg'; d.id = r.id; d.dataset.p = r.p;
+    d.style.setProperty('--c', r.color); box(d, G[r.id]);
+    d.innerHTML = `<div class="hd"><div class="t1"><span class="ic">${r.ic}</span><span class="nm">${r.no} ${esc(r.name)}</span></div><div class="one">${esc(r.one)}</div><div class="cnt">点开看讲解</div></div>`;
+    world.appendChild(d);
+  });
+
+  EXTS.forEach(e => {
+    const d = document.createElement('div'); d.className = 'ext ' + e.k; d.id = e.id; d.dataset.p = e.p; box(d, G[e.id]);
+    d.innerHTML = (e.k === 'window' ? '<div class="bar"><i></i><i></i><i></i></div>' : '') + `<div class="en">${esc(e.name)}</div><div class="eo">${esc(e.one)}</div>`;
+    world.appendChild(d);
+  });
+
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.id = 'lines'; svg.setAttribute('viewBox', `0 0 ${W} ${H}`); svg.setAttribute('width', W); svg.setAttribute('height', H);
+  svg.innerHTML = `<defs>
+    <marker id="ag" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="5" markerHeight="5" orient="auto"><path d="M0,0L10,5L0,10z" fill="#64748b"/></marker>
+    <marker id="ay" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#facc15"/></marker></defs>`;
+  world.appendChild(svg);
+
+  LINES.forEach(l => {
+    l.p = l.p ?? 1;
+    let d, at;
+    if (ROUTE[l.id]) { const r = ROUTE[l.id]; d = 'M' + r.pts.map(p => p.join(' ')).join(' L'); at = r.at; }
+    else { const cv = curve(G[l.from], G[l.to], l.t ?? 0.5); d = cv.d; at = l.at || cv.at; }
+    const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    p.setAttribute('d', d); p.setAttribute('class', 'ln' + (l.def ? ' def' : ' hid') + (l.p >= 4 ? ' p4' : ''));
+    p.id = 'ln_' + l.id; p.dataset.p = l.p; svg.appendChild(p);
+    const lb = document.createElement('div'); lb.className = 'lbl' + (l.def ? ' def' : ' hid'); lb.id = 'lb_' + l.id; lb.dataset.p = l.p;
+    lb.textContent = l.label; lb.style.left = at[0] + 'px'; lb.style.top = at[1] + 'px'; world.appendChild(lb);
+  });
+
+  PILLS.forEach(pl => {
+    const d = document.createElement('div'); d.className = 'pill' + (pl.vertical ? ' vert' : ''); d.id = 'pl_' + pl.id; box(d, G[pl.id]);
+    d.textContent = pl.name; world.appendChild(d);
+  });
+}
+// 两个框之间的弯线：从各自边框上朝向对方的点出发
+function edge(b, tx, ty) {
+  const cx = b.x + b.w / 2, cy = b.y + b.h / 2, dx = tx - cx, dy = ty - cy;
+  const s = Math.min(Math.abs((b.w / 2) / (dx || 1e-6)), Math.abs((b.h / 2) / (dy || 1e-6)));
+  return [cx + dx * s, cy + dy * s];
+}
+function curve(a, b, t) {
+  const ac = [a.x + a.w / 2, a.y + a.h / 2], bc = [b.x + b.w / 2, b.y + b.h / 2];
+  const p1 = edge(a, bc[0], bc[1]), p2 = edge(b, ac[0], ac[1]);
+  const mx = (p1[0] + p2[0]) / 2, my = (p1[1] + p2[1]) / 2, dx = p2[0] - p1[0], dy = p2[1] - p1[1], len = Math.hypot(dx, dy) || 1;
+  const k = Math.min(0.18 * len, 160), cx = mx - dy / len * k, cy = my + dx / len * k;
+  const u = 1 - t, at = [u * u * p1[0] + 2 * u * t * cx + t * t * p2[0], u * u * p1[1] + 2 * u * t * cy + t * t * p2[1]];
+  return { d: `M${p1[0]} ${p1[1]} Q${cx} ${cy} ${p2[0]} ${p2[1]}`, at };
+}
+
+// ---------- 讲解页 ----------
+const NAME = id => REG[id] ? `${REG[id].no} ${REG[id].name}` : (EXTS.find(e => e.id === id) || {}).name || (PILLS.find(p => p.id === id) || {}).name?.replace('\n', ' ') || id;
+function pointHtml(pt, i) {
+  const more = (pt.y ? `<p><b>为什么：</b>${pt.y}</p>` : '') + (pt.alt ? `<p><b>没选的做法：</b>${pt.alt}</p>` : '');
+  return `<div class="pt"><div class="pq"><span class="n">${i + 1}</span>${pt.q}</div><div class="pa">${pt.a}</div>`
+    + (more ? `<details><summary>为什么这样定 · 没选的做法</summary>${more}</details>` : '')
+    + `<div class="ps">RFC-0006 ${pt.s || ''}</div></div>`;
+}
+function linksHtml(id) {
+  const rows = LINES.filter(l => l.from === id || l.to === id).map(l => {
+    const other = l.from === id ? l.to : l.from, dir = l.from === id ? '→' : '←';
+    const go = REG[other] ? ` data-go="${other}"` : '';
+    return `<li${go}><span class="dir">${dir}</span><b>${esc(NAME(other))}</b>　${esc(l.label.replace(/\n/g, ' '))}</li>`;
+  });
+  return rows.length ? `<h3>和谁相连</h3><ul class="links">${rows.join('')}</ul>` : '';
+}
+function renderGlossary() {
+  const el = $('#detail'); el.style.setProperty('--c', '#93c5fd');
+  $('#dbody').innerHTML = `<div class="dh" style="--c:#93c5fd"><span class="ic">📖</span><div><div class="dn">名词解释</div><div class="dl">图里反复出现的词，用一句话说清是什么。</div></div></div><div class="kv gl">${GLOSSARY.map(g => `<div class="k">${g[0]}</div><div class="v">${g[1]}</div>`).join('')}</div>`;
+  if (shown !== 'gloss') el.scrollTop = 0; shown = 'gloss';
+}
+function renderDetail(id) {
+  const r = REG[id], dt = DETAIL[id];
+  let html = `<div class="dh" style="--c:${r.color}"><span class="ic">${r.ic}</span><div><div class="dn">${r.no} ${esc(r.name)}</div><div class="dl">${dt ? dt.lead : esc(r.one)}</div></div></div>`;
+  if (dt) {
+    html += `<h3>先看这张图</h3><div class="dg">${dt.diagram}</div><h3>要点</h3>` + dt.points.map(pointHtml).join('');
+  } else {
+    html += `<div class="todo">这一区还没按新写法改，先把全部要点直接列出来。</div>`;
+    let i = 0;
+    r.groups.forEach(g => {
+      if (g.g) html += `<h3>${esc(g.g)}</h3>`;
+      g.items.forEach(it => {
+        const tb = it.tb ? `<table class="tb">${it.tb.map((row, k) => `<tr>${row.map(x => k ? `<td>${esc(x)}</td>` : `<th>${esc(x)}</th>`).join('')}</tr>`).join('')}</table>` : '';
+        html += pointHtml({ q: esc(it.n), a: esc(it.h || '') + tb, y: it.y && esc(it.y), alt: it.a && esc(it.a), s: it.s }, i++);
+      });
+    });
+  }
+  html += linksHtml(id);
+  const el = $('#detail'); el.style.setProperty('--c', r.color); $('#dbody').innerHTML = html;
+  if (shown !== id) el.scrollTop = 0;
+  shown = id;
+}
+let shown = null;
+
+// ---------- 镜头 ----------
+let cam = {x:0, y:0, s:1};
+function applyCam(anim) {
+  world.style.transition = anim && !NOANIM ? 'transform .55s cubic-bezier(.2,.7,.2,1)' : 'none';
+  world.style.transform = `translate(${cam.x}px,${cam.y}px) scale(${cam.s})`;
+}
+function viewport() {
+  const dW = document.body.classList.contains('split') ? $('#detail').offsetWidth : 0;
+  const tourH = state.tour ? $('#tourbar').offsetHeight + 24 : 0;
+  return [stage.clientWidth - dW, stage.clientHeight - tourH];
+}
+function scaleFor(b, pad) { const [vw, vh] = viewport(); return Math.min(vw / (b.w + 2 * pad), vh / (b.h + 2 * pad)); }
+function fit(b, pad = 60, max = 1.25) {
+  const [vw, vh] = viewport();
+  const s = Math.min(scaleFor(b, pad), max);
+  cam = { s, x: vw / 2 - (b.x + b.w / 2) * s, y: vh / 2 - (b.y + b.h / 2) * s };
+  applyCam(true);
+}
+function union(ids) {
+  const bs = ids.map(id => G[id]).filter(Boolean);
+  if (!bs.length) return {x:0, y:0, w:W, h:H};
+  const x = Math.min(...bs.map(b => b.x)), y = Math.min(...bs.map(b => b.y));
+  return { x, y, w: Math.max(...bs.map(b => b.x + b.w)) - x, h: Math.max(...bs.map(b => b.y + b.h)) - y };
+}
+
+// ---------- 状态 ----------
+const state = { sel:null, tour:null, step:0, phase:9, gloss:false };
+function clearMarks() { $$('.on,.near,.show').forEach(e => e.classList.remove('on', 'near', 'show')); }
+function lightLines(ids) {
+  const touched = new Set();
+  ids.forEach(id => {
+    const l = LINES.find(x => x.id === id); if (!l) return;
+    $('#ln_' + id).classList.add('on'); $('#lb_' + id).classList.add('on');
+    (l.pills || []).forEach(p => $('#pl_' + p).classList.add('show'));
+    touched.add(l.from); touched.add(l.to);
+  });
+  return touched;
+}
+function render() {
+  clearMarks();
+  const b = document.body;
+  b.classList.toggle('focus', !!(state.sel || state.tour));
+  b.classList.toggle('split', !!state.sel || state.gloss);
+  b.classList.toggle('touring', !!state.tour);
+  if (state.tour) {
+    const st = TOURS.find(t => t.id === state.tour).steps[state.step];
+    st.open.forEach(id => $('#' + id).classList.add('on'));
+    (st.also || []).forEach(id => $('#' + id).classList.add('near'));
+    (st.ext || []).forEach(id => $('#' + id).classList.add('on'));
+    lightLines(st.lines).forEach(id => { const e = $('#' + id); if (e && !e.classList.contains('on')) e.classList.add('near'); });
+    const pills = st.lines.flatMap(id => LINES.find(x => x.id === id).pills || []);
+    let view = union([...st.open, ...(st.also || []), ...(st.ext || []), ...pills]);
+    if (scaleFor(view, 50) < 0.5) view = union([...st.open, ...(st.also || [])]);
+    tourText(); fit(view, 50, 0.9);
+  } else if (state.sel) {
+    $('#' + state.sel).classList.add('on');
+    const ids = LINES.filter(l => l.from === state.sel || l.to === state.sel).map(l => l.id);
+    lightLines(ids).forEach(id => { if (id !== state.sel) { const e = $('#' + id); e && e.classList.add('near'); } });
+    renderDetail(state.sel);
+    fit({x:0, y:0, w:W, h:H}, 16, 2);
+  } else if (state.gloss) {
+    renderGlossary(); fit({x:0, y:0, w:W, h:H}, 16, 2);
+  } else {
+    fit({x:0, y:0, w:W, h:H}, 16, 2);
+  }
+}
+function select(id) { state.gloss = false; state.tour = null; $('#tour').value = ''; state.sel = id; render(); }
+
+// ---------- 走一遍 ----------
+function tourText() {
+  const t = TOURS.find(t => t.id === state.tour), n = t.steps.length;
+  $('#ttxt').innerHTML = `<b>${esc(t.name)}　${state.step + 1} / ${n}</b><br>${esc(t.steps[state.step].t)}`;
+  $('#tp').disabled = state.step === 0; $('#tn').disabled = state.step === n - 1;
+}
+function startTour(id) { state.gloss = false; state.sel = null; state.tour = id || null; state.step = 0; $('#tour').value = id || ''; render(); }
+
+// ---------- 阶段 ----------
+function applyPhase() { $$('[data-p]').forEach(e => e.classList.toggle('future', +e.dataset.p > state.phase)); }
+
+// ---------- 交互 ----------
+let drag = null, moved = false;
+stage.addEventListener('pointerdown', e => {
+  if (e.target.closest('#detail,#tourbar')) return;
+  drag = {x:e.clientX, y:e.clientY, cx:cam.x, cy:cam.y}; moved = false;
+});
+window.addEventListener('pointermove', e => {
+  if (!drag) return;
+  const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+  if (!moved && Math.hypot(dx, dy) > 5) { moved = true; stage.classList.add('grab'); }
+  if (moved) { cam.x = drag.cx + dx; cam.y = drag.cy + dy; applyCam(false); }
+});
+window.addEventListener('pointerup', () => { drag = null; stage.classList.remove('grab'); });
+stage.addEventListener('wheel', e => {
+  if (e.target.closest('#detail')) return;
+  e.preventDefault();
+  const r = stage.getBoundingClientRect(), mx = e.clientX - r.left, my = e.clientY - r.top;
+  const f = Math.exp(-e.deltaY * 0.0015), s = Math.max(0.15, Math.min(3, cam.s * f)), k = s / cam.s;
+  cam = { s, x: mx - (mx - cam.x) * k, y: my - (my - cam.y) * k }; applyCam(false);
+}, {passive:false});
+stage.addEventListener('click', e => {
+  if (moved) return;
+  const go = e.target.closest('[data-go]'); if (go) { select(go.dataset.go); return; }
+  if (e.target.closest('#detail,#tourbar')) return;
+  const reg = e.target.closest('.reg');
+  if (reg) { if (!state.tour) select(reg.id); return; }
+  if (state.tour) return;
+  state.sel = null; state.gloss = false; render();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') { if (state.tour) startTour(null); else { state.sel = null; state.gloss = false; render(); } }
+  if (state.tour && e.key === 'ArrowRight') $('#tn').click();
+  if (state.tour && e.key === 'ArrowLeft') $('#tp').click();
+});
+$('#dx').onclick = () => { state.sel = null; state.gloss = false; render(); };
+$('#gloss').onclick = () => { state.tour = null; $('#tour').value = ''; state.sel = null; state.gloss = true; render(); };
+$('#home').onclick = () => { startTour(null); state.sel = null; state.gloss = false; render(); };
+$('#tp').onclick = () => { if (state.step > 0) { state.step--; render(); } };
+$('#tn').onclick = () => { const n = TOURS.find(t => t.id === state.tour).steps.length; if (state.step < n - 1) { state.step++; render(); } };
+$('#tx').onclick = () => startTour(null);
+$('#tour').innerHTML = '<option value="">▶ 走一遍…</option>' + TOURS.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
+$('#tour').onchange = e => startTour(e.target.value);
+$('#phase').onchange = e => { state.phase = +e.target.value; applyPhase(); };
+window.addEventListener('resize', () => render());
+
+// ---------- 启动 ----------
+build();
+$('#date').textContent = DATE;
+if (HASH.phase) { state.phase = +HASH.phase; $('#phase').value = HASH.phase; }
+applyPhase();
+if (HASH.tour) { state.tour = HASH.tour; state.step = +(HASH.step || 1) - 1; $('#tour').value = HASH.tour; }
+else if (HASH.sel) state.sel = HASH.sel;
+else if (HASH.gloss) state.gloss = true;
+render();
+if (HASH.open === '1') $$('#detail details').forEach(d => d.open = true);
+if (HASH.scroll) $('#detail').scrollTop = +HASH.scroll;
+
+</script></body></html>
