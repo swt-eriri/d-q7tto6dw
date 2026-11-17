@@ -1,0 +1,291 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 停用一个人之后发生什么</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#B6">← 学习清单</a>（第 B6 题）</p>
+<h1>停用一个人之后发生什么：哪些立刻失效，哪些最多 30 秒，哪些要等别人</h1>
+<p class="lead">机制：账号变更通知（C20）与缓存（身份与权限 0006 第 3.4、5.2、8.3 节；后端框架 0004 第 4.2 节）。例子：管理员停用李四，部署了两个请求进程。</p>
+<p class="sub">这一页想让你讲得出：同一个事务里改了什么；为什么本进程立刻生效、其他进程最多 30 秒；这个通知处理失败为什么不需要重试保障；判权和取数为什么是立刻的；李四正在跑的执行会怎样。
+<span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006；<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（入口的认证缓存）；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理（令牌校验缓存）；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 一张总表</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>数据改了 ≠ 缓存清了</h3><dl>
+    <dt>数据</dt><dd>停用、作废会话、作废令牌，一个事务写进库里，提交那一刻就是真的。</dd>
+    <dt>缓存</dt><dd>两处内存缓存还记着旧结果：入口的认证缓存、MCP 代理的令牌校验缓存，各 30 秒。</dd></dl>
+    <div class="eg">「最多 30 秒」说的是缓存，不是数据。</div></div>
+  <div class="pair"><h3>变更通知是加速 ≠ 变更通知是保证</h3><dl>
+    <dt>加速</dt><dd>通知让提交它的那个进程立刻清缓存。</dd>
+    <dt>兜底</dt><dd>真正的保证是缓存 30 秒到期。通知没处理成，也只是退回「最多 30 秒」。</dd></dl>
+    <div class="eg">所以这个通知不需要像普通事件那样的重试保障（④ 第 3 条）。</div></div>
+  <div class="pair"><h3>认证 ≠ 判权</h3><dl>
+    <dt>认证</dt><dd>「这个 cookie 是谁」，有 30 秒缓存。</dd>
+    <dt>判权、取数身份</dt><dd>每次都按主键查库，<b>不缓存</b>。停用后立刻拒绝。</dd></dl>
+    <div class="eg">另一个请求进程上，李四在 30 秒内可能还能「通过认证」，但要能力的操作已经被拒。</div></div>
+  <div class="pair"><h3>不能再发起 ≠ 正在跑的会停</h3><dl>
+    <dt>不能再发起</dt><dd>登录、操作、tool 回调、MCP 调用都被拒。</dd>
+    <dt>正在跑的</dt><dd>李四正在运行的执行和他的 DSH 进程<b>不会自动停</b>，要等会话模块按规则回收。</dd></dl>
+    <div class="eg">停用后停不停执行、回收不回收进程，由会话模块决定（0006 Q6，问嘉敏）。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍 <small>部署两个请求进程，看两边的差别</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 一张总表 <small>李四被停用后，各种东西什么时候失效</small></h2>
+<table class="plain">
+<tr><th>什么</th><th>什么时候失效</th><th>靠什么</th></tr>
+<tr><td>登录会话（数据）</td><td>提交那一刻</td><td>同一事务作废全部会话</td></tr>
+<tr><td>进程令牌（数据）</td><td>提交那一刻</td><td>同一事务作废全部令牌</td></tr>
+<tr><td>判权（checkCapability）</td><td>立刻</td><td>每次查库，不缓存</td></tr>
+<tr><td>取数身份</td><td>立刻</td><td>每次查库，不缓存；已停用返回「不允许」</td></tr>
+<tr><td>提交那个进程的认证缓存、令牌校验缓存</td><td>立刻</td><td>变更通知在本进程清缓存</td></tr>
+<tr><td>其他请求进程的认证缓存、令牌校验缓存</td><td>最多 30 秒</td><td>缓存到期</td></tr>
+<tr><td>正在运行的执行、DSH 进程</td><td>不自动停</td><td>会话模块按规则回收（0006 Q6）</td></tr>
+</table>
+<p class="sub">MVP 只有一个请求进程，管理员的请求、入口、MCP 代理都在里面，所以实际上全部立刻生效。</p>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么停用、作废会话、作废令牌、登记通知要在同一个事务里？</summary>
+  <p class="if">分开：停用提交了、作废会话前崩了，李四的旧 cookie 还能用到 12 小时会话到期；或者通知登记了、停用却回滚了，缓存被白清一次（无害，但说明不一致）。</p>
+  <p>一个事务：要么全部生效，要么都没发生。和 A5 讲的「业务写入和事件登记同事务」是同一条规则。</p></details>
+<details><summary>2. 为什么不做跨进程广播，让所有请求进程立刻清缓存？</summary>
+  <p class="if">广播要额外的机制（消息队列或数据库通知，MySQL 没有）：多一个组件，多一处要运维的东西。</p>
+  <p>MVP 只有一个请求进程，通知已经能让停用立刻生效；以后多进程时，其他进程最多晚 30 秒，对行内场景够用（0004 第 10.1 节）。而且判权、取数每次查库，晚的只是「认证」这一层。</p></details>
+<details><summary>3. 这个通知处理失败了，为什么不需要重试保障？</summary>
+  <p>它只做一件事：清内存缓存。清不成，缓存 30 秒后自己过期，结果只是「退回最多 30 秒」。</p>
+  <p class="if">普通业务事件（A5）处理失败是真的漏了一件事（建议永远没标已发布），所以要每分钟重提、1 小时告警。这里没有「漏掉」的可能。</p>
+  <p>我的理解（RFC 没展开）：它照常登记在事件登记表里，没处理完也会被后台进程重提；但重提是在后台进程里跑，后台进程没有入口缓存，清了也没用，无害。起作用的只有提交进程里那一次。</p></details>
+<details><summary>4. 停用时既然校验令牌时也会查状态，为什么还要批量作废令牌？</summary>
+  <p>停用应该立刻、干净地失败。批量作废只多一条 UPDATE，库里也能直接看出令牌已作废；校验时查代表对象的当前状态是第二道保险（0006 第 10.1 节）。</p></details>
+<details><summary>5. 为什么正在跑的执行不在这里顺手停掉？</summary>
+  <p>执行和 DSH 进程归会话模块管，怎么停（等当前一轮结束、立刻中断、回收进程）是会话模块的业务规则。身份模块只保证发出通知，并让他的 tool 回调和 MCP 调用被拒。这件事已记为 0006 Q6，由会话模块定。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>多个请求进程时，其他进程最多 30 秒。</b>这 30 秒里李四在那边还能通过认证、看到不需要判权的东西；要能力的操作已经被拒。</li>
+  <li><b>不停正在运行的执行。</b>他的 tool 回调和 MCP 调用会被拒，但执行和 DSH 进程要等会话模块回收。</li>
+  <li><b>很快又启用时有个小坑。</b>旧进程还没回收，它的令牌已经作废，MCP 调用会失败，直到进程重新拉起（0006 第 10.2 节）。</li>
+  <li><b>只覆盖这几类变化。</b>通知在停用、启用、移除、角色或导出权限变更、重置密码、本人改密、评估账号和接入应用的相关变化时发；别的变化不发。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 只有一个请求进程时，李四被停用后多久失效？</summary>
+  <p>立刻。管理员的请求、入口的认证缓存、MCP 代理都在这一个进程里，变更通知提交后就在这里清掉缓存。</p></details>
+<details><summary>2. 两个请求进程，李四连在 B 上。停用后第 10 秒他点「发送」，会怎样？</summary>
+  <p>B 的认证缓存还有 20 秒，认证能过；但会话模块执行前调判权，判权每次查库，看到已停用 → 拒绝（403）。第 30 秒左右缓存到期后，连认证都过不了（401）。</p></details>
+<details><summary>3. 李四正在跑的执行里，Agent 调了「取数」，会怎样？</summary>
+  <p>被拒：取数时身份模块按执行凭据里的主体查取数身份，李四已停用，返回「不允许」。执行本身没停。</p></details>
+<details><summary>4. 李四的 DSH 进程调 mem0 呢？</summary>
+  <p>进程令牌已作废。提交进程上的 MCP 代理已清缓存，立刻失败；其他进程上的代理最多 30 秒后失败（校验时也会查代表对象的状态）。</p></details>
+<details><summary>5. 停用这个通知，谁订阅？各做什么？</summary>
+  <p>两个订阅方：入口（清认证缓存）和 MCP 代理（清令牌校验缓存）。都叫「清缓存」，但清的不是同一个缓存。</p></details>
+</div>
+
+<p class="src">出处：0006 第 2.3 节（判权不缓存）、第 3.4 节（作废全部会话）、第 4 节（取数身份不缓存、已停用返回不允许）、第 5.2 节第 4、6 步（令牌校验缓存 30 秒、停用时作废全部令牌、校验时查状态）、第 8.3 节（C20 的发出时机、两个使用方、只在提交事务的进程里处理、处理失败只退回 30 秒）、第 10.1–10.2 节、第 13 节 Q6；0004 第 4.2 节（认证缓存 30 秒、本进程清缓存、不做跨进程清除）、第 10.1 节。<br>
+<b>示意，不是 RFC 定的</b>：两个请求进程（MVP 是一个）、时间、ID。<b>我的理解</b>：④ 第 3 条最后一段（重提在后台进程里无害）。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'部署了两个请求进程 A、B。管理员连在 A 上；李四的浏览器连在 B 上，他还有一个执行正在 DSH 里跑。',
+  user:[{u:'李四',st:'启用'}],sess:[{id:'wss_3',st:'有效'}],tok:[{id:'ptk_7',k:'USER · 李四的 DSH 进程',st:'有效'}],
+  ev:[],cA:[{k:'李四的令牌（MCP 代理）',v:'有效，到 10:00:25'}],cB:[{k:'李四的 cookie（认证）',v:'李四，到 10:00:20'}]});
+
+step({t:'10:00:00',k:['adm'],at:'a',h:'管理员停用李四：一个事务改四样',
+  b:'请求进程 A 里，身份模块开一个事务：① 账号改为停用；② 一条 UPDATE 作废李四全部登录会话；③ 作废他全部进程令牌；④ 登记账号变更通知（主体：李四；变化：停用），还有一条审计。提交。',
+  why:'四样一起生效或都不生效（④ 第 1 条）。从这一刻起，库里的李四已经是停用的。',crash:null},
+  s=>{s.page='';s.user[0].st='停用';s.sess[0].st='已作废';s.tok[0].st='已作废';s.ev.push({e:'C20 李四 · 停用',to:'入口（清认证缓存）',where:'进程 A'},{e:'C20 李四 · 停用',to:'MCP 代理（清令牌缓存）',where:'进程 A'});});
+
+step({t:'10:00:00.05',k:['t02a','m05a'],at:'a',h:'提交后：只有进程 A 里的两个订阅方清缓存',
+  b:'通知在<b>提交事务的进程 A</b> 里触发两个订阅方：入口清掉李四的认证缓存，MCP 代理清掉李四的令牌校验缓存。进程 B 不会收到任何通知（A5：事件不跨进程广播）。',
+  why:'都叫「清缓存」，清的不是同一个缓存（⑥ 第 5 题）。',crash:null},
+  s=>{s.cA[0].v='（已清除）';});
+
+step({t:'10:00:10',k:['t02b','m01b','m07c'],at:'b',h:'进程 B 上的李四：认证还能过，判权已经拒',
+  b:'李四在 B 上点「发送」。B 的认证缓存里还有「这个 cookie 是李四」（到 10:00:20），认证通过；会话模块执行前调 checkCapability(对话) → 身份模块<b>按主键查库</b> → 已停用 → 拒绝（原因「账号已停用」），返回 403。',
+  why:'认证有 30 秒缓存，判权没有（① 第 3 对）。',crash:null},
+  s=>{s.page='李四在 B 上发送：403。';});
+
+step({t:'10:00:20',k:['t02b','m07r'],at:'b',h:'B 的认证缓存到期：401',
+  b:'B 的缓存到期。李四下一个请求，入口重新调 resolveWebSession：会话已作废 → 401，前端跳登录页。他用正确密码登录会看到「账号已停用」（B3）。',
+  why:'这就是「其他进程最多 30 秒」。',crash:null},
+  s=>{s.cB[0].v='（已过期）';s.page='李四在 B 上：被踢回登录页。';});
+
+step({t:'10:00:30',k:['dsh','m07gw','m05a'],at:'dsh',h:'李四正在跑的执行：调用被拒，但没停',
+  b:'李四的执行还在 DSH 里跑。Agent 调「取数」：回调到平台，取数时身份模块按执行凭据里的主体（李四）查取数身份 → 已停用 → 「不允许」，取数被拒。Agent 调 mem0：DSH 进程带着已作废的令牌到 MCP 代理 → 校验失败。<b>执行本身和 DSH 进程不会因此停下</b>，要等会话模块按规则回收。',
+  why:'停用后停不停执行、回收不回收进程，由会话模块决定（0006 Q6，嘉敏）。',crash:null},
+  s=>{s.page='';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6'],m05:['M05','#fb923c'],m01:['M01','#22d3ee'],dsh:['DSH','#94a3b8']},
+  procs:{
+    a:{n:'请求进程 A',s:'管理员连在这里',chips:[['adm','m07','M07 · 停用（一个事务）',''],['t02a','fw','框架 · 入口认证缓存','订阅方 1'],['m05a','m05','M05 · MCP 代理令牌缓存','订阅方 2'],['m07gw','m07','M07 · 取数身份','每次查库']]},
+    b:{n:'请求进程 B',s:'李四连在这里',chips:[['t02b','fw','框架 · 入口认证缓存','收不到通知'],['m01b','m01','M01 · 发送',''],['m07c','m07','M07 · checkCapability','每次查库'],['m07r','m07','M07 · resolveWebSession','']]},
+    dsh:{n:'李四的 DSH 进程',s:'执行还在跑',chips:[['dsh','dsh','Agent','调取数、调 mem0']]}},
+  cols:[['a','dsh'],'db',['b']],
+  dbTitle:'库里的数据 + 两个进程的缓存',dbSub:'',
+  tables:[
+    {n:'账号',o:'M07',cols:['人','状态'],rows:s=>s.user.map(r=>[r.u,r.st])},
+    {n:'登录会话',o:'M07',cols:['会话','状态'],rows:s=>s.sess.map(r=>[r.id,r.st])},
+    {n:'进程令牌',o:'M07 · identity_process_tokens',cols:['令牌','种类','状态'],rows:s=>s.tok.map(r=>[r.id,r.k,r.st])},
+    {n:'事件登记表',o:'框架 · event_publication',cols:['事件','通知谁（每个监听器一行）','在哪个进程触发'],rows:s=>s.ev.map(r=>[r.e,r.to,r.where])},
+    {n:'进程 A 的缓存',o:'内存',cols:['缓存','值'],rows:s=>s.cA.map(r=>[r.k,r.v])},
+    {n:'进程 B 的缓存',o:'内存',cols:['缓存','值'],rows:s=>s.cB.map(r=>[r.k,r.v])}]});
+</script>
+</body>
+</html>
