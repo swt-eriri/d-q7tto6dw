@@ -1,0 +1,283 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 两种特殊事件：要排序的、回滚也要留下的</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A7">← 学习清单</a>（第 A7 题）· 先看过 <a href="mech-events.html">A5 事件与任务</a> 再看这页</p>
+<h1>两种特殊事件：要排序的，和业务回滚了也要留下的</h1>
+<p class="lead">机制：有序订阅、独立事务的审计（后端框架 0004 第 3.3 节规则 4、5）。例子：旧版本什么时候能卸载；张三越权操作被拒，这条记录要留下。</p>
+<p class="sub">A5 讲的是普通事件：不保证顺序，和业务同生共死。这一页讲两个例外：什么时候必须按顺序处理、怎么做到；什么时候业务回滚了事件也要留下、怎么做到。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#38bdf8">M04</span> = Agent 配置与发布（蕴颐）；<span class="who" style="--c:#f472b6">M07</span> = 身份（你的 0006）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 为什么这样做</a><a href="#s4">④ 它不保证什么</a><a href="#s5">⑤ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>普通事件 ≠ 有序事件</h3><dl>
+    <dt>普通事件</dt><dd>框架<b>不保证顺序</b>，序号一律填 0。绝大多数事件都是这样。</dd>
+    <dt>有序事件</dt><dd>只有订阅时标了「要按顺序」的才排序。<b>目前只有一个：C19 版本引用</b>（发布模块订阅）。</dd></dl>
+    <div class="eg">不是「重要的事件才排序」，而是「处理顺序反了会算错」的才排序。</div></div>
+  <div class="pair"><h3>聚合 ID ≠ 事件 ID</h3><dl>
+    <dt>事件 ID</dt><dd>每条事件一个，用来去重（收件记录）。</dd>
+    <dt>聚合 ID</dt><dd>「这条事件是关于哪个东西的」。顺序只在<b>同一个聚合内</b>保证。C19 的聚合 ID 是执行 ID。</dd></dl>
+    <div class="eg">同一次执行的「开始引用」一定先于「释放引用」处理；不同执行之间不管先后。</div></div>
+  <div class="pair"><h3>收件记录 ≠ 游标</h3><dl>
+    <dt>收件记录</dt><dd>「这条事件处理过没有」，按事件 ID 去重。</dd>
+    <dt>游标</dt><dd>「这个聚合已经按顺序处理到第几条」，每个（监听器, 聚合）一行。</dd></dl>
+    <div class="eg">有序订阅两个都用：游标管顺序，收件记录管去重。</div></div>
+  <div class="pair"><h3>同事务发布 ≠ 独立事务发布</h3><dl>
+    <dt>同事务（普通）</dt><dd>业务回滚，事件跟着消失。</dd>
+    <dt>独立事务（审计专用）</dt><dd>另开一个小事务登记并<b>立刻提交</b>，外面的业务回滚了它还在。</dd></dl>
+    <div class="eg">用于「拒绝」「失败」的审计：正因为业务失败了才要记，不能跟着回滚。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍 <small>前半段：版本引用为什么要排序；后半段：越权被拒的审计为什么要独立提交</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么版本引用的两条事件必须按顺序处理？</summary>
+  <p>发布模块靠这两条事件维护「每个版本有哪些执行还在用」，用来判断旧版本能不能卸载。卸载后 DSH 就不能再恢复引用它的会话了。</p>
+  <p class="if">顺序反了：先处理「释放」时还没有这条引用，什么都不做；后处理「开始引用」时加了一条，而这条永远不会再被释放。v6 看起来一直有人在用，永远卸不掉。如果实现成「释放时减一」，还可能减成负数，导致还有执行在用时就被卸载。</p>
+  <p>这两条事件甚至是在<b>不同进程</b>里发的：「开始引用」在请求进程受理时发，「释放」在后台进程写终态时发，两边的监听器并发跑，谁先谁后完全没准。</p></details>
+<details><summary>2. 序号为什么要在执行行的锁下分配？</summary>
+  <p>和 A9 的会话序号同一个道理：先锁住聚合行（执行），在它的计数器上加一当序号，再发布事件，锁持有到提交。同一个聚合的事件提交顺序就等于序号顺序，不会出现「序号 2 先提交、序号 1 后提交」。</p></details>
+<details><summary>3. 游标为什么用「条件更新」，不先锁行再读？</summary>
+  <p>序号 n 的处理写成 <code>UPDATE … SET 最后序号 = n WHERE … AND 最后序号 = n − 1</code>，改到 1 行说明前一条处理过了；改到 0 行说明还没轮到，抛可重试错误，等每分钟的重提再来。</p>
+  <p class="if">先锁行再读：第一条事件到来时游标行还不存在，锁一个不存在的行会加间隙锁，并发时容易死锁（0004 第 3.6 节）。</p></details>
+<details><summary>4. 审计为什么不能和业务放在同一个事务？</summary>
+  <p class="if">放在一起：越权操作被拒时业务要回滚，审计登记跟着回滚，「谁试图做什么被拒了」就没有记录了，安全上最需要的记录反而最容易丢。登录失败同理。</p>
+  <p>所以拒绝、失败类的审计用独立的小事务登记：它的聚合 ID 是「发出方:请求 ID」，序号 0，不排序。成功的变更（比如管理员改了角色）的审计照常和业务同事务，改成功了才记。</p></details>
+<details><summary>5. 既然有了引用计数，卸载为什么还要等 24 小时？</summary>
+  <p>有一个空档：会话模块刚解析到旧版本 v6，指针恰好切到 v7，而「开始引用」事件还没到发布模块，卸载检查看到 v6 没人用。宽限期（默认 24 小时）盖住这个空档。卸载条件还包括：不是当前发布版本、没有评估的 hold、不是未退役的试运行版本（0011 第 3 节）。</p></details>
+</div>
+
+<h2 id="s4">④ 它不保证什么</h2>
+<ul class="no">
+  <li><b>只在同一个聚合内保证顺序。</b>不同执行的事件之间不排序。</li>
+  <li><b>前一条一直失败，后一条就一直等。</b>序号 1 的处理有 bug，序号 2 每分钟被重提、每次都改到 0 行，1 小时后告警。</li>
+  <li><b>只有标了「要按顺序」的订阅才排序，发出方还得真的分配序号。</b>发出方忘了在锁下分配，或者用了别的写法，顺序保证就不成立，而且不会报错。目前只有会话模块发 C19 时要这样做（执行表上有专门的计数列）。</li>
+  <li><b>独立事务的审计只记「拒绝、失败」。</b>它不知道外面的业务最后成没成，所以不能拿来记成功的变更。</li>
+</ul>
+
+<h2 id="s5">⑤ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 同一个执行的「释放」先被处理到，游标会怎样？这条事件最后怎样？</summary>
+  <p>「释放」序号是 2，条件更新要求「最后序号 = 1」，但游标行还没有（序号 1 没处理），改到 0 行 → 抛可重试错误，登记保持未完成。等「开始引用」处理完（游标变成 1），下一次重提时「释放」就能处理了。</p></details>
+<details><summary>2. 为什么说这两条事件「在不同进程里发」？</summary>
+  <p>「开始引用」在执行受理时发，受理在请求进程里；「释放」在执行进入终态时发，终态是跟随器在后台进程里交给会话模块写的。提交后监听器在提交事务的进程里跑（A5），所以两条事件的处理在两个进程里并发进行。</p></details>
+<details><summary>3. 张三（普通使用者）想保存 Agent 配置被拒了。数据库里留下了什么？</summary>
+  <p>Agent 配置没变（业务回滚）；事件登记表里有一条访问拒绝的审计登记（独立事务已提交），之后由审计模块处理存档。</p></details>
+<details><summary>4. 普通事件（比如 A5 的「Agent 版本已发布」）的序号是多少？</summary>
+  <p>0。只有被「按顺序」订阅的事件才分配序号；序号为 0 的事件不排序。</p></details>
+</div>
+
+<p class="src">出处：0004 第 3.3 节规则 4（审计独立事务、聚合 ID、序号 0）、规则 5（顺序、锁下分配、游标的条件更新）、规则 6（重提、1 小时告警）、第 3.6 节（游标表、不先锁再读的原因）；0011 第 3 节（旧版本卸载、引用、卸载条件、宽限期）、第 6.4 节（C19 有序订阅）；0012（C19 发出时机、执行表上的序号计数列：开始引用为 1、释放为 2）；0006 第 8.3 节（访问拒绝、登录失败用独立事务发审计）。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、「开始引用的处理失败了一次」这个情节、游标与引用表里只画了相关的列。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'10:00 前：客服 Agent 刚从 v6 发布到 v7。张三的执行 exe_5 是在切换前受理的，还在用 v6。',
+  exe:[{id:'exe_5',v:'v6',st:'运行中',seq:'0'}],ev:[],cur:[],refs:[],ver:[{v:'v6',st:'已安装（不是当前版本）'}],biz:[]});
+
+step({t:'09:59:58',k:['m01acc'],at:'api',h:'执行受理：发「开始引用」，序号 1',
+  b:'张三发问时，请求进程里的会话模块受理执行 exe_5（解析到的版本是 v6）。同一个事务里：<b>锁住执行行</b>，序号计数 0→1，发布 C19「开始引用」（聚合 ID exe_5，序号 1）。提交。',
+  why:'序号在执行行的锁下分配（③ 第 2 条）。下面假设这条事件的处理第一次失败了（比如数据库一时锁等待超时）。',crash:null},
+  s=>{s.page='';s.exe[0].seq='1';s.ev.push({id:'evt_a',ty:'C19 开始引用 · exe_5',sq:'1',to:'M04·版本引用',done:'否（处理失败，等重提）'});});
+
+step({t:'10:00:30',k:['m01end','m04w'],at:'wk',h:'执行结束：发「释放」，序号 2；发布模块处理它，被游标挡住',
+  b:'跟随器看到执行结束，交给会话模块写终态（这次在<b>后台进程</b>里）。同一个事务：锁执行行，序号 1→2，发布 C19「释放」（序号 2），提交。提交后，后台进程里的发布模块监听器处理它：<code>UPDATE 游标 SET 最后序号 = 2 WHERE 监听器 = … AND 聚合 = exe_5 AND 最后序号 = 1</code> → 游标行还不存在 → <b>改到 0 行</b> → 抛可重试错误。',
+  why:'如果没有游标，「释放」现在就会被处理：引用表里还没有 exe_5，什么都不做；之后「开始引用」再加上一条，就永远不会被释放了（③ 第 1 条）。',crash:null},
+  s=>{s.exe[0].st='已完成';s.exe[0].seq='2';s.ev.push({id:'evt_b',ty:'C19 释放 · exe_5',sq:'2',to:'M04·版本引用',done:'否（还没轮到）'});});
+
+step({t:'10:01:00',k:['redo','m04w'],at:'wk',h:'每分钟重提：先处理「开始引用」',
+  b:'后台进程的定时重提把超过 1 分钟没完成的登记（「开始引用」）重新提交。发布模块在一个事务里：插收件记录；序号是 1 → <b>插入游标行</b>（最后序号 1）；在版本引用表里记下「exe_5 在用 v6」。提交，登记标为完成。',
+  why:'「释放」是 10:00:30 登记的，还不满 1 分钟，这一轮不重提它。',crash:null},
+  s=>{s.ev[0].done='是';s.cur.push({l:'M04·版本引用',a:'exe_5',n:'1'});s.refs.push({e:'exe_5',v:'v6',st:'在用'});});
+
+step({t:'10:02:00',k:['redo','m04w'],at:'wk',h:'再下一轮重提：「释放」终于能处理了',
+  b:'「释放」被重提：条件更新 <code>… WHERE 最后序号 = 1</code> → <b>改到 1 行</b>，游标变成 2；同一个事务里把引用表中 exe_5 标为已释放。提交，登记完成。',
+  why:'结果和「按顺序一条一条来」完全一样，只是晚了一点。',crash:null},
+  s=>{s.ev[1].done='是';s.cur[0].n='2';s.refs[0].st='已释放';});
+
+step({t:'第二天',k:['clean'],at:'wk',h:'旧版本清理：v6 可以卸载了',
+  b:'发布模块的定时清理任务检查 v6：不是当前发布版本；没有在途执行引用它；没有评估的 hold；离开当前发布版本已超过 24 小时宽限期 → 卸载 v6。',
+  why:'如果引用顺序算错了，v6 会一直显示「有人在用」，永远卸不掉；或者还有人在用时就被卸掉（③ 第 1、5 条）。',crash:null},
+  s=>{s.ver[0].st='已卸载';});
+
+step({t:'另一件事 · 某天 10:05:00',k:['m04save','m07c'],at:'api',h:'另一件事：张三想改 Agent 配置，被拒',
+  b:'张三（普通使用者）调了保存 Agent 配置的接口。发布模块开事务，先判权：调身份模块的 checkCapability(Agent 配置与发布) → 没有这项能力 → 拒绝。身份模块在拒绝时<b>另开一个小事务</b>（独立事务），登记一条访问拒绝的审计事件（聚合 ID「identity:请求 ID」，序号 0），<b>立刻提交</b>。',
+  why:'这条审计不依赖外面那个事务的结果（③ 第 4 条）。',crash:null},
+  s=>{s.ev.push({id:'evt_c',ty:'C17 审计：访问拒绝 · 张三 · Agent 配置',sq:'0',to:'M09·审计',done:'否（刚登记）'});s.biz.push({w:'Agent 配置的修改',st:'事务进行中'});});
+
+step({t:'另一件事 · 10:05:00.010',k:['m04save'],at:'api',h:'业务回滚，审计还在',
+  b:'发布模块抛出「无权」错误，外面的业务事务回滚，Agent 配置一个字都没改，入口返回 403。事件登记表里那条审计登记还在，提交后照常被审计模块处理、存档。',
+  why:'对比：如果审计和业务在同一个事务里，这里会一起消失，「张三试图修改 Agent 配置」就没有任何记录。',crash:null},
+  s=>{s.biz[0].st='已回滚（什么都没改）';s.ev[2].done='是（审计模块已处理）';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m01:['M01','#22d3ee'],m04:['M04','#38bdf8'],m07:['M07','#f472b6']},
+  procs:{
+    api:{n:'请求进程',s:'',chips:[['m01acc','m01','M01 · 受理执行','发「开始引用」'],['m04save','m04','M04 · 保存配置','先判权'],['m07c','m07','M07 · 判权拒绝 + 独立事务审计','']]},
+    wk:{n:'后台进程',s:'',chips:[['m01end','m01','M01 · 写终态（跟随器交来）','发「释放」'],['m04w','m04','M04 · 版本引用监听器','有序订阅'],['redo','fw','框架 · 每分钟重提',''],['clean','m04','M04 · 旧版本清理','定时任务']]}},
+  cols:[['api'],'db',['wk']],
+  tables:[
+    {n:'执行',o:'M01 的表',cols:['执行','版本','状态','序号计数'],rows:s=>s.exe.map(r=>[r.id,r.v,r.st,r.seq])},
+    {n:'事件登记表',o:'框架 · event_publication',cols:['事件','内容','序号','通知谁','完成'],rows:s=>s.ev.map(r=>[r.id,r.ty,r.sq,r.to,r.done])},
+    {n:'有序订阅游标',o:'框架 · platform_inbox_cursor',cols:['监听器','聚合','最后序号'],rows:s=>s.cur.map(r=>[r.l,r.a,r.n])},
+    {n:'版本引用',o:'M04 · version_execution_refs',cols:['执行','版本','状态'],rows:s=>s.refs.map(r=>[r.e,r.v,r.st])},
+    {n:'Agent 版本',o:'M04 · agent_versions',cols:['版本','状态'],rows:s=>s.ver.map(r=>[r.v,r.st])},
+    {n:'张三的修改',o:'M04 的业务事务',cols:['写了什么','结果'],rows:s=>s.biz.map(r=>[r.w,r.st])}]});
+</script>
+</body>
+</html>
