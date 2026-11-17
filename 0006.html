@@ -57,11 +57,12 @@ header button,header select{font:inherit;padding:4px 11px;border-radius:7px;bord
 @keyframes flow{to{stroke-dashoffset:-48}}
 .lbl{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:25px;line-height:1.3;color:#94a3b8;background:#0a101c;padding:2px 8px;border-radius:8px;white-space:pre;text-align:center;border:1px solid #1e293b;pointer-events:none;transition:opacity .3s}
 .lbl.hid{display:none}.lbl.on{display:block;color:#fde68a;border-color:#facc15;font-size:21px;background:#020617}
-.pill{position:absolute;z-index:3;display:none;align-items:center;justify-content:center;text-align:center;white-space:pre-line;font-size:19px;font-weight:700;line-height:1.3;color:#e2e8f0;background:#1e293b;border:2px dashed #94a3b8;border-radius:12px;pointer-events:none}
-.pill.vert{writing-mode:vertical-rl;letter-spacing:4px}.pill.show{display:flex}
+.pill{position:absolute;z-index:3;display:none;align-items:center;justify-content:center;text-align:center;white-space:pre-line;font-size:27px;font-weight:800;line-height:1.25;color:#f8fafc;background:#0c2a3a;border:3px solid #38bdf8;border-radius:14px;box-shadow:0 0 0 4px rgba(56,189,248,.25),0 10px 30px rgba(0,0,0,.6);pointer-events:none}
+.pill.vert{writing-mode:vertical-rl;letter-spacing:8px;font-size:32px}.pill.show{display:flex}
 /* 聚焦时其余变暗 */
 body.focus .reg:not(.on):not(.near){opacity:.1}
 body.focus .reg.near{opacity:.5}
+body.focus .reg.tgt,body.focus .ext.tgt{opacity:1;border-color:#facc15;box-shadow:0 0 0 4px rgba(250,204,21,.3)}
 body.split .reg:not(.on):not(.near){opacity:.3}body.split .reg .one,body.split .reg .cnt,body.split .lbl,body.split .pill,body.split #legend{display:none}
 body.focus .reg.on{box-shadow:0 0 0 5px color-mix(in srgb,var(--c) 30%,transparent),0 24px 60px rgba(0,0,0,.55)}
 body.focus .ext:not(.on):not(.near){opacity:.18}body.focus .ext.near{opacity:.6}
@@ -219,7 +220,7 @@ const REGIONS = [
       y:'PRD v8 添加用户只填工号、姓名、角色。', s:'第 2.1 节' },
     { id:'r2.initadmin', n:'初始管理员',
       h:'进程启动时如果没有启用的管理员，按部署配置里的工号和初始密码建一个（必须改密）。两个进程同时建，工号唯一约束挡住第二个。',
-      y:'已知限制：唯一的管理员忘记密码就没人能重置，部署要求至少建两个管理员。', s:'第 2.1、10.2 节' } ]} ]},
+      y:'已知限制：重置密码只能由管理员做。如果全平台只有一个管理员，他自己忘了密码，就没人能帮他重置，只能运维直接改数据库。所以部署要求至少建两个管理员。', s:'第 2.1、10.2 节' } ]} ]},
 
 { id:'r3', no:'③', ic:'🚪', name:'登录与会话', color:'#34d399', p:1,
   one:'浏览器用工号和密码登录，之后每个请求靠 cookie 认出是谁',
@@ -246,7 +247,7 @@ const REGIONS = [
     { id:'r3.bcrypt', n:'密码 bcrypt',
       h:'密码是人起的、能猜，用故意慢的 bcrypt。', s:'第 9 节' },
     { id:'r3.lock', n:'5 次失败锁 15 分钟',
-      h:'连续 5 次失败锁 15 分钟，自动解锁；管理员重置密码立即解锁。', y:'防猜密码，又不用管理员介入。缺点：可以被人故意触发，把别人锁 15 分钟。', s:'第 3.2、10.2 节' },
+      h:'连续 5 次失败锁 15 分钟，自动解锁；管理员重置密码立即解锁。', y:'防猜密码，又不用管理员介入。缺点：别人也能故意锁你。只要知道你的工号，在登录页用你的工号连续输错 5 次密码，你就 15 分钟登不上。工号不算秘密，所以防不住；影响只是晚登录 15 分钟，管理员重置密码可以立即解锁。', s:'第 3.2、10.2 节' },
     { id:'r3.policy', n:'密码规则',
       h:'至少 8 位，含字母和数字；改密要输旧密码；不强制定期改密。', y:'组长 11-16 答复：要有一定复杂度、不要求定期换。先用这条最简单的规则，行内要求更严时上线前只改这一处。', s:'第 3.2 节' } ]},
   { g:'浏览器安全', items:[
@@ -311,9 +312,9 @@ const REGIONS = [
       h:'进程回收时 T04 调 revokeProcessToken（重复调用结果相同）；失败由 T04 的清理任务重试。作废超过 7 天的行由每日清理删除。', s:'第 5.2 节' } ]},
   { g:'已知风险', items:[
     { id:'r5.environ', n:'主进程能读到令牌',
-      h:'Agent 主进程的读文件工具不经沙箱，能读到 /proc/self/environ 里的令牌；但读到也只能以同一身份经代理调用，代理照样判权，不扩大权限（DSH 测试用例 V15）。沙箱里执行的命令读不到（沙箱清掉名字含 TOKEN 的环境变量）。', s:'第 5.3 节' },
+      h:'意思是：Agent 可能把自己进程的令牌读出来。Agent 主进程的读文件工具不经沙箱，能读到 /proc/self/environ（进程的环境变量）里的令牌；但读到也只能以同一身份经代理调用，代理照样判权，不扩大权限（DSH 测试用例 V15）。沙箱里执行的命令读不到（沙箱清掉名字含 TOKEN 的环境变量）。', s:'第 5.3 节' },
     { id:'r5.dev', n:'开发环境单进程共用',
-      h:'只起一个 DSH 进程时所有用户共用一把令牌，代理认成同一个人，只用于没有真实数据的环境。生产按用户分进程，前提是 V16（多个进程各带各的令牌、代理能区分）复测通过；不通过时，要按人判权的 MCP 服务改成平台业务 tool。', s:'第 5.4 节' } ]} ]},
+      h:'意思是：开发时大家共用一把令牌。只起一个 DSH 进程时所有用户共用一把令牌，MCP 代理分不出谁是谁，把所有人认成同一个人，只用于没有真实数据的环境。生产按用户分进程，前提是 V16（多个进程各带各的令牌、代理能区分）复测通过；不通过时，要按人判权的 MCP 服务改成平台业务 tool。', s:'第 5.4 节' } ]} ]},
 
 { id:'r6', no:'⑥', ic:'🧪', name:'评估账号', color:'#22d3ee', p:3,
   one:'数据平台开的测试账号（分三个权限档），评估 Agent 的修改时拿来取数',
@@ -414,7 +415,7 @@ const REGIONS = [
     { id:'q6', k:'q', n:'Q6 停用后停不停执行', h:'用户停用后，是否停掉他正在运行的执行、回收他的 DSH 进程。', y:'本文建议：由 RFC-0012 决定；本文保证发 C20。谁定：会话模块。', s:'第 13 节' },
     { id:'q7', k:'q', n:'Q7 各表保留期', h:'本模块各表的保留期（RFC-0001 Q14）。', y:'本文建议：会话、令牌、应用凭据作废或过期 7 天后删除；账号长期保留。谁定：技术负责人。', s:'第 13 节' },
     { id:'e.cons', n:'缺点（第 10.2 节）',
-      h:'1. 多个 API 进程时，停用、降级在其他进程上最多 30 秒后生效（checkCapability 不缓存，判权本身立刻生效）。2. 唯一的管理员忘记密码就没人能重置。3. 失败锁定可以被人故意触发。4. 进程令牌能被 Agent 主进程的读文件工具读到，但不扩大权限。5. 开发环境单进程时所有用户共用一把令牌。6. 用户停用后，他正在运行的执行和 DSH 进程不会自动停止（Q6）。', s:'第 10.2 节' } ]} ]}
+      h:'1. 停用可能晚 30 秒生效：平台后端跑多个副本时，管理员停用李四后，李四如果正好连在另一个副本上，还能再用最多 30 秒（那个副本记着「这个 cookie 是李四」的缓存还没过期）。改角色不受影响，因为判权每次查库、不缓存。2. 管理员忘了密码可能没人救：重置密码只能管理员做，全平台只有一个管理员时他自己忘了就没人能重置，所以部署要求至少两个管理员。3. 别人能故意把你锁住：知道你的工号，就能在登录页用它连续输错 5 次，让你 15 分钟登不上。工号不是秘密，防不住；影响只是晚登录，管理员重置密码可立即解锁。4. Agent 可能读到自己进程的令牌：令牌放在 DSH 进程的环境变量里，Agent 用读文件工具也许能读出来（还没测）。但读到了也只能冒充它本来就代表的那个人，权限不会变大。5. 开发环境大家共用一把令牌：开发时只起一个 DSH 进程，MCP 代理分不出是谁，把所有人当成同一个人。所以只能在没有真实数据的环境这样用。6. 停用不会打断正在跑的事：李四被停用时，他正在运行的 Agent 执行和 DSH 进程不会自动停下，要不要停由会话模块定（Q6）。', s:'第 10.2 节' } ]} ]}
 ];
 
 // 平台外的系统
@@ -432,7 +433,7 @@ const PILLS = [
   { id:'M05', name:'MCP 代理' },
   { id:'T04', name:'DSH\n适配层' },
   { id:'M03', name:'数据访问模块' },
-  { id:'M09', name:'审计模块' },
+  { id:'M09', name:'审计\n模块' },
   { id:'BIZ', name:'各业务模块' },
   { id:'M16', name:'会话、自进化模块' }
 ];
@@ -450,7 +451,7 @@ const LINES = [
   { id:'L9', from:'r2', to:'r1', def:1, label:'角色、状态\n导出权限' },
   { id:'L10', from:'r6', to:'r1', def:1, label:'评估账号\n主体', p:3 },
   { id:'H1', from:'r5', to:'r1', label:'代理拿令牌来问 → 答：是谁（主体）' },
-  { id:'H2', from:'T04', to:'r5', label:'签发、作废令牌', pills:['T04'], at:[490,1428] },
+  { id:'H2', from:'T04', to:'r5', label:'签发、作废令牌', pills:['T04'], at:[480,1448] },
   { id:'H3', from:'T04', to:'dsh', label:'令牌放进环境变量', pills:['T04'] },
   { id:'H4', from:'r2', to:'r3', label:'停用、移除、重置：作废会话' },
   { id:'H5', from:'r2', to:'r5', label:'停用、移除：作废令牌' },
@@ -461,7 +462,7 @@ const LINES = [
   { id:'H10', from:'r6', to:'r8', label:'停用、启用时发变更通知', p:3 },
   { id:'H11', from:'r7', to:'r8', label:'停用、换凭据、改资格时发变更通知', p:4 },
   { id:'H12', from:'r8', to:'T02', label:'变更通知：请求入口清缓存', pills:['T02'] },
-  { id:'H13', from:'r8', to:'M05', label:'变更通知：MCP 代理清缓存', pills:['M05'], p:2 },
+  { id:'H13', from:'r8', to:'M05', label:'变更通知：MCP 代理清缓存', pills:['M05'], p:2, at:[1215,1150] },
   { id:'H14', from:'r8', to:'M09', label:'审计记录', pills:['M09'] },
   { id:'H15', from:'BIZ', to:'r1', label:'判权、查能力清单', pills:['BIZ'] },
   { id:'H16', from:'M16', to:'r6', label:'选账号、校验', pills:['M16'], p:3, at:[2385,585] }
@@ -471,24 +472,24 @@ const LINES = [
 const TOURS = [
  { id:'t1', name:'张三登录、提问、取数', steps:[
   { open:['r3'], hit:['r3.flow','r3.bcrypt','r3.hash'], lines:['L1'], ext:['browser'],
-    t:'张三在浏览器输入工号和密码。平台把工号去空格、转大写，再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。\n🔒 登录成功时插一行登录会话，一个事务。' },
+    t:'张三在浏览器输入工号和密码。平台把工号去空格、转大写，再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。\n🔒 写库：登录会话表插一行（存 cookie 的哈希和到期时间），账号的「连续输错次数」清零。' },
   { open:['r3','r1'], hit:['r3.cache','r1.user','r1.cap'], lines:['L1','L7'], ext:['browser'],
     t:'之后每个请求浏览器都自动带上 cookie。请求入口先看 30 秒内有没有认过这个 cookie（缓存），没有再问身份与权限模块「这是谁」→ 答：「用户张三」和他的能力清单。\n🔒 只读。' },
   { open:['r5'], hit:['r5.route','r5.kinds','r5.env'], lines:['H2','H3'], ext:['dsh'],
-    t:'张三提问。DSH 适配层要给张三起一个 DSH 进程（路由键就是张三的用户 ID），先向身份与权限模块要一把用户令牌（问 → 答：令牌明文，只给这一次），放进这个进程的环境变量。\n🔒 签发：插一行令牌（库里只存哈希），一个事务。' },
+    t:'张三提问。DSH 适配层要给张三起一个 DSH 进程（路由键就是张三的用户 ID），先向身份与权限模块要一把用户令牌（问 → 答：令牌明文，只给这一次），放进这个进程的环境变量。\n🔒 写库：进程令牌表插一行（存令牌的哈希、这是谁的令牌）。明文只交给适配层这一次，库里没有明文。' },
   { open:['r5'], hit:['r5.why','r5.withroute','r5.internal'], lines:['L3','L4','H1'], ext:['dsh','mcp'],
     t:'Agent 调 mem0（个人记忆）：请求带着进程令牌发给 MCP 代理。代理拿令牌问身份与权限模块，认出是张三，再用这条连接自己的凭据去访问 mem0。令牌只在平台内部用，不发给 mem0。\n🔒 只读（校验结果缓存 30 秒）。' },
   { open:['r4'], hit:['r4.only','r4.ret','r4.col'], lines:['L5','L6'], ext:['dsh','gw'],
-    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 查到这次执行的执行凭据（替张三干活）。数据访问模块向身份与权限模块要张三的网关 uid，交给取数网关，网关按 uid 决定张三能看哪些数据。\n🔒 只读。' } ]},
+    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 找到这次执行的执行凭据：张三提问时会话模块记下的那条执行记录（谁发起的、允许哪些 tool、额度多少），所以知道是在替张三干活。数据访问模块向身份与权限模块要张三的网关 uid，交给取数网关，网关按 uid 决定张三能看哪些数据。\n🔒 只读。' } ]},
  { id:'t2', name:'管理员停用李四', steps:[
   { open:['r2'], hit:['r2.disable','r2.patch'], lines:[],
     t:'管理员在用户管理里停用李四（管理员要有「管理账号」这项能力）。' },
   { open:['r2'], hit:['r2.disable'], also:['r3','r5'], lines:['H4','H5'],
     t:'在同一个事务里：李四的账号改为停用，作废他的全部登录会话和进程令牌，并登记一条变更通知。\n🔒 一个事务：账号状态 + 作废会话 + 作废令牌 + 登记变更通知。\n💥 中途失败：整个回滚，李四没被停用，管理员看到报错再试一次。' },
   { open:['r8'], hit:['r8.speed','r8.sub','r8.tx'], also:['r3','r5'], lines:['H12','H13'],
-    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。李四的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。\n💥 通知处理失败：只是退回到「缓存最多 30 秒后到期」，不需要额外重试。' },
+    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。李四的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。\n（缓存：请求入口把「这个 cookie 是谁」记在内存里，每条只留 30 秒，到点自动作废、下次重新查库。）\n💥 通知处理失败：缓存没被清，但最多 30 秒后自己过期，下次查库就看到李四已停用，所以不需要额外重试。' },
   { open:['r8'], hit:['r8.list','r8.speed'], lines:['H14'],
-    t:'这次停用记一条审计。如果平台后端同时跑了多个副本，其他副本收不到这条通知，要等缓存到期，最多晚 30 秒生效。' } ]},
+    t:'这次停用记一条审计。如果平台后端同时跑了多个副本，变更通知只在处理停用请求的那个副本里发，其他副本收不到，要等它们各自的缓存过期，最多晚 30 秒生效。' } ]},
  { id:'t3', name:'王经理跑自进化评估', steps:[
   { open:['r1'], hit:['r1.svc','r1.r10'], lines:[],
     t:'王经理（全站管理员）发起自进化。这个后台任务的主体是「服务：自进化，发起人王经理」，之后每一步判权都按王经理当时的能力算。' },
@@ -804,7 +805,7 @@ const GLOSSARY = [
   ['路由键', 'DSH 进程的门牌号，一个路由键对应一个进程。用户的进程，路由键就是用户 ID。'],
   ['tool / 业务 tool', 'Agent 能调用的功能。业务 tool（比如取数）由平台提供。'],
   ['桥接插件', '装在 DSH 里的插件。Agent 调业务 tool 时，由它把请求转回平台。'],
-  ['执行凭据', '平台给每次 Agent 执行记下的「这次替谁干活」。tool 回调时，平台按 DSH 会话 ID 查到它。'],
+  ['执行凭据', '不是一串密钥，而是会话模块在每次提问开始执行时记下的那条执行记录：谁发起的（主体）、哪个会话、用哪个 Agent 版本、允许哪些 tool、额度。只有 Agent 回调平台（tool 回调）时才用到：平台按 DSH 会话 ID 找到正在跑的那条执行记录，就知道替谁干活。浏览器的普通请求不用它，靠登录 cookie 认人。'],
   ['MCP / MCP 服务', '一种让 Agent 调外部工具的通用协议。mem0（个人记忆）和行内的一些服务按这个协议提供工具。'],
   ['MCP 代理', '平台里转发 MCP 调用的组件，负责判断谁能用哪个工具，再去调真正的 MCP 服务。'],
   ['进程令牌', '平台发给每个 DSH 进程的一串密钥，放在进程环境变量里，MCP 代理靠它认出是谁在调。见 ⑤。'],
@@ -812,7 +813,7 @@ const GLOSSARY = [
   ['请求入口', '平台后端接收每个请求的第一关：认出是谁、限流、防跨站请求。'],
   ['DSH 适配层', '平台里负责起停 DSH 进程、把请求交给对应进程的部分。'],
   ['变更通知', '账号变化后平台内部发的一条消息，让请求入口和 MCP 代理立刻清掉缓存。见 ⑧。'],
-  ['缓存', '把查过的结果暂存一会儿，少查数据库。这里最长存 30 秒。'],
+  ['缓存', '把查过的结果在内存里暂存一会儿，少查数据库。这里每条只存 30 秒，到点自动作废，下次重新查库；收到变更通知会提前清掉。'],
   ['事务', '一组数据库修改，要么全部成功，要么全部不做。'],
   ['哈希', '把一串内容算成一个固定长度的「指纹」，从指纹推不回原文。bcrypt 是故意算得慢的哈希（用于密码），SHA-256 是普通的快哈希。'],
   ['cookie', '浏览器替网站保存的一小段数据，之后每个请求自动带上。登录 cookie 里就是一串随机的会话编号。'],
@@ -833,8 +834,8 @@ const G = {
   r9:{x:580,y:1540,w:1860,h:350},
   browser:{x:40,y:270,w:240,h:130}, biz:{x:40,y:675,w:240,h:130}, dsh:{x:40,y:1080,w:240,h:210},
   mcp:{x:2640,y:825,w:260,h:130}, gw:{x:2640,y:1120,w:260,h:130},
-  T02:{x:455,y:270,w:70,h:530}, M05:{x:425,y:1150,w:130,h:70}, T04:{x:425,y:1330,w:130,h:70},
-  M03:{x:2080,y:1473,w:150,h:44}, M09:{x:2455,y:1300,w:125,h:44}, BIZ:{x:1470,y:60,w:200,h:44}, M16:{x:2090,y:563,w:200,h:44}
+  T02:{x:430,y:270,w:110,h:530}, M05:{x:390,y:1140,w:180,h:90}, T04:{x:390,y:1320,w:180,h:90},
+  M03:{x:2030,y:1458,w:260,h:70}, M09:{x:2450,y:1240,w:130,h:150}, BIZ:{x:1430,y:52,w:280,h:76}, M16:{x:2050,y:554,w:300,h:62}
 };
 // 默认主线的走法和标签位置
 const ROUTE = {
@@ -991,7 +992,7 @@ function union(ids) {
 
 // ---------- 状态 ----------
 const state = { sel:null, tour:null, step:0, phase:9, gloss:false };
-function clearMarks() { $$('.on,.near,.show').forEach(e => e.classList.remove('on', 'near', 'show')); }
+function clearMarks() { $$('.on,.near,.show,.tgt').forEach(e => e.classList.remove('on', 'near', 'show', 'tgt')); }
 function lightLines(ids) {
   const touched = new Set();
   ids.forEach(id => {
@@ -1013,7 +1014,7 @@ function render() {
     st.open.forEach(id => $('#' + id).classList.add('on'));
     (st.also || []).forEach(id => $('#' + id).classList.add('near'));
     (st.ext || []).forEach(id => $('#' + id).classList.add('on'));
-    lightLines(st.lines).forEach(id => { const e = $('#' + id); if (e && !e.classList.contains('on')) e.classList.add('near'); });
+    lightLines(st.lines).forEach(id => { const e = $('#' + id); if (e && !e.classList.contains('on')) e.classList.add('near', 'tgt'); });
     const pills = st.lines.flatMap(id => LINES.find(x => x.id === id).pills || []);
     let view = union([...st.open, ...(st.also || []), ...(st.ext || []), ...pills]);
     if (scaleFor(view, 50) < 0.5) view = union([...st.open, ...(st.also || [])]);
