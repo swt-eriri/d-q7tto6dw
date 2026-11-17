@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 密钥、日志监控、上线检查</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A11">← 学习清单</a>（第 A11 题，架构级：知道做什么、为什么即可）</p>
+<h1>密钥、日志监控、上线检查</h1>
+<p class="lead">机制：密钥与安全、可观测性（后端框架 0004 第 8、9 节）。例子：一把桥接服务密钥的一生；后台进程挂了，从哪些指标能看出来。</p>
+<p class="sub">这一页想让你讲得出：每类密钥存在哪、谁能用；模块为什么不自己处理密钥；出问题时先看哪几个指标；没有追踪系统时怎么把两个进程的日志串起来；健康检查和就绪检查各看什么。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#94a3b8">DSH 适配层</span> = 0002。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 各类密钥在哪</a><a href="#s4">④ 出问题先看什么</a><a href="#s5">⑤ 为什么这样做</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>加密存储 ≠ 只存哈希</h3><dl>
+    <dt>加密存储</dt><dd>以后还要<b>拿回明文</b>用的，加密后存库，比如桥接服务密钥（入口验签要用）、模型凭据。</dd>
+    <dt>只存哈希</dt><dd>只需要<b>核对</b>、不需要拿回的，只存 SHA-256，比如登录 cookie、进程令牌、应用凭据。库泄露了也拿不到能用的值。</dd></dl>
+    <div class="eg">先问「以后要不要用到明文」，再决定存哪种。</div></div>
+  <div class="pair"><h3>主密钥 ≠ 数据密钥</h3><dl>
+    <dt>主密钥</dt><dd>部署环境变量注入（行内有密钥管理服务就接入），不进库。</dd>
+    <dt>数据密钥</dt><dd>真正加密数据的密钥，自己也被主密钥加密后和密文存在一起，带密钥版本号。</dd></dl>
+    <div class="eg">这叫信封加密（AES-256-GCM）。换主密钥时只要重新加密数据密钥，轮换手工进行。</div></div>
+  <div class="pair"><h3>健康检查 ≠ 就绪检查</h3><dl>
+    <dt>/healthz</dt><dd>只看进程还活着。</dd>
+    <dt>/readyz</dt><dd>看数据库能连上、迁移版本对得上。</dd></dl>
+    <div class="eg"><b>DSH 不可用不影响就绪</b>：平台照常提供历史、管理功能，执行类操作返回 503。</div></div>
+  <div class="pair"><h3>请求 ID ≠ 追踪 ID</h3><dl>
+    <dt>请求 ID</dt><dd>一次入口请求一个，出错时返回给用户，用来查这次请求。</dd>
+    <dt>追踪 ID</dt><dd>一件事从头到尾一个：请求、它引出的任务和事件都带同一个，跨进程也不变。</dd></dl>
+    <div class="eg">P0 不部署追踪系统，按追踪 ID 搜日志就能把请求进程和后台进程的日志串起来。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍 <small>前半段：一把密钥的一生；后半段：后台进程挂了，指标怎么变</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 各类密钥在哪</h2>
+<table class="plain">
+<tr><th>密钥</th><th>在哪</th><th>谁能用</th></tr>
+<tr><td>DSH 启动令牌</td><td>守护程序内存与受限文件；DSH 适配层内存</td><td>DSH 适配层</td></tr>
+<tr><td>桥接服务密钥（每个 DSH 进程一把）</td><td>DSH 适配层生成，加密存平台库；经守护程序放进进程环境变量；进程重启时重新生成，旧的立即失效</td><td>桥接插件签名；入口验签</td></tr>
+<tr><td>MCP 用户令牌（每个 DSH 进程一把）</td><td>身份模块签发、只存哈希；经守护程序放进进程环境变量</td><td>MCP 代理向身份模块校验（B5）</td></tr>
+<tr><td>守护程序访问凭据</td><td>部署环境</td><td>DSH 适配层</td></tr>
+<tr><td>取数网关凭据</td><td>部署环境或运维模块加密存储</td><td>只有取数模块的网关客户端</td></tr>
+<tr><td>模型凭据</td><td>运维模块加密存储，经 DSH 适配层写入 DSH 设置</td><td>运维模块、DSH 适配层</td></tr>
+<tr><td>接入应用凭据</td><td>身份模块只存哈希</td><td>入口验证（0017）</td></tr>
+<tr><td>加密主密钥</td><td>部署环境变量（行内有密钥管理服务时接入，0004 Q5）</td><td>内核的 secrets 服务</td></tr>
+</table>
+
+<h2 id="s4">④ 出问题先看什么</h2>
+<table class="plain">
+<tr><th>现象</th><th>先看的指标</th></tr>
+<tr><td>页面慢、报错多</td><td>HTTP 延迟与错误率；DSH 调用延迟与按分类的错误数</td></tr>
+<tr><td>回答停住不动</td><td>跟随器数量与事件滞后（A1、A10）</td></tr>
+<tr><td>后台任务没人做</td><td>任务队列长度与最老任务等待时间；死信任务数（A6）</td></tr>
+<tr><td>事件该发生的没发生</td><td>事件登记表的未完成数与最老未完成时长（超过 1 小时告警，A5）</td></tr>
+<tr><td>Agent 调 tool 失败</td><td>tool 回调核验失败数（按失败步骤，A8）</td></tr>
+<tr><td>浏览器收不到推送</td><td>事件流在线连接数（A9）</td></tr>
+</table>
+<p class="sub">日志是 JSON，每条带请求 ID、追踪 ID、模块、主体 ID（不带姓名）。指标以 Prometheus 格式暴露，接入行内监控的方式由运维定。</p>
+
+<h2 id="s5">⑤ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么模块不能自己处理密钥，只能调 secrets.encrypt / decrypt？</summary>
+  <p class="if">各模块自己加解密：每个模块各写一套，算法、密钥版本、轮换方式不一致，出了问题没法统一换。</p>
+  <p>集中在内核：算法和主密钥只在一个地方，换主密钥时只改这一处。</p></details>
+<details><summary>2. 为什么桥接服务密钥每个进程一把、重启就换？</summary>
+  <p>它就放在 DSH 进程的环境变量里，泄露的可能性比放在平台内部大。一个进程一把，泄露只影响一个进程；重启就换，泄露的密钥寿命不超过这个进程。泄露后最坏能怎样，见 A8 ④ 第 4 条。</p></details>
+<details><summary>3. 为什么 DSH 不可用时平台仍算「就绪」？</summary>
+  <p class="if">算「不就绪」：负载均衡会把请求进程摘掉，用户连历史记录、管理页面都打不开，而这些本来不依赖 DSH。</p>
+  <p>所以就绪只看数据库和迁移版本；执行类操作单独返回 <code>503 common.dependency-unavailable</code>，DSH 的状态由运维模块的运行状态页展示。</p></details>
+<details><summary>4. 为什么日志里只带主体 ID、不带姓名，还要脱敏？</summary>
+  <p class="if">日志的查看范围比业务库宽得多。把姓名、cookie、签名、凭据写进日志，等于把敏感信息复制到了一个管得更松的地方。</p>
+  <p>请求头里的凭据、cookie、签名，事件正文里已知的敏感字段一律打码；DSH 返回的原始错误不直接进响应。</p></details>
+<details><summary>5. 为什么 P0 不部署追踪系统？</summary>
+  <p>多一个要部署、要运维的组件。请求、任务、事件都带追踪 ID 并写进每条日志，按它搜日志就能串起请求进程和后台进程；tool 回调的日志带原执行的追踪 ID。行内有追踪平台时再接 OpenTelemetry。</p></details>
+</div>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 张三说「我的回答一直不出来」，给了你一个请求 ID。你怎么查？</summary>
+  <p>用请求 ID 在日志里找到这次请求，拿到它的追踪 ID；再用追踪 ID 搜，能看到后台进程里跟随任务、事件处理的日志。同时看跟随器滞后、任务队列最老等待这些指标，判断是不是后台进程的问题。</p></details>
+<details><summary>2. DSH 主机宕了，负载均衡会不会把请求进程摘掉？</summary>
+  <p>不会。就绪检查只看数据库和迁移版本。用户还能看历史、做管理，执行类操作返回 503。</p></details>
+<details><summary>3. 登录 cookie 和桥接服务密钥，为什么一个只存哈希、一个加密存储？</summary>
+  <p>cookie 只需要核对（算哈希比一比），不需要拿回明文；桥接服务密钥入口验签时要用明文重新算签名，所以只能加密存储。</p></details>
+</div>
+
+<p class="src">出处：0004 第 8 节（密钥表、信封加密、日志脱敏、/internal/* 不对办公网转发）、第 9 节（日志、指标、追踪、健康检查）、第 3.3 节（1 小时告警）、第 4.4 节；0002 第 3.3 节（ensureProcess、密钥轮换）。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、指标的具体数值、告警阈值（除事件登记 1 小时外）。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三第一次提问，平台要为他起一个 DSH 进程。',
+  keys:[],env:[],met:[{m:'跟随器事件滞后',v:'< 1 秒'},{m:'任务队列最老等待',v:'1 秒'},{m:'事件登记最老未完成',v:'0'},{m:'/readyz',v:'就绪'}]});
+
+step({t:'09:00:00',k:['t04','sec'],at:'api',h:'生成密钥、加密存库',
+  b:'DSH 适配层确保张三的 DSH 进程时，生成一把新的桥接服务密钥，调内核的 <code>secrets.encrypt</code>：用一把数据密钥加密它，数据密钥再被主密钥加密，带上密钥版本号，一起存进 DSH 进程登记表。',
+  why:'适配层不自己挑算法、不碰主密钥（⑤ 第 1 条）。',crash:null},
+  s=>{s.page='';s.keys.push({p:'dshp_张三',c:'（密文）',ver:'密钥版本 1',st:'有效'});});
+
+step({t:'09:00:01',k:['t04'],at:['api','dsh'],h:'交给守护程序，放进进程环境变量',
+  b:'适配层调守护程序的「确保进程」，把明文密钥（连同身份模块签发的 MCP 用户令牌）交过去；守护程序把它们注入新进程的环境变量。桥接插件从环境变量读密钥，之后每次回调都用它签名。',
+  why:'明文只在内存和这个进程的环境变量里出现，库里只有密文。',crash:null},
+  s=>{s.env.push({k:'桥接服务密钥',v:'（明文，只在这个进程里）'},{k:'MCP 用户令牌',v:'（明文，只在这个进程里）'});});
+
+step({t:'09:05:00',k:['plugin','verify','sec'],at:['dsh','api'],h:'回调时：插件签名，入口解密后验签',
+  b:'Agent 调业务 tool，桥接插件用密钥签名回调。入口按连接 ID 查到密钥引用，调 <code>secrets.decrypt</code> 拿到明文，重新算签名比对（A8 第 1 步）。日志里记下这次回调，但签名、凭据一律打码。',
+  why:'验签必须用明文，所以这把密钥只能加密存储，不能只存哈希（① 第 1 对）。',crash:null});
+
+step({t:'11:00:00',k:['t04','sec'],at:['api','dsh'],h:'进程重启：换一把新的，旧的立即失效',
+  b:'张三的 DSH 进程因故重启。适配层重新生成一把密钥，加密存库替换旧的，交给守护程序注入新进程。旧密钥立即失效：拿旧密钥签名的回调验签不过。',
+  why:'泄露的密钥最多活到进程重启（⑤ 第 2 条）。',crash:null},
+  s=>{s.keys[0].c='（新密文）';s.env[0].v='（新明文）';});
+
+step({t:'14:00:00',k:['mon'],at:'wk',h:'另一件事：后台进程挂了，指标怎么变',
+  b:'后台进程崩了，守护进程没能拉起来（A1）。几分钟内：跟随器事件滞后一直涨（没人取回 DSH 事件）；任务队列最老等待一直涨（没人领任务）；事件登记表最老未完成时长一直涨（没人每分钟重提）。请求进程的 /healthz、/readyz 都正常，页面能打开。',
+  why:'「页面打得开」不代表系统正常。这几个指标就是为后台进程这种看不见的部分准备的（④）。',crash:null},
+  s=>{s.down=['wk'];s.met[0].v='5 分钟，还在涨';s.met[1].v='5 分钟，还在涨';s.met[2].v='5 分钟，还在涨';});
+
+step({t:'15:00:00',k:['mon'],at:'wk',h:'告警，按追踪 ID 查日志',
+  b:'事件登记表里有超过 1 小时没完成的登记，触发告警（还有后台进程存活告警）。运维收到告警，按某个卡住的任务的追踪 ID 搜日志，找到后台进程最后的报错，修好后重启。之后未完成的登记被重提、任务被领走，指标回落。',
+  why:'按追踪 ID 搜，请求进程受理时的日志和后台进程处理时的日志能串在一起（① 第 4 对）。',crash:null},
+  s=>{s.met[2].v='超过 1 小时 → 告警';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],dsh:['DSH 适配层','#94a3b8']},
+  procs:{
+    api:{n:'平台（请求进程 / DSH 适配层）',s:'',chips:[['t04','dsh','DSH 适配层 · 生成密钥、确保进程',''],['sec','fw','框架 · secrets 加解密','信封加密'],['verify','fw','框架 · 入口验签','']]},
+    dsh:{n:'DSH 进程 dshp_张三',s:'',chips:[['plugin','dsh','桥接插件','用环境变量里的密钥签名']]},
+    wk:{n:'后台进程',s:'',chips:[['mon','fw','指标与告警','']]}},
+  cols:[['api','dsh'],'db',['wk']],
+  dbTitle:'库里的密钥、进程里的东西、监控指标',dbSub:'',
+  tables:[
+    {n:'DSH 进程登记',o:'DSH 适配层 · platform_dsh_processes',cols:['进程','服务密钥','版本','状态'],rows:s=>s.keys.map(r=>[r.p,r.c,r.ver,r.st])},
+    {n:'DSH 进程的环境变量',o:'不在库里',cols:['名字','值'],rows:s=>s.env.map(r=>[r.k,r.v])},
+    {n:'监控指标',o:'示意数值',cols:['指标','值'],rows:s=>s.met.map(r=>[r.m,r.v])}]});
+</script>
+</body>
+</html>
