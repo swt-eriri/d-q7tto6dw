@@ -6,7 +6,7 @@
 <title>机制 · 一件事做完之后：事件与任务</title>
 <style>
 :root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
---fw:#a78bfa;--m04:#38bdf8;--m06:#f59e0b;--new:#22c55e;--chg:#facc15;--bad:#f87171}
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
 .wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
@@ -19,7 +19,6 @@ nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
 nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
 nav.toc a:hover{border-color:#64748b}
 .who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
-.who.fw{color:var(--fw);border-color:var(--fw)}.who.m04{color:var(--m04);border-color:var(--m04)}.who.m06{color:var(--m06);border-color:var(--m06)}
 /* 先分清 */
 .pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
 .pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
@@ -36,14 +35,14 @@ details.basics p{margin:8px 0;color:#cbd5e1}
 .steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
 .steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
 .steps button:hover{color:var(--text)}
-.stage{display:grid;grid-template-columns:200px 1fr 220px;gap:12px}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
 .proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
 .proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
 .proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
 .chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
 .chip .o{font-size:11px;display:block}
 .chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
-.chip[data-own=fw]{--c:var(--fw)}.chip[data-own=m04]{--c:var(--m04)}.chip[data-own=m06]{--c:var(--m06)}
 .chip.on .o{color:var(--c)}
 .proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
 .db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
@@ -86,15 +85,23 @@ ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
 .src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
 .walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
 @media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
 </style>
 </head>
 <body><div class="wrap">
 
-<p class="sub" style="margin:0 0 6px"><a href="mech-index.html#A5" style="color:#93c5fd">← 学习清单</a>（第 A5 题）</p>
+<p class="back"><a href="mech-index.html#A5">← 学习清单</a>（第 A5 题）</p>
 <h1>一件事做完之后，「接下来该发生的事」怎么保证发生</h1>
 <p class="lead">机制：事件与任务（后端框架 0004 第 3.3、3.4 节）。例子：管理员发布「客服 Agent」。</p>
 <p class="sub">这一页想让你关掉以后能自己讲出：每一步是谁在做、数据库里留下了什么、在哪一步崩了会怎样、为什么非这样不可。
-<span class="who fw">框架</span> = 你负责的 0004；<span class="who m04">M04</span> = Agent 配置与发布（蕴颐）；<span class="who m06">M06</span> = 自进化（闻洛）。</p>
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#38bdf8">M04</span> = Agent 配置与发布（蕴颐）；<span class="who" style="--c:#f59e0b">M06</span> = 自进化（闻洛）。</p>
 <nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（可以让它崩）</a><a href="#s3">③ 为什么非这样不可</a><a href="#s4">④ 它不保证什么</a><a href="#s5">⑤ 自测</a></nav>
 
 <h2 id="s1">① 先分清四对词 <small>口试里最容易混的</small></h2>
@@ -125,32 +132,7 @@ ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
 </details>
 
 <h2 id="s2">② 走一遍 <small>点左边跳到某一步；每一步都可以点「💥 在这里崩」</small></h2>
-<div class="walk">
-  <div class="steps" id="steps"></div>
-  <div>
-    <div class="stage">
-      <div class="page" id="page"></div>
-      <div class="proc" id="pApi"><h4>请求进程 API-A<small>处理页面请求；不领任务</small></h4>
-        <div class="chip" data-k="m04req" data-own="m04">M04 · 发布受理<span class="o">模块代码（蕴颐）</span></div>
-        <div class="chip" data-k="fwApi" data-own="fw">框架 · 建任务监听器<span class="o">框架代码（你）</span></div>
-      </div>
-      <div class="db"><h4>数据库（全平台一个库）<small>只画这个例子用到的行</small></h4><div id="tables"></div>
-        <div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>
-      <div class="proc" id="pWk"><h4>后台进程 Worker-1<small>领任务、跑监听器、定时重提</small></h4>
-        <div class="chip" data-k="claim" data-own="fw">框架 · 执行池领取<span class="o">框架代码（你）</span></div>
-        <div class="chip" data-k="job" data-own="m04">M04 · 发布任务处理器<span class="o">模块代码（蕴颐）</span></div>
-        <div class="chip" data-k="m06" data-own="m06">M06 · 标记建议监听器<span class="o">模块代码（闻洛）</span></div>
-        <div class="chip" data-k="fwWk" data-own="fw">框架 · 标记完成 / 每分钟重提<span class="o">框架代码（你）</span></div>
-      </div>
-    </div>
-    <div class="explain" id="explain"></div>
-    <div class="ctl">
-      <button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button>
-      <button class="boom" id="boom">💥 在这一步之后崩</button>
-    </div>
-    <div class="crash" id="crash"></div>
-  </div>
-</div>
+<div id="walk"></div>
 
 <h2 id="s3">③ 为什么非这样不可 <small>每条都是「不这样会坏在哪」</small></h2>
 <div class="qa">
@@ -206,62 +188,112 @@ ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
 
 </div>
 <script>
-const OWN={m04req:'m04',fwApi:'fw',claim:'fw',job:'m04',m06:'m06',fwWk:'fw'};
-const S0={page:'管理员之前采纳了一条自进化建议 s_88，已写进草稿（修订号 7）。现在点「发布」。',
-  ptr:'v6',pub:[],ev:[],jobs:[],inbox:[],sug:[{id:'s_88',st:'已采纳（未发布）'}]};
-const STEPS=[];
-let cur=JSON.parse(JSON.stringify(S0));
-function step(o,mut){ if(mut) mut(cur); STEPS.push(Object.assign({state:JSON.parse(JSON.stringify(cur))},o)); }
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>数据库（全平台一个库）<small>只画这个例子用到的行和列</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">💥 在这一步之后崩</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(); if(boom&&cr) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
 
+init({page:'管理员之前采纳了一条自进化建议 s_88，已写进草稿（修订号 7）。现在点「发布」。',
+  ptr:'v6',pub:[],ev:[],jobs:[],inbox:[],sug:[{id:'s_88',st:'已采纳（未发布）'}]});
 step({t:'09:59',k:[],h:'开始之前',
   b:'线上是 v6。管理员采纳过的建议 s_88 写在草稿修订号 7 里，还没发布。事件登记表、任务表、收件记录里还没有和这次发布有关的行。',
   why:'下面每一步注意三件事：在哪个进程里、是谁的代码、数据库里多了或改了哪一行。',crash:null});
 
-step({t:'10:00:00.000',k:['m04req'],proc:'api',h:'M04 受理发布请求，登记事件',
+step({t:'10:00:00.000',k:['m04req'],at:'api',h:'M04 受理发布请求，登记事件',
   b:'请求到了 API-A。M04 开一个事务，调 events.publish(「发布已申请」，带草稿修订号 7)。框架在<b>同一个事务</b>里往事件登记表写 1 行：要通知「框架·建任务监听器」，未完成。提交。页面显示「发布中」。',
   why:'受理只做一件事：把「要发布」可靠地记下来。真正的发布要几分钟，不在请求里做（③ 第 4 条）。',
   crash:[{w:'提交之前崩',left:'事务回滚，登记行不存在，什么都没留下。',next:'没有人会接着做。',end:'页面报错，管理员再点一次「发布」。这是安全的失败：要么记下了，要么什么都没发生。'},
          {w:'提交之后、监听器跑之前崩',left:'登记行在，状态「未完成」。任务表里还没有任务。',next:'1 分钟后，Worker 的定时任务发现这行超过 1 分钟没完成，在 Worker 进程里重新提交给建任务监听器。',end:'任务照样建出来，只是晚了 1 分钟。'}]},
   s=>{s.page='管理员看到：<b>发布中…</b>';s.ev.push({id:'evt_1001',n:'发布已申请',to:'框架·建任务',done:'否'});});
 
-step({t:'10:00:00.050',k:['fwApi'],proc:'api',h:'提交后，API-A 里的框架监听器建任务',
-  b:'事务提交后，<b>API-A 自己</b>的事件监听线程触发「建任务监听器」（事务是 API-A 提交的，所以在 API-A 里跑，不是 Worker）。它往任务表插 1 行：类型 agent-publish，去重键 = 事件 ID evt_1001，串行键 agent-publish:客服（同一个 Agent 的发布排队，一次只做一个），池 default，状态「排队」。',
+step({t:'10:00:00.050',k:['fwApi'],at:'api',h:'提交后，API-A 里的框架监听器建任务',
+  b:'事务提交后，<b>API-A 自己</b>的事件监听线程触发「建任务监听器」（事务是 API-A 提交的，所以在 API-A 里跑，不是 Worker）。它往任务表插 1 行：类型 agents.publish，去重键 = 事件 ID evt_1001，串行键 agent-publish:客服（同一个 Agent 的发布排队，一次只做一个），池 default，状态「排队」。',
   why:'模块不直接写任务表，一律「发事件 → 框架建任务」（0004 第 3.4 节）。去重键用事件 ID，是为了这个监听器被重跑时不会建出第二个任务。',
   crash:[{w:'任务插入后、标记完成前崩',left:'任务表里有 1 条排队任务；登记行还是「未完成」。',next:'1 分钟后 Worker 重提，再跑一次建任务监听器：插入撞上（类型，去重键）唯一约束 → 当作已建过，算成功 → 把登记行标为完成。',end:'仍然只有 1 个任务。这就是建任务不需要收件记录的原因（③ 第 3 条）。'}]},
-  s=>{s.jobs.push({ty:'agent-publish',dk:'evt_1001',sk:'agent-publish:客服',st:'排队',who:'—'});});
+  s=>{s.jobs.push({ty:'agents.publish',dk:'evt_1001',sk:'agent-publish:客服',st:'排队',who:'—'});});
 
-step({t:'10:00:00.060',k:['fwApi'],proc:'api',h:'标记登记行完成：第一个事件处理完了',
+step({t:'10:00:00.060',k:['fwApi'],at:'api',h:'标记登记行完成：第一个事件处理完了',
   b:'监听器正常返回，框架把登记行标为「已完成」。<b>到这里第一个事件就处理完了，但发布一步都还没做。</b>',
   why:'这是「事件处理完 ≠ 事情做完」最清楚的地方。之后的发布进度只看任务表，和这个事件再没有关系。',
   crash:[{w:'这之后 API-A 崩',left:'登记行已完成，任务在排队。',next:'和 API-A 无关了：任何一个后台进程都会来领这个任务。',end:'发布照常进行。'}]},
   s=>{s.ev[0].done='是';});
 
-step({t:'10:00:01',k:['claim'],proc:'wk',h:'Worker-1 领到任务',
+step({t:'10:00:01',k:['claim'],at:'wk',h:'Worker-1 领到任务',
   b:'Worker-1 的 default 池有空闲，约每秒去任务表领一次：把这条任务从「排队」改成「运行中」，记下持有者 Worker-1、租约代次 1、租约到 10:01:01。',
   why:'请求进程不领任务，只有后台进程领（评估执行器的评估任务是唯一例外，由请求进程代领）。有几个后台进程都没关系，数据库保证一条任务只被一个进程领走。',
   crash:[{w:'领到后马上崩',left:'任务「运行中」，持有者 Worker-1，但没人续租。',next:'租约 60 秒到期后，Worker 的定时检查（每 10 秒一次）把它退回「排队」。',end:'另一个后台进程领走，从头做。'}]},
   s=>{s.jobs[0].st='运行中';s.jobs[0].who='Worker-1 · 代次1';});
 
-step({t:'10:00:02 → 10:02:30',k:['job'],proc:'wk',h:'发布任务干活：校验、组装、安装、探测',
+step({t:'10:00:02 → 10:02:30',k:['job'],at:'wk',h:'发布任务干活：校验、组装、安装、探测',
   b:'M04 的处理器：检查草稿修订号还是 7 → 校验 → 组装出 v7，建发布记录 apr_31「组装完成」→ 经 DSH 适配层把 v7 安装到 DSH、跑探测（约两分钟）→ 发布记录改为「已安装未上线」。这期间每 20 秒续一次租约。',
   why:'装 DSH、跑探测是在等外部系统，这时<b>不开着数据库事务</b>：写发布记录是一个个短事务，写完就提交、还连接。线上这时仍然是 v6。',
   crash:[{w:'安装到一半 Worker-1 崩',left:'发布记录 apr_31 停在「组装完成」；任务「运行中」但没人续租。',next:'60 秒后租约过期 → 任务退回排队 → 别的后台进程领走重做。<b>不会再发一次「发布已申请」事件</b>，恢复全靠任务表。',end:'重做时要能接着已有的发布记录做，不出错（任务处理器必须能重复执行，「任务」页讲）。'}]},
   s=>{s.pub.push({id:'apr_31',v:'v7',st:'已安装未上线'});s.jobs[0].who='Worker-1 · 代次1（每 20 秒续租）';});
 
-step({t:'10:02:31.000',k:['job'],proc:'wk',h:'切换：一个事务里改三样东西',
+step({t:'10:02:31.000',k:['job'],at:'wk',h:'切换：一个事务里改三样东西',
   b:'同一个事务里：① 把「客服 Agent 当前发布版本」从 v6 换成 v7（只有它还是 v6 才换，叫「比较并替换」）；② 发布记录改为「已发布」；③ events.publish(C04「Agent 版本已发布」，带建议清单 [s_88]) → 登记表新增 1 行，要通知「M06·标记建议」。提交。',
   why:'三样必须一起生效或一起不生效（③ 第 1 条）。从这一刻起新受理的执行用 v7；已经受理的执行继续用 v6。',
   crash:[{w:'提交之前崩',left:'三样都没生效：指针仍是 v6，记录仍是「已安装未上线」，没有 C04 登记行。',next:'任务租约过期后被重新领取，重新走到切换这一步。',end:'不会出现「指针换了但 M06 不知道」这种半截状态。'}]},
   s=>{s.ptr='v7';s.pub[0].st='已发布';s.ev.push({id:'evt_2001',n:'C04 Agent 版本已发布',to:'M06·标记建议',done:'否'});});
 
-step({t:'10:02:31.050',k:['m06'],proc:'wk',h:'提交后，Worker-1 里的 M06 监听器标记建议',
+step({t:'10:02:31.050',k:['m06'],at:'wk',h:'提交后，Worker-1 里的 M06 监听器标记建议',
   b:'这次事务是 <b>Worker-1</b> 提交的，所以 M06 的监听器在 Worker-1 里触发（③ 第 5 条）。M06 开一个事务：先往收件记录插（M06·标记建议，evt_2001），再把 s_88 改成「已发布」。提交。',
   why:'收件记录和改建议必须在同一个事务里（③ 第 2 条）。插收件记录撞上主键，说明处理过了，直接跳过。',
   crash:[{w:'M06 提交后、标记完成前崩',left:'收件记录在，s_88 已是「已发布」；登记行还是「未完成」。',next:'1 分钟后重提，再跑 M06 监听器：插收件记录撞主键 → 跳过，算成功 → 标完成。',end:'s_88 只被改了一次。另外别忘了任务那一侧：发布任务也停在「运行中」，租约过期后被接手重跑，处理器看到发布记录已经是「已发布」，就该直接算成功，不能再切一次（任务处理器要能重复执行，这是对 M04 处理器的要求，RFC 没写到这么细）。'},
          {w:'M06 提交之前崩',left:'收件记录和 s_88 的修改一起回滚，好像没处理过。',next:'1 分钟后重提，重新处理。',end:'照样只生效一次。'}]},
   s=>{s.inbox.push({l:'M06·标记建议',e:'evt_2001'});s.sug[0].st='已发布';});
 
-step({t:'10:02:31.060',k:['fwWk'],proc:'wk',h:'收尾：登记行完成，任务成功',
+step({t:'10:02:31.060',k:['fwWk'],at:'wk',h:'收尾：登记行完成，任务成功',
   b:'框架把 C04 的登记行标为完成；发布任务处理器返回成功，任务改为「成功」。页面显示「已发布 v7」。',
   why:'回头看：两个事件都在 1 秒内处理完，一个任务用了两分半。每一步都有一张表记着做到哪，任何一步崩了，都知道该由谁、从哪里接着做。',
   crash:null},
@@ -275,38 +307,13 @@ const TBL=[
  {k:'inbox',n:'收件记录',o:'框架 · platform_inbox',cols:['监听器','事件'],rows:s=>s.inbox.map(r=>[r.l,r.e])},
  {k:'sug',n:'自进化建议',o:'M06 的表',cols:['建议','状态'],rows:s=>s.sug.map(r=>[r.id,r.st])},
 ];
-let i=0,boom=false;
-const $=id=>document.getElementById(id);
-function render(){
-  const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
-  $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
-  $('page').innerHTML=st.state.page;
-  document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',st.k.includes(c.dataset.k)));
-  $('tables').innerHTML=TBL.map(t=>{
-    const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
-    const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
-      return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
-      :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
-    return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
-  const own=st.k.map(k=>OWN[k]).filter((v,j,a)=>a.indexOf(v)===j).map(o=>`<span class="who ${o}">${{fw:'框架',m04:'M04',m06:'M06'}[o]}</span>`).join('');
-  $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t} ${st.proc?'· 在 '+(st.proc==='api'?'请求进程 API-A':'后台进程 Worker-1'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p><p class="why">${st.why}</p>`;
-  $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
-  $('boom').style.display=st.crash?'':'none';
-  $('boom').classList.toggle('on',boom&&!!st.crash);
-  $('pApi').classList.toggle('crashed',boom&&!!st.crash&&st.proc==='api');
-  $('pWk').classList.toggle('crashed',boom&&!!st.crash&&st.proc==='wk');
-  $('crash').classList.toggle('show',boom&&!!st.crash);
-  $('crash').innerHTML=st.crash?st.crash.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
-  history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
-}
-$('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
-$('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
-$('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
-$('boom').onclick=()=>{boom=!boom;render();};
-document.addEventListener('keydown',e=>{if(e.target.tagName==='SUMMARY')return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
-const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
-if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
-render();
+mount({
+  owners:{fw:['框架','#a78bfa'],m04:['M04','#38bdf8'],m06:['M06','#f59e0b']},
+  procs:{
+    api:{n:'请求进程 API-A',s:'处理页面请求；不领任务',chips:[['m04req','m04','M04 · 发布受理','模块代码（蕴颐）'],['fwApi','fw','框架 · 建任务监听器','框架代码（你）']]},
+    wk:{n:'后台进程 Worker-1',s:'领任务、跑监听器、定时重提',chips:[['claim','fw','框架 · 执行池领取','框架代码（你）'],['job','m04','M04 · 发布任务处理器','模块代码（蕴颐）'],['m06','m06','M06 · 标记建议监听器','模块代码（闻洛）'],['fwWk','fw','框架 · 标记完成 / 每分钟重提','框架代码（你）']]}},
+  cols:[['api'],'db',['wk']],
+  tables:TBL});
 </script>
 </body>
 </html>
