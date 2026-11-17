@@ -1,0 +1,292 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 取数用谁的身份</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#B4">← 学习清单</a>（第 B4 题）· 先看过 <a href="mech-toolcb.html">A8 tool 回调核验</a> 再看这页</p>
+<h1>取数用谁的身份：只用登记过的 uid，不猜</h1>
+<p class="lead">机制：取数身份（身份与权限 0006 第 4 节）。例子：Agent 替张三取数；张三的工号更正了；管理员清空了他的 uid；自进化和评估账号取数。</p>
+<p class="sub">这一页想让你讲得出：取数网关认的身份从哪来；为什么 uid 为空时不拿工号顶替；为什么只能在 tool 回调里查；自进化为什么不能取数；uid 为什么全表唯一、改它为什么要审计。
+<span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006；<span class="who" style="--c:#4ade80">M03</span> = 取数（拿 uid 去调取数网关）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 四种主体各返回什么</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>工号 ≠ 网关 uid</h3><dl>
+    <dt>工号</dt><dd>登录时输入的，可以更正（需求 OH-IAM-F011）。</dd>
+    <dt>网关 uid</dt><dd>取数网关认识的身份，网关按它判数据范围。是账号表的一列，<b>新建账号时默认填工号</b>，管理员可以改。</dd></dl>
+    <div class="eg">一般就是工号（组长 11-16），但两者是两列：更正工号时 uid 不跟着变。</div></div>
+  <div class="pair"><h3>未映射 ≠ 不允许</h3><dl>
+    <dt>未映射</dt><dd>这个人可以取数，但还没登记 uid。不能真实取数，提示「账号还没开通取数身份，请联系管理员」。</dd>
+    <dt>不允许</dt><dd>这个主体根本不该取数：服务主体，或账号已停用、移除。</dd></dl>
+    <div class="eg">还有第三种：已映射，返回 uid。</div></div>
+  <div class="pair"><h3>能力 ≠ 数据范围</h3><dl>
+    <dt>能力</dt><dd>平台判断：能不能对话、能不能导出（B1）。</dd>
+    <dt>数据范围</dt><dd>能看哪些数据，<b>由取数网关按 uid 判断</b>。平台不维护部门授权，管理员角色也不扩大取数权限。</dd></dl>
+    <div class="eg">平台只负责「把对的人的 uid 交给网关」。</div></div>
+  <div class="pair"><h3>执行凭据里的主体 ≠ 模型填的参数</h3><dl>
+    <dt>执行凭据</dt><dd>入口核验 tool 回调时从会话模块查来的（A8），取数身份就按它里面的主体查。</dd>
+    <dt>参数</dt><dd>模型填的，不含身份。模型写「用李四的身份」也没用。</dd></dl>
+    <div class="eg">Agent 没法替别人要 uid。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍</h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 四种主体各返回什么</h2>
+<table class="plain">
+<tr><th>主体</th><th>返回</th></tr>
+<tr><td>用户</td><td>有 uid → 已映射（uid）；没有 → 未映射；已停用或移除 → 不允许</td></tr>
+<tr><td>接入应用 + 实际用户</td><td>按实际用户，同上</td></tr>
+<tr><td>评估账号</td><td>同上，按评估账号自己的 uid 和状态</td></tr>
+<tr><td>服务</td><td>不允许：自进化不继承管理员的数据权限，打分、探测不取数</td></tr>
+</table>
+<p class="sub">只能在 tool 回调里调（前提：调用上下文里有可信执行上下文）。每次 tool 调用按主键查一次，不缓存。</p>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. uid 为空时，为什么不拿工号临时顶替？（第 4 步）</summary>
+  <p class="if">顶替：猜错了，就是用别人的数据权限取数。比如管理员清空 uid 正是因为发现它不对，结果平台又自己填回去了。</p>
+  <p>新建时默认填工号不一样：那是管理员看得见、改得了的登记；取数时临时顶替是没人看见的猜测。</p></details>
+<details><summary>2. 更正工号时，uid 为什么不跟着变？（第 2 步）</summary>
+  <p>uid 一变就是数据权限变了。这种事不能悄悄发生，由管理员在编辑页决定改不改，改了要发审计。</p></details>
+<details><summary>3. uid 为什么全表唯一？</summary>
+  <p class="if">不唯一：同一个 uid 绑给了两个人，一个人就能用另一个人的数据权限取数。</p></details>
+<details><summary>4. 为什么只能在 tool 回调里查？</summary>
+  <p>取数只发生在 Agent 调「取数」tool 时。要求调用上下文里有可信执行上下文（只有入口核验 tool 回调时能生成，A8），就保证了主体来自核验过的执行凭据，而不是哪个模块自己传进来的。</p></details>
+<details><summary>5. 王经理是管理员，他发起的自进化为什么不能用他的身份取数？</summary>
+  <p class="if">能的话：自进化跑起来会以管理员的数据权限取数，权限比任何一个真实用户问问题时都大，而且结果混进了自进化的评估里。</p>
+  <p>自进化要看「不同权限的人问会怎样」，用的是数据平台开通的三档评估账号（B7）。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>不保证 uid 是对的。</b>平台只保证用登记的那个；登记错了由管理员发现和更正。</li>
+  <li><b>不管数据范围。</b>能看哪些数据全在取数网关。</li>
+  <li><b>不管口径能不能用。</b>那是取数模块按口径许可判断的业务规则。</li>
+  <li><b>知识服务的身份本期不存。</b>本期用本地知识文件；接入知识平台时，再加一个可空列和返回值里的一个字段（0006 Q5，等知识平台确定要什么身份）。</li>
+  <li><b>取数网关最终版不归平台开发，以后可能变。</b>uid 的来源（组长说一般是工号）随之可能变（组长 11-16）。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 新建账号时只填了工号、姓名、角色，他能取数吗？</summary>
+  <p>能（如果网关认这个 uid）。新建时 uid 默认填规范化后的工号。</p></details>
+<details><summary>2. 管理员把张三的工号从 A1001 更正为 A1010，Agent 再替他取数用哪个 uid？</summary>
+  <p>还是 A1001。更正工号不改 uid，要不要改 uid 由管理员在编辑页另外决定。</p></details>
+<details><summary>3. 管理员想把李四的 uid 也设成 A1001，会怎样？</summary>
+  <p>被拒：uid 全表唯一，同一个 uid 不能绑给两个主体。</p></details>
+<details><summary>4. CRM 替李四调用时取数，用谁的 uid？</summary>
+  <p>李四的。接入应用的主体按实际用户取 uid；应用只被授予调用资格，不被赋予数据范围。</p></details>
+</div>
+
+<p class="src">出处：0006 第 1.1 节（几个标识）、第 2.1 节（移除时清空 uid）、第 4 节（取数身份全部规则）、第 6 节（评估账号）、第 7 节（接入应用按实际用户）、第 8.1 节（GatewayIdentityQuery、Mapped / Unmapped / NotAllowed）、第 10.1 节、第 13 节 Q2、Q5。<br>
+<b>示意，不是 RFC 定的</b>：时间、工号、uid 的具体值、评估账号的 uid。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三是使用者，工号 A1001，新建账号时 uid 默认填了 A1001。',
+  users:[{u:'张三',no:'A1001',uid:'A1001',st:'启用'},{u:'李四',no:'A1024',uid:'A1024',st:'启用'}],
+  evals:[{id:'评估账号 · 二档',uid:'EVAL_T2',st:'启用'}],
+  log:[]});
+
+step({t:'10:00',k:['m03','m07'],at:'api',h:'Agent 替张三取数：已映射',
+  b:'Agent 调「取数」，入口核验后带着可信执行上下文交给取数模块（A8）。取数模块调 <code>getGatewayIdentity()</code>：身份模块按<b>执行凭据里的主体</b>（张三）按主键查一次账号 → 启用、有 uid → 返回「已映射（A1001）」。取数模块把 A1001 交给取数网关，网关按它判数据范围。',
+  why:'取数模块不传「替谁查」，身份模块自己从调用上下文里取主体（④ 第 4 条）。',
+  boomText:'🚫 如果不在 tool 回调里调',stripe:false,
+  crash:[{w:'某模块在普通页面请求里调 getGatewayIdentity',left:'调用上下文里没有可信执行上下文，前提不满足，拒绝。',next:'—',end:'取数身份只给 tool 回调用。'}]},
+  s=>{s.page='';s.log.push({who:'张三',r:'已映射（A1001）'});});
+
+step({t:'11:00',k:['adm'],at:'api',h:'管理员更正张三的工号：uid 不跟着变',
+  b:'张三的工号录错了，管理员更正为 A1010。账号表里工号变了，<b>uid 还是 A1001</b>。编辑页上 uid 是单独一栏，要不要改由管理员决定。',
+  why:'uid 一变就是数据权限变了，不能悄悄改（④ 第 2 条）。',crash:null},
+  s=>{s.users[0].no='A1010';});
+
+step({t:'11:10',k:['adm'],at:'api',h:'管理员清空张三的 uid',
+  b:'数据平台说 A1001 这个 uid 有问题，管理员先把张三的 uid 清空。改 uid 等于改数据权限，身份模块发一条审计（记原值和新值）。',
+  why:'',boomText:'🚫 如果改成别人的 uid',stripe:false,
+  crash:[{w:'管理员把张三的 uid 改成 A1024（李四的）',left:'被拒：uid 全表唯一。',next:'—',end:'同一个 uid 不能绑给两个人，否则一个人能用另一个人的数据权限（④ 第 3 条）。'}]},
+  s=>{s.users[0].uid='（空）';});
+
+step({t:'11:20',k:['m03','m07'],at:'api',h:'Agent 再替张三取数：未映射，不顶替',
+  b:'身份模块查到张三 uid 为空 → 返回「<b>未映射</b>」。<b>不拿工号 A1010 或别的值临时顶替。</b>取数模块不能真实取数，tool 返回「账号还没开通取数身份，请联系管理员」。',
+  why:'顶替就是猜，猜错了就是用别人的数据权限取数（④ 第 1 条）。',crash:null},
+  s=>{s.log.push({who:'张三',r:'未映射 → 不能取数'});s.page='张三看到：账号还没开通取数身份，请联系管理员。';});
+
+step({t:'14:00',k:['m03','m07'],at:'api',h:'自进化在跑：不允许',
+  b:'王经理发起的自进化里，有一次执行的主体是服务主体（自进化，发起人王经理）。取数时身份模块返回「<b>不允许</b>」。王经理是管理员也不行。',
+  why:'自进化不继承管理员的数据权限（④ 第 5 条）。',crash:null},
+  s=>{s.page='';s.log.push({who:'服务（自进化，王经理）',r:'不允许'});});
+
+step({t:'14:30',k:['m03','m07'],at:'api',h:'评估账号跑被测会话：用评估账号自己的 uid',
+  b:'评估时，被测会话跑在评估账号的进程里，执行凭据里的主体是「评估账号 · 二档」。取数时身份模块按这个评估账号的 uid 返回「已映射（EVAL_T2）」，网关按二档的数据范围给数据。受限的那一档被网关拒绝，记为「权限行为通过」。',
+  why:'取数结果取决于谁在问，所以评估用数据平台开通的三档账号来跑（B7）。',crash:null},
+  s=>{s.log.push({who:'评估账号 · 二档',r:'已映射（EVAL_T2）'});});
+
+step({t:'第二天',k:['adm'],at:'api',h:'李四被停用：不允许',
+  b:'管理员停用了李四。如果他还有执行在跑（B6），取数时身份模块查到他已停用 → 返回「不允许」。',
+  why:'每次 tool 调用都按主键查一次、不缓存，所以停用立刻生效。',crash:null},
+  s=>{s.users[1].st='停用';s.log.push({who:'李四（已停用）',r:'不允许'});});
+
+mount({
+  owners:{m07:['M07','#f472b6'],m03:['M03','#4ade80']},
+  procs:{api:{n:'请求进程',s:'tool 回调和管理页面都在这里',chips:[['m03','m03','M03 · 取数处理器','拿 uid 调网关'],['m07','m07','M07 · getGatewayIdentity','按执行凭据里的主体查，不缓存'],['adm','m07','M07 · 用户管理','改工号、改 uid（发审计）']]}},
+  cols:[['api'],'db'],
+  tables:[
+    {n:'账号',o:'M07 · identity_users',cols:['人','工号','网关 uid','状态'],rows:s=>s.users.map(r=>[r.u,r.no,r.uid,r.st])},
+    {n:'评估账号',o:'M07 · identity_eval_accounts',cols:['账号','网关 uid','状态'],rows:s=>s.evals.map(r=>[r.id,r.uid,r.st])},
+    {n:'取数身份查询结果',o:'示意',cols:['主体','返回'],rows:s=>s.log.map(r=>[r.who,r.r])}]});
+</script>
+</body>
+</html>
