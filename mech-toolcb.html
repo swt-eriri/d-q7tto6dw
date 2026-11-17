@@ -1,0 +1,315 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · Agent 调业务 tool 时，平台怎么确认是谁</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A8">← 学习清单</a>（第 A8 题）</p>
+<h1>Agent 调业务 tool 时，平台怎么确认「这是谁的哪一次执行」</h1>
+<p class="lead">机制：tool 回调核验（后端框架 0004 第 4.4、8、10.1 节）。例子：张三的会话里，Agent 调「取数」tool。</p>
+<p class="sub">这一页想让你讲得出：DSH 里的 Agent 调平台时为什么带不了令牌；平台靠什么认出「这是张三的这次执行」；核验三步各防什么；桥接插件重试为什么安全；密钥泄露最坏能怎样。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#4ade80">M03</span> = 取数；<span class="who" style="--c:#f472b6">M07</span> = 身份（你的 0006）；<span class="who" style="--c:#94a3b8">DSH 侧</span> = 桥接插件（0002）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（每一关都可以不通过）</a><a href="#s3">③ 两类特殊回调</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>签名 ≠ 身份</h3><dl>
+    <dt>签名</dt><dd>证明「这个请求来自某个 DSH 进程上的桥接插件，内容没被改过」。每个 DSH 进程一把服务密钥。</dd>
+    <dt>身份</dt><dd>证明「这是张三的这一次执行」。不在请求里，是平台<b>按 DSH 会话 ID 去会话模块查</b>出来的执行凭据。</dd></dl>
+    <div class="eg">签名对了只说明「是自己人发的」，还不知道是替谁发的。</div></div>
+  <div class="pair"><h3>参数 ≠ 身份</h3><dl>
+    <dt>参数</dt><dd>模型填的，比如「查上个月的存款余额」。只当作业务输入。</dd>
+    <dt>身份</dt><dd>参数里<b>没有任何身份字段</b>。模型就算写「替李四查」，平台也不看。</dd></dl>
+    <div class="eg">DSH 会话 ID、调用 ID 是 DSH 给的执行上下文，不是模型填的。</div></div>
+  <div class="pair"><h3>防重放 ≠ 幂等</h3><dl>
+    <dt>防重放</dt><dd>回调记录表（保留 10 分钟）：同一个回调再来一次，返回上次的结果；内容不同，拒绝。挡的是「同一个请求被重复送达或被人重放」。</dd>
+    <dt>幂等</dt><dd>模块事务里的幂等记录（保留 24 小时）：保证业务写入只生效一次。</dd></dl>
+    <div class="eg">两者用同一个键：DSH 会话 ID + 调用 ID + 第几次回调。</div></div>
+  <div class="pair"><h3>tool 回调 ≠ MCP 调用</h3><dl>
+    <dt>tool 回调</dt><dd>经桥接插件回调平台，按 DSH 会话查执行凭据，精确到<b>这一次执行</b>。本页讲的就是这个。</dd>
+    <dt>MCP 调用</dt><dd>DSH 进程直接发给平台的 MCP 代理，只能带进程环境变量里的令牌，精确到<b>这个进程</b>（B5 讲）。</dd></dl>
+    <div class="eg">取数、读知识、登记产出这些平台业务 tool 走回调；mem0、行内 MCP 服务走 MCP。</div></div>
+</div>
+<details class="basics"><summary>用到的三个基础概念（不熟就点开）</summary>
+  <p><b>HMAC 签名</b>：发送方用密钥对「方法 + 路径 + 时间戳 + 请求体摘要」算一个值附在请求上；接收方用同一把密钥再算一遍，对得上就说明请求来自持有密钥的人、内容没被改。密钥本身不在请求里传。</p>
+  <p><b>重放</b>：把截获的旧请求原样再发一次。时间戳（±60 秒）加回调记录表，让旧请求要么过期、要么只能拿到上次的结果。</p>
+  <p><b>桥接插件</b>：装在 DSH 里的一个插件。Agent 调平台的业务 tool 时，实际执行的是它：它把调用转成一个签了名的 HTTP 请求发给平台，再把平台的结果交回给 Agent。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>点「🚫 如果这一步不通过」看每一关挡住时怎样</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 两类特殊回调</h2>
+<table class="plain">
+<tr><th></th><th>是什么</th><th>和普通 tool 回调的区别</th></tr>
+<tr><td><b>非 tool 回调</b><br><code>/internal/exec/v1</code></td><td>桥接插件每轮开始取剩余额度（get_limits）、登记预算暂停（report_budget_pause）</td><td>没有对应的 tool 调用，也就没有调用 ID：插件为每个请求生成一个请求 ID 填在调用 ID 的位置、第几次回调填 1，防重放照常。第 2 步换成「按 DSH 会话找活动执行，并核对连接属于会话所在的进程」</td></tr>
+<tr><td><b>发布探测进程</b><br>路由键 system:probe</td><td>M04 发布时跑的探测会话（A5 第 5 步「探测」）</td><td>没有会话模块的执行，取不到额度。入口用第 1 步查到的路由键认出它，改向 M04 取一次性的探测执行：额度 1 次模型调用、0 次 tool 调用，没有取数和业务 tool 权限，用完即失效。取额度由入口直接应答；收到预算暂停说明不正常，通知 M04 把这次探测记为失败；业务 tool 一律拒绝</td></tr>
+</table>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么不让 DSH 把平台令牌带进 tool 调用？放进工作目录的文件里让插件读呢？</summary>
+  <p class="if">带令牌：DSH 做不到，它没法把平台令牌传进 tool 调用（DSH 能力核验结论第 3.5 节）。</p>
+  <p class="if">放进工作目录的文件：工作目录对 Agent 的文件工具可见，令牌会被读进模型的上下文，等于交给了模型。</p>
+  <p>所以反过来：DSH 只需要告诉平台「我是哪个 DSH 会话」，平台自己查这个会话当前在跑哪次执行、是谁的（决定记录「执行凭据按 DSH 会话查」）。</p></details>
+<details><summary>2. 为什么每个 DSH 进程一把服务密钥，进程重启就换？</summary>
+  <p>密钥只存在这个进程的环境变量里。按用户分进程后，一把密钥泄露只影响一个进程；进程一重启就生成新的，旧的立刻失效。</p>
+  <p class="if">全平台一把：泄露一次，所有进程都能被冒充，而且换密钥要重启所有进程。</p></details>
+<details><summary>3. 为什么核验时不核对「跟随器已经看到了这次 tool 调用」？</summary>
+  <p>原本想用它防伪造：真调用一定会在 DSH 事件里出现。但：</p>
+  <p class="if">① P0 是单个 DSH 进程，Agent 能读到别的会话日志里的调用信息，照样能伪造，防不住；② 要同步等跟随器，占住请求线程；③ 跟随器重连期间所有调用都会被误拒。</p>
+  <p>所以本期不核对，按用户分 DSH 进程后需要时再评估（0004 Q3）。所有回调都记在回调记录表里，可以事后排查。</p></details>
+<details><summary>4. 服务密钥泄露了，最坏能做到什么？</summary>
+  <p>能伪造这个 DSH 进程上的回调，但身份仍然由平台按 DSH 会话查：只能<b>以那次执行的身份、在它允许的 tool 和限额内</b>行事，不能变成别人，也不能用没开放的 tool。会话没有活动执行时，伪造的回调在第 2 步就被拒。</p></details>
+<details><summary>5. 为什么核验失败返回「tool 能理解的错误结果」，而不是直接返回 HTTP 错误？</summary>
+  <p class="if">裸 HTTP 错误：桥接插件只能把它当网络故障，Agent 不知道是该停还是该重试，可能一直重试。</p>
+  <p>返回 tool 结果里的错误对象，Agent 能看懂原因（比如「执行已停止」），自己决定停止。同时记安全日志，按失败的步骤计数。</p></details>
+<details><summary>6. 第 2 步被拒的回调为什么要把记录删掉？</summary>
+  <p>RFC 只写了做法：第 2 步被拒的不记结果，可以重试。理由是我的理解：第 2 步被拒常常是状态问题（比如执行刚好在切换），删掉记录，桥接插件用同一个键重试时能重新核验；如果留着「已拒绝」，重试会一直拿到旧的拒绝。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>不防「同一进程里的 Agent 冒用别人的会话 ID」。</b>P0 单进程下，Agent 能读到别的会话日志，理论上能拿别人的 DSH 会话 ID 和调用 ID 伪造回调。按用户分进程后才有实际隔离（生产按用户分进程已定）。</li>
+  <li><b>防重放只记 10 分钟。</b>更久以后的重复写入靠模块的幂等记录（24 小时）和业务唯一约束。</li>
+  <li><b>不保证外部调用只发生一次。</b>取数网关、DSH 这些外部系统，按「先落记录再外呼、结果不明只对账」处理，平台的唯一键管不到对方那边。</li>
+  <li><b>核验只认「这次执行」，不管业务规则。</b>这个口径张三能不能查，是取数模块按口径许可判断的；数据范围由取数网关按 uid 判断。</li>
+  <li><b>每次回调多一次写库和一次跨模块查询</b>，大约多几毫秒到几十毫秒（RFC 列为缺点）。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 桥接插件发出回调后网络超时，用同样的请求重发了一次。平台会取两次数吗？</summary>
+  <p>不会。同一个键（DSH 会话 ID + 调用 ID + 第几次回调）、同样的内容：第一次已完成就返回上次的结果；还在处理就返回「处理中，可重试」；处理者超过 60 秒没动静，重试可以接手重做，模块的幂等记录保证不重复写入。</p></details>
+<details><summary>2. 张三点了「停止」，执行已经停了。这时 Agent 还在 DSH 里调了一次取数，会怎样？</summary>
+  <p>第 1 步验签能过，第 2 步向会话模块取执行凭据时，执行已停止 → 拒绝，返回 tool 能理解的错误；记录被删掉。</p></details>
+<details><summary>3. 模型在参数里写了「请用李四的身份查」，取数时用的是谁的 uid？</summary>
+  <p>张三的。参数只当业务输入，身份来自执行凭据里的主体；取数模块调身份模块的「取数身份」接口，按执行凭据里的主体返回 uid（B4 讲）。</p></details>
+<details><summary>4. 一个 tool 不在这次执行允许的清单里，模型硬要调，会在哪一步被挡？</summary>
+  <p>第 2 步。会话模块返回的执行凭据里带着允许的 tool 清单，tool 不在里面就拒绝。</p></details>
+<details><summary>5. 发布探测进程上的 Agent 调了「取数」，会怎样？</summary>
+  <p>拒绝。入口按路由键 system:probe 认出这是探测进程，探测进程上的业务 tool 回调一律拒绝。</p></details>
+</div>
+
+<p class="src">出处：0004 第 3.1 节（可信执行上下文只能由回调核验生成）、第 3.2 节（回调的幂等根键）、第 3.6 节（回调记录表的处理规则、60 秒接手、10 分钟保留）、第 4.4 节（请求内容、核验三步、非 tool 回调、探测例外、不核对跟随器的理由）、第 8 节（服务密钥每进程一把、重启轮换）、第 10.1–10.2 节；0006 第 1.1 节（tool 回调与 MCP 两条路）、第 4 节（取数身份）；决定记录「执行凭据按 DSH 会话查」「先落记录再外呼」。<br>
+<b>示意，不是 RFC 定的</b>：时间、所有 ID、取数参数的内容、取数结果。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三在问：「上个月各分行的存款余额是多少？」Agent 决定调「取数」tool。',
+  procs:[{p:'dshp_张三',rk:'usr_张三',key:'（加密存储）'}],
+  exe:[{id:'exe_1',ds:'dss_9',st:'运行中',tools:'取数、读知识'}],
+  cb:[],idem:[],ctx:[]});
+
+step({t:'10:00:00',k:[],h:'开始之前',
+  b:'张三的执行 exe_1 正在跑。会话模块在执行开始时登记了它的执行凭据：主体是张三、DSH 会话是 dss_9、用的 Agent 版本和知识版本、允许的 tool、限额。张三的 DSH 进程 dshp_张三 有一把桥接服务密钥，由 DSH 适配层生成、加密存在平台库里，启动进程时经守护程序放进进程环境变量。',
+  why:'记住：平台这边已经知道「dss_9 这个 DSH 会话正在跑张三的 exe_1」。下面的核验就是靠这条对应关系。',crash:null});
+
+step({t:'10:00:05.000',k:['plugin'],at:'dsh',h:'桥接插件发出回调',
+  b:'DSH 执行 tool 时实际调的是桥接插件。插件发 <code>POST /internal/tool/v1/query</code>，带上：连接 ID、DSH 会话 ID dss_9（DSH 给的，不是模型填的）、调用 ID call_42、第几次回调 1、模型给的参数、时间戳，以及用服务密钥算的签名。',
+  why:'请求里没有任何「我是张三」的东西，也没有平台令牌。',crash:null},
+  s=>{s.page='';});
+
+step({t:'10:00:05.002',k:['v_sign'],at:'api',h:'第 1 步（上）：验签',
+  b:'入口按连接 ID 向 DSH 适配层查连接登记：属于进程 dshp_张三、路由键 usr_张三、服务密钥引用 → 取出密钥，重新算签名，一致；时间戳在 ±60 秒内。',
+  why:'这一步只证明「请求来自 dshp_张三 上的桥接插件、内容没被改」。查到的路由键还用来判断是不是发布探测进程（③）。',
+  crash:[{w:'签名对不上，或时间戳超出 ±60 秒',left:'拒绝，返回 tool 能理解的错误结果。',next:'记安全日志，「核验失败数」按第 1 步计一次。',end:'伪造的请求、被截获后过了一分钟才重放的请求，都停在这里。'}]});
+
+step({t:'10:00:05.003',k:['v_replay'],at:'api',h:'第 1 步（下）：防重放，占住这个键',
+  b:'往回调记录表插一行：键（dss_9, call_42, 1）、请求摘要、状态「处理中」。插入成功，说明这是第一次来。',
+  why:'这一行就是「同一个回调只处理一次」的依据。桥接插件重试时会撞上这一行（看「如果不通过」）。',
+  crash:[{w:'键已存在、内容相同、状态「已完成」',left:'直接返回上次的结果，不再处理。',next:'—',end:'桥接插件的重试是安全的。'},
+         {w:'键已存在、内容相同、状态「处理中」',left:'返回「处理中，可重试」。',next:'如果处理者超过 60 秒没更新，重试可以用条件更新接手重做。',end:'模块的幂等记录保证重做也不会重复写入。'},
+         {w:'键已存在、内容不同',left:'拒绝。',next:'记安全日志。',end:'同一个调用不可能有两份不同的内容，这是伪造或出错。'}]},
+  s=>{s.cb.push({k:'dss_9 · call_42 · 1',st:'处理中',dg:'a81f…',res:''});});
+
+step({t:'10:00:05.005',k:['v_cred','m01_verify'],at:'api',h:'第 2 步：向会话模块取执行凭据',
+  b:'调会话模块的 <code>verifyToolCall</code>：按 DSH 会话 dss_9 找到当前活动执行 exe_1，状态「运行中」，「取数」在允许清单里 → 返回执行凭据：主体 UserPrincipal(usr_张三)、会话、执行 exe_1、Agent 版本、知识版本、允许的 tool、限额、有效期。',
+  why:'到这一步才知道「是谁」：身份是平台按 DSH 会话自己查出来的，不是请求告诉它的（④ 第 1 条）。',
+  crash:[{w:'会话没有活动执行，或执行已停止、结束、回收',left:'拒绝，返回 tool 能理解的错误（比如「执行已停止」）。',next:'删掉回调记录表里这一行，桥接插件可以用同一个键重试（④ 第 6 条）。',end:'张三点了停止之后，Agent 再调什么都会停在这里。'},
+         {w:'tool 不在允许清单里',left:'拒绝。',next:'同上，删掉记录。',end:'Agent 版本没开放的 tool 调不了。'}]},
+  s=>{});
+
+step({t:'10:00:05.006',k:['v_ctx'],at:'api',h:'第 3 步：构造可信执行上下文，交给取数模块',
+  b:'入口用执行凭据构造调用上下文：主体张三、用途 tool-callback、<b>可信执行上下文</b>（会话、执行、版本、允许的 tool、限额）、幂等根键 dss_9:call_42:1。按模块清单里登记的 tool 回调，交给取数模块。',
+  why:'可信执行上下文只有这一步能生成，模块不能自己造（0004 第 3.1 节）。取数、读知识、登记产出这些模块只看它，不再自己核验。',crash:null},
+  s=>{s.ctx.push({k:'principal',v:'UserPrincipal(usr_张三)'},{k:'purpose',v:'tool-callback'},{k:'execution',v:'exe_1 · 允许：取数、读知识 · 限额'},{k:'idempotencyKey',v:'dss_9:call_42:1'});});
+
+step({t:'10:00:05.010 → 10:00:07',k:['m03','m07_gw'],at:'api',h:'取数模块处理：业务规则在这里',
+  b:'取数模块按口径许可检查这个口径张三能不能用（业务规则）；调身份模块取取数身份：按执行凭据里的主体张三，返回他登记的网关 uid；再调取数网关。它用根键 dss_9:call_42:1 做幂等，保证同一个回调只真正生效一次。具体怎么落记录、怎么调网关是取数模块自己的设计，原则是事务里不调外部、先落记录再外呼。',
+  why:'「这次执行是张三的」由入口保证；「张三能不能查这个口径」「能看哪些数据」分别由取数模块和取数网关判断。',
+  crash:[{w:'张三没有登记网关 uid',left:'身份模块返回「未映射」，不拿工号顶替。',next:'tool 返回「账号还没开通取数身份，请联系管理员」。',end:'B4 讲。'}]},
+  s=>{s.idem.push({sc:'data_access.query',k:'dss_9:call_42:1',res:'（处理中）'});});
+
+step({t:'10:00:07.100',k:['v_done','plugin'],at:['api','dsh'],h:'完成：记下结果，交回 Agent',
+  b:'取数模块写回幂等记录的结果，事务提交；回调记录表这一行改为「已完成」并存下结果。入口把结果返回给桥接插件，插件交给 DSH 里的 Agent。',
+  why:'之后 10 分钟内，同一个回调再来，都直接拿到这份结果。',crash:null},
+  s=>{s.cb[0].st='已完成';s.cb[0].res='（取数结果）';s.idem[0].res='（取数结果）';s.page='Agent 拿到了取数结果，接着写回答。';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m01:['M01','#22d3ee'],m03:['M03','#4ade80'],m07:['M07','#f472b6'],dsh:['DSH 侧','#94a3b8']},
+  procs:{
+    dsh:{n:'DSH 进程 dshp_张三',s:'在 DSH 主机上',chips:[['plugin','dsh','桥接插件','签名后回调平台']]},
+    api:{n:'请求进程',s:'/internal/tool/v1',chips:[['v_sign','fw','框架 · 验签','第 1 步'],['v_replay','fw','框架 · 防重放','第 1 步'],['v_cred','fw','框架 · 取执行凭据','第 2 步'],['m01_verify','m01','M01 · verifyToolCall','按 DSH 会话找执行'],['v_ctx','fw','框架 · 构造可信上下文','第 3 步'],['m03','m03','M03 · 取数处理器','业务规则'],['m07_gw','m07','M07 · 取数身份','按主体给 uid'],['v_done','fw','框架 · 记结果、返回','']]}},
+  cols:[['dsh'],['api'],'db'],
+  dbTitle:'数据：库里的行 + 这次请求的内存对象',dbSub:'只画这个例子用到的',
+  boomLabel:'🚫 如果这一步不通过',stripe:false,crashLabels:['怎么处理','接下来','说明'],
+  tables:[
+    {n:'DSH 进程登记',o:'DSH 适配层 · platform_dsh_processes',cols:['进程','路由键','服务密钥'],rows:s=>s.procs.map(r=>[r.p,r.rk,r.key])},
+    {n:'执行',o:'M01 的表',cols:['执行','DSH 会话','状态','允许的 tool'],rows:s=>s.exe.map(r=>[r.id,r.ds,r.st,r.tools])},
+    {n:'回调记录',o:'框架 · platform_tool_callbacks（10 分钟）',cols:['键','状态','请求摘要','结果'],rows:s=>s.cb.map(r=>[r.k,r.st,r.dg,r.res||'—'])},
+    {n:'幂等记录',o:'框架 · platform_idempotency（24 小时）',cols:['范围','键','结果'],rows:s=>s.idem.map(r=>[r.sc,r.k,r.res])},
+    {n:'调用上下文',o:'这次请求的内存对象，只读',cols:['字段','值'],rows:s=>s.ctx.map(r=>[r.k,r.v])}]});
+</script>
+</body>
+</html>
