@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · DSH 进程调 MCP 时怎么认人（进程令牌）</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#B5">← 学习清单</a>（第 B5 题）· 对照 <a href="mech-toolcb.html">A8 tool 回调核验</a> 一起看</p>
+<h1>DSH 进程调 MCP 时怎么认人：每个进程一把令牌</h1>
+<p class="lead">机制：进程令牌（身份与权限 0006 第 1.1、5 节）。例子：张三的 DSH 进程里，Agent 调 mem0 记忆服务；王经理的自进化进程调行内 MCP 服务；评估和探测进程。</p>
+<p class="sub">这一页想让你讲得出：tool 回调已经能认人了，为什么 MCP 还要另一套；令牌从签发到作废的一生；五种令牌各代表谁、放行什么；为什么不设过期、风险能不能接受。
+<span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006（签发、校验）；<span class="who" style="--c:#94a3b8">DSH 适配层</span> = 0002（起进程、交给守护程序）；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理（拿令牌问「是谁」，再判能不能调）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 五种令牌</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>tool 回调 ≠ MCP 调用</h3><dl>
+    <dt>tool 回调</dt><dd>经桥接插件回调平台，平台按 DSH 会话查执行凭据，精确到<b>这一次执行</b>（A8）。</dd>
+    <dt>MCP 调用</dt><dd>DSH 进程直接按 MCP 协议发给 MCP 代理，<b>只能带进程环境变量里的东西</b>，所以只能精确到<b>这个进程</b>。</dd></dl>
+    <div class="eg">平台业务 tool（取数、读知识）走回调；mem0、行内 MCP 服务走 MCP。</div></div>
+  <div class="pair"><h3>路由键 ≠ 用户 ID</h3><dl>
+    <dt>路由键</dt><dd>DSH 进程的门牌号，一个路由键一个进程。用户进程的路由键就是用户 ID。</dd>
+    <dt>其他路由键</dt><dd><code>evolution:管理员 ID</code>、评估账号 ID、<code>eval-aux:评估 ID</code>、<code>system:probe</code>。</dd></dl>
+    <div class="eg">身份模块按路由键的前缀判断这是哪种令牌、代表谁。</div></div>
+  <div class="pair"><h3>进程令牌 ≠ 外部 MCP 服务的凭据</h3><dl>
+    <dt>进程令牌</dt><dd>只在平台内部用：DSH 进程 → MCP 代理，告诉代理「我是谁」。</dd>
+    <dt>连接凭据</dt><dd>代理再去访问外部 MCP 服务时，用的是这条连接自己的凭据（0010）。<b>令牌不外发。</b></dd></dl>
+    <div class="eg">外部服务看不到平台的令牌。</div></div>
+  <div class="pair"><h3>作废 ≠ 过期</h3><dl>
+    <dt>作废</dt><dd>进程回收、代表对象被停用或失去权限时，主动作废。</dd>
+    <dt>不设过期</dt><dd>令牌没有到期时间。运行中进程的环境变量从外面改不了，过期只能重启进程。</dd></dl>
+    <div class="eg">「随进程有效」：进程在，令牌在；进程回收，令牌作废。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍</h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 五种令牌</h2>
+<table class="plain">
+<tr><th>种类</th><th>路由键</th><th>代表谁</th><th>MCP 代理放行什么</th></tr>
+<tr><td>用户</td><td>用户 ID</td><td>这个用户</td><td>按资源模块的对象授权；可向 mem0 传用户身份</td></tr>
+<tr><td>自进化</td><td>evolution:管理员 ID</td><td>服务主体（自进化，这位管理员），审计落在他身上</td><td>只放这个自进化 Agent 版本勾选的 tool；不放 mem0；不传最终用户身份。签发和校验时管理员都必须有「自进化管理」能力</td></tr>
+<tr><td>评估账号</td><td>评估账号 ID</td><td>这个评估账号</td><td>不放 mem0</td></tr>
+<tr><td>评估辅助</td><td>eval-aux:评估 ID</td><td>平台服务主体，没有发起人</td><td>不放 MCP tool；只用于同一次评估的打分与模拟用户会话</td></tr>
+<tr><td>探测</td><td>system:probe</td><td>平台服务主体，没有发起人</td><td>只能列 tool，不能调</td></tr>
+</table>
+<p class="sub">校验结果带路由键：MCP 调用记录按路由键存；评估辅助令牌的评估 ID 只在路由键里，主体里没有。</p>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. tool 回调已经能认人了，为什么 MCP 还要另一套？</summary>
+  <p>MCP 调用不经桥接插件，是 DSH 进程按 MCP 协议直接发给代理的，平台没机会按 DSH 会话去查执行凭据；DSH 也不能把平台令牌带进 tool 调用。能带的只有进程环境变量里的东西，所以每个进程放一把令牌，由守护程序注入，MCP 配置把它读进请求头。</p></details>
+<details><summary>2. 为什么不设过期？风险是什么？</summary>
+  <p class="if">设短期过期：DSH 进程可能连着跑好几天，运行中进程的环境变量改不了，令牌一过期只能重启进程，打断用户。</p>
+  <p>风险：Agent 主进程的读文件工具不经沙箱，可能读到进程环境变量里的令牌（还没测，并入 DSH 测试用例 V15）。即使读到，也只能以同一个身份经代理调用，代理照样判权，<b>不扩大权限</b>。沙箱里执行的命令读不到（沙箱清掉名字含 TOKEN 的环境变量）。</p></details>
+<details><summary>3. 停用时为什么要批量作废令牌，校验时不是还会查状态吗？</summary>
+  <p>停用应该立刻、干净地失败。批量作废只多一条 UPDATE，库里一眼能看出令牌已作废；校验时查代表对象的当前状态，是第二道保险。</p></details>
+<details><summary>4. 为什么签发的入参还是路由键，不改成明确的类型？</summary>
+  <p>MCP 调用记录要按路由键存，评估辅助令牌的评估 ID 只在路由键里。解析五种前缀只有十几行代码，不值得为此改接口和表。</p></details>
+<details><summary>5. 自进化令牌为什么签发和校验时都要查管理员的能力？</summary>
+  <p>和 B1「按发起人当前的能力」一样：管理员被降级后，他的自进化进程不能继续带着管理员身份调 MCP。降级时身份模块同一事务作废他的自进化令牌，校验时再查一次能力。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>只精确到进程，不精确到执行。</b>同一个进程里的所有会话共用这把令牌。</li>
+  <li><b>开发环境单进程时，所有用户共用一把令牌。</b>代理会认成同一个人，只能用于没有真实数据的环境。</li>
+  <li><b>生产按用户分进程有个前提还没测：</b>多个进程各带各的令牌、代理能区分（DSH 测试用例 V16，待复测）。不通过的话，要按人判权的 MCP 服务改成平台业务 tool、走桥接插件，进程令牌退化为只区分进程种类。V16 影响 P2 的 MCP 代理，不影响 P0、P1。</li>
+  <li><b>令牌可能被 Agent 读到</b>（V15 待测），但不扩大权限。</li>
+  <li><b>停用后旧进程很快又启用的小坑：</b>旧进程的令牌已作废，MCP 调用会失败，直到进程重新拉起（B6）。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 张三的 DSH 进程调 mem0，代理怎么知道是张三？</summary>
+  <p>请求头里带着进程令牌；代理调身份模块的 verifyCallerToken，身份模块按令牌的 SHA-256 查到这一行，未作废、张三是启用的 → 返回种类「用户」、路由键、主体张三。代理据此判断，并可以向 mem0 传张三的身份。</p></details>
+<details><summary>2. 王经理的自进化进程能用 mem0 吗？</summary>
+  <p>不能。自进化令牌不放 mem0，也不传最终用户身份；只放这个自进化 Agent 版本勾选的 tool。</p></details>
+<details><summary>3. 发布探测进程能调行内 MCP 服务的 tool 吗？</summary>
+  <p>不能。探测令牌只能列 tool，不能调（用来核对 tool 清单，A5 第 5 步「探测」）。</p></details>
+<details><summary>4. 进程回收时作废令牌失败了，会怎样？</summary>
+  <p>由 DSH 适配层的清理任务重试；作废接口重复调用结果相同，重试是安全的。进程已经不在了，旧令牌也没有进程能用。</p></details>
+</div>
+
+<p class="src">出处：0006 第 1.1 节（两条路、几个标识、令牌不外发）、第 5 节（为什么要令牌、五种令牌、生命周期、不设过期、开发环境单进程、V15、V16）、第 8.1 节（ProcessTokenIssuer、CallerTokenVerification）、第 9 节（进程令牌表）、第 10 节；0004 第 2.2 节（令牌来源经装配层接线）；0002 第 3.3 节（ensureProcess）。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、调的具体 tool。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三第一次提问，平台要为路由键 usr_张三 起一个 DSH 进程。',
+  tok:[],proc:[],cache:[]});
+
+step({t:'09:00:00',k:['t04','issue'],at:'api',h:'签发：按路由键认出种类和代表谁',
+  b:'DSH 适配层要为路由键 usr_张三 起进程，经装配层调身份模块的 <code>issueProcessToken(usr_张三)</code>。身份模块解析路由键：是用户 ID → 种类「用户」，代表张三；张三是启用的 → 生成 32 字节随机令牌，库里存它的 SHA-256、种类、路由键、代表对象；<b>明文只返回这一次</b>。',
+  why:'库里只存哈希：令牌只需要核对，不需要拿回明文（A11 ① 第 1 对）。',
+  boomText:'🚫 如果代表对象不行',stripe:false,
+  crash:[{w:'张三已被停用',left:'拒绝签发（identity.user-disabled）。',next:'—',end:'起不了带他身份的进程。'},{w:'路由键是 evolution:王经理，而他没有「自进化管理」能力',left:'拒绝签发（identity.capability-missing）。',next:'—',end:'签发和校验时都查这项能力（④ 第 5 条）。'}]},
+  s=>{s.page='';s.tok.push({id:'ptk_1',k:'用户',rk:'usr_张三',who:'张三',st:'有效'});});
+
+step({t:'09:00:01',k:['t04'],at:['api','dsh'],h:'交给守护程序，放进进程环境变量',
+  b:'DSH 适配层把明文令牌（连同桥接服务密钥，A11）交给守护程序，守护程序注入新进程的环境变量；令牌 ID 记在 DSH 进程登记里。进程里的 MCP 配置会把它读进请求头。',
+  why:'这就是「随进程有效」：令牌跟着这个进程。',crash:null},
+  s=>{s.proc.push({p:'dshp_张三',rk:'usr_张三',t:'ptk_1',st:'运行中'});});
+
+step({t:'09:05:00',k:['agent','m05','verify'],at:['dsh','api'],h:'Agent 调 mem0：代理拿令牌问「是谁」',
+  b:'Agent 调 mem0 记忆服务，请求直接发到 MCP 代理，请求头里带着令牌。代理调 <code>verifyCallerToken</code>：身份模块按 SHA-256 查到 ptk_1，未作废，张三当前是启用的 → 返回令牌 ID、种类「用户」、路由键、主体张三。代理把结果缓存 30 秒，按资源模块的对象授权判断能不能调，可以向 mem0 传张三的身份，按路由键记一条 MCP 调用记录。',
+  why:'身份模块只回答「是谁」；「能不能用这条连接、这个 tool」是代理（0010）判断的。',crash:null},
+  s=>{s.cache.push({k:'ptk_1',v:'张三 · 用户 · usr_张三',exp:'09:05:30'});});
+
+step({t:'10:00:00',k:['t04','issue','m05','verify'],at:['api','dsh'],h:'王经理的自进化进程：另一种令牌，放行范围不同',
+  b:'王经理发起自进化，适配层为路由键 evolution:王经理 起进程，签发「自进化」令牌（主体：服务主体·自进化·王经理）。这个进程调行内 MCP 服务时，代理只放这个自进化 Agent 版本勾选的 tool，不放 mem0，不传最终用户身份。',
+  why:'令牌种类决定放行范围（③）。',crash:null},
+  s=>{s.tok.push({id:'ptk_2',k:'自进化',rk:'evolution:王经理',who:'王经理（服务主体）',st:'有效'});s.proc.push({p:'dshp_evo_王经理',rk:'evolution:王经理',t:'ptk_2',st:'运行中'});});
+
+step({t:'10:30:00',k:['adm'],at:'api',h:'王经理被降级：自进化令牌作废',
+  b:'王经理被降级，失去「自进化管理」能力。身份模块在同一个事务里作废他的自进化令牌，发变更通知；本进程的 MCP 代理立刻清缓存，这个进程的下一次 MCP 调用校验失败。',
+  why:'校验时还会再查一次能力，作为第二道保险（④ 第 3、5 条）。',crash:null},
+  s=>{s.tok[1].st='已作废';});
+
+step({t:'18:00:00',k:['t04','revoke'],at:'api',h:'张三的进程被回收：令牌作废',
+  b:'会话模块判定张三没有运行中或等待中的会话，回收他的 DSH 进程。适配层调 <code>revokeProcessToken(ptk_1)</code>，令牌作废。失败了由适配层的清理任务重试，重复调用结果一样。作废超过 7 天的行由每日清理任务删除。',
+  why:'进程在，令牌在；进程没了，令牌作废（① 第 4 对）。下次张三提问，起新进程、签新令牌。',crash:null},
+  s=>{s.tok[0].st='已作废';s.proc[0].st='已回收';s.cache[0].v='（已过期）';});
+
+mount({
+  owners:{m07:['M07','#f472b6'],dsh:['DSH 适配层','#94a3b8'],m05:['M05','#fb923c']},
+  procs:{
+    api:{n:'平台',s:'',chips:[['t04','dsh','DSH 适配层 · 起进程',''],['issue','m07','M07 · issueProcessToken','按路由键签发'],['verify','m07','M07 · verifyCallerToken','按哈希查、看代表对象状态'],['revoke','m07','M07 · revokeProcessToken','重复调用结果相同'],['adm','m07','M07 · 用户管理',''],['m05','m05','M05 · MCP 代理','缓存 30 秒；判能不能调']]},
+    dsh:{n:'DSH 进程',s:'',chips:[['agent','dsh','Agent','调 MCP，请求头带令牌']]}},
+  cols:[['api','dsh'],'db'],
+  tables:[
+    {n:'进程令牌',o:'M07 · identity_process_tokens（只存 SHA-256）',cols:['令牌','种类','路由键','代表谁','状态'],rows:s=>s.tok.map(r=>[r.id,r.k,r.rk,r.who,r.st])},
+    {n:'DSH 进程登记',o:'DSH 适配层 · platform_dsh_processes',cols:['进程','路由键','令牌','状态'],rows:s=>s.proc.map(r=>[r.p,r.rk,r.t,r.st])},
+    {n:'MCP 代理的校验缓存',o:'内存，30 秒',cols:['令牌','结果','到期'],rows:s=>s.cache.map(r=>[r.k,r.v,r.exp])}]});
+</script>
+</body>
+</html>
