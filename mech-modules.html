@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 九个模块怎么装在一起、怎么防越界</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A2">← 学习清单</a>（第 A2 题，架构级：知道做什么、为什么即可）</p>
+<h1>九个模块怎么装在一起、怎么防止越界</h1>
+<p class="lead">机制：装配与模块边界（后端框架 0004 第 2.2、2.3、2.5、3.7、10.1 节）。例子：一个模块的开发者犯了几个常见的越界错误，分别在哪一关被拦住。</p>
+<p class="sub">这一页想让你讲得出：模块之间能怎么调用、不能怎么调用；每种越界由谁拦、在什么时候拦（启动时、CI 时还是只靠评审）；为什么一个库、一个账号、一个连接池。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#38bdf8">M04</span> = 例子里犯错的模块（发布模块只是举例）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（每个错误在哪被拦）</a><a href="#s3">③ 模块清单写什么</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>api 包 ≠ 模块内部</h3><dl>
+    <dt>api 包</dt><dd>每个模块对外公开的接口和数据类型。别的模块<b>只能注入这里的接口</b>。</dd>
+    <dt>内部</dt><dd>实现类、存储类、处理器……别的模块看不到，也注入不了。</dd></dl>
+    <div class="eg">每个模块一个 Spring 配置类，只把 api 包里的接口作为 Bean 暴露出去。</div></div>
+  <div class="pair"><h3>表名前缀 ≠ 独立的库</h3><dl>
+    <dt>表名前缀</dt><dd>全平台一个库，模块靠表名区分：<code>identity_users</code>、<code>platform_jobs</code>……</dd>
+    <dt>独立的库</dt><dd>每个模块一个库或 schema、各用各的数据库账号。行内建库、建账号要申请，现在只有一个库一个账号，所以不这样做。</dd></dl>
+    <div class="eg">隔离靠三样：表名前缀、按前缀分包生成的 jOOQ 类、Spring Modulith 的模块校验。</div></div>
+  <div class="pair"><h3>启动失败 ≠ CI 失败 ≠ 评审</h3><dl>
+    <dt>启动失败</dt><dd>进程装配时校验不过，直接起不来，「不带病运行」。</dd>
+    <dt>CI 失败</dt><dd>提交代码时自动检查不过，合不进去。</dd>
+    <dt>评审</dt><dd>机器查不了，只能靠人看。</dd></dl>
+    <div class="eg">验收时要知道每条规则落在哪一关（② 走一遍）。</div></div>
+  <div class="pair"><h3>模块之间调用 ≠ 共享事务</h3><dl>
+    <dt>调用</dt><dd>进程内直接调对方 api 包的 Java 接口。</dd>
+    <dt>不共享事务</dt><dd>跨模块调用时不得持有打开的事务；每个模块在自己的事务里写自己的表。</dd></dl>
+    <div class="eg">所以跨模块要「同时成功」的事，靠事件（A5）而不是一个大事务。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍 <small>点「🚫 被拦住时」看结果</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 模块清单写什么 <small>每个模块一份，任何一项与清单外的约定不一致，进程启动失败</small></h2>
+<table class="plain">
+<tr><th>字段</th><th>内容</th><th>谁检查</th></tr>
+<tr><td>名字、表名前缀</td><td>模块名、表名前缀</td><td>jOOQ 按前缀分包；CI 查引用</td></tr>
+<tr><td>依赖哪些模块</td><td>写在模块的 <code>package-info.java</code> 注解里</td><td>Spring Modulith 校验（允许的依赖、只经 api 包、无环）</td></tr>
+<tr><td>要哪些 DSH 分组</td><td>只能是 RFC-0001 分给它的那几组</td><td>启动校验</td></tr>
+<tr><td>提供哪些契约接口</td><td>比如会话模块提供 C07</td><td>以 api 包接口类型暴露为 Bean</td></tr>
+<tr><td>要用哪些契约接口</td><td>只有列出的才能注入；提供方的契约目录里必须把本模块列为使用方</td><td><b>评审</b></td></tr>
+<tr><td>路由、tool 回调、事件流</td><td>引用 OpenAPI 的接口名；处理哪些业务 tool；向浏览器提供哪些事件流</td><td>启动校验；契约比对进 CI</td></tr>
+<tr><td>订阅</td><td>订阅的事件和处理器；要按顺序的标出来（A7）</td><td>启动校验</td></tr>
+<tr><td>任务、定时规则</td><td>任务类型和处理器、所属执行池（不写为 default；long 只给框架）、cron 规则</td><td>启动校验；提交未登记的类型被拒</td></tr>
+</table>
+<div class="note">
+  <p><b>框架层三处「跨层」用法</b>：DSH 适配层的连接配置来自运维模块、进程令牌来自身份模块，入口验签要查 DSH 适配层的连接登记。它们都由 <code>backend/bootstrap</code> 里的配置类接线，在装配校验里显式登记，不算越界。</p>
+</div>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么只准注入 api 包里的接口？</summary>
+  <p class="if">能直接用别的模块的内部类：大家很快就会互相调实现类、直接读写对方的表，模块边界名存实亡；以后想把某个模块拆成独立服务，到处都是要改的地方。</p>
+  <p>只经 api 包：模块对外只有契约里写的那些接口，内部怎么改都不影响别人；以后拆服务，把接口换成远程调用，调用方不用改（0004 第 2.4 节）。</p></details>
+<details><summary>2. 为什么用 Spring 容器装配，不自己写工厂函数或注入框架？</summary>
+  <p>Spring 本来就在用，容器自带按类型注入、按配置启用组件；Spring Modulith 还能直接按包结构校验模块依赖。自己写一套等于重复造轮子，还要自己维护。</p></details>
+<details><summary>3. 为什么一个库、一个数据库账号？</summary>
+  <p class="if">每个模块一个 schema、两个数据库角色：行内建库、建账号都要申请，目前只有一个库、一个账号。</p>
+  <p>表名前缀 + jOOQ 按前缀分包 + Modulith 校验，已经能把模块区分开。一个库还带来好处：模块的业务写入和框架的事件登记、幂等记录天然在同一个事务里（A4、A5）。</p></details>
+<details><summary>4. 为什么每个进程只有一个连接池、一个事务管理器？</summary>
+  <p class="if">每个模块一个：三个进程就要 60–150 条连接；多个事务管理器容易「静默写错地方」（以为在一个事务里，其实是两个）；只有一个账号时分开也没有意义。</p></details>
+<details><summary>5. 为什么只留 Modulith 一套依赖检查？</summary>
+  <p class="if">原设计还有依赖清单比对脚本、ArchUnit 使用方检查，三套表达的是同一件事，改一处要改三处。</p>
+  <p>Modulith 校验已经能拦住越界访问和循环依赖；<code>docs/module-deps.yaml</code> 只作为文档和它保持一致。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>「要用哪些契约接口」只靠评审。</b>清单里列了、但提供方没把你列为使用方，机器查不出来。</li>
+  <li><b>不拦写原生 SQL。</b>规则是「不写 SQL 字符串，确需原生 SQL 的走评审白名单」，靠评审。</li>
+  <li><b>不拦跨模块调用时开着事务。</b>这是规则，没有自动检查，靠评审和测试。</li>
+  <li><b>不拦业务上的越权。</b>模块边界管的是「代码能调谁」，「用户能做什么」是判权（A3）。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 发布模块的代码 import 了会话模块的一个实现类，什么时候会被发现？</summary>
+  <p>Spring Modulith 的模块校验会发现「没经 api 包访问别的模块」，校验失败，进程启动失败（测试里也会跑这个校验）。</p></details>
+<details><summary>2. 发布模块的代码用了 identity_users 的 jOOQ 类去查账号，会怎样？</summary>
+  <p>CI 检查发现模块代码用了别的模块前缀的生成类，CI 失败，合不进去。正确做法是调身份模块 api 包里的接口。</p></details>
+<details><summary>3. 某模块在清单里把一个任务类型的池写成 long，会怎样？</summary>
+  <p>进程启动失败。long 池只给框架自己的任务（跟随器、应答通道）。</p></details>
+<details><summary>4. 为什么说「跨模块要同时成功的事靠事件」？</summary>
+  <p>模块之间不共享事务，没法把两个模块的写入放进一个事务。做法是：本模块在自己的事务里改数据并登记事件，对方在自己的事务里处理事件（A5）。</p></details>
+</div>
+
+<p class="src">出处：0004 第 2.2 节（Spring 装配、每模块一个配置类只暴露 api 包、模块清单字段、启动失败、三处跨层用法）、第 2.3 节（平台内核）、第 2.4 节、第 2.5 节（一个库、表名前缀、一个账号、一个连接池、jOOQ 分包 CI 检查、跨模块不持有事务）、第 3.4 节（池的启动校验、未登记类型被拒）、第 3.7 节（数据访问规则）、第 10.1 节、第 11.2 节 F1 验收。<br>
+<b>示意，不是 RFC 定的</b>：例子里犯错的是发布模块、具体的类名和代码。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'发布模块（M04）的开发者在写代码。看他犯的几个错误分别在哪一关被拦住。',
+  man:[{k:'名字 / 表名前缀',v:'agents / agents_'},{k:'依赖',v:'identity、resources ……（示意）'},{k:'DSH 分组',v:'Agent 版本'},{k:'任务',v:'agents.publish（pool 不写 = default）'}],
+  res:[]});
+
+step({t:'启动时',k:['boot'],h:'正常情况：两个进程怎么装起来',
+  b:'进程启动：先读九个模块的清单，做启动校验（Modulith 模块校验：允许的依赖、只经 api 包、无环；DSH 分组与 RFC-0001 一致；池名、路由、订阅都对得上）→ 装平台内核（共享连接池、事件登记、幂等、任务、时钟、ID、日志、密钥）→ 每个模块的配置类注入下层模块的 api 接口和 DSH 分组 → 请求进程注册路由、tool 回调、事件流；后台进程注册监听器、任务处理器、定时规则。',
+  why:'任何一项校验不过，进程直接起不来。',crash:null},
+  s=>{s.page='';});
+
+step({t:'写代码时 ①',k:['dev'],h:'错误 1：直接用了会话模块的内部实现类',
+  b:'为了省事，开发者在发布模块里注入了会话模块的一个实现类（不在 api 包里）。',why:'',
+  crash:[{w:'被谁拦',left:'<b>Spring Modulith 模块校验</b>：访问别的模块没经过 api 包。',next:'<b>启动失败</b>（测试里跑校验也会失败）。',end:'改成注入会话模块 api 包里的接口。'}]},
+  s=>{s.res.push({e:'注入别的模块的实现类',g:'Modulith 校验 → 启动失败'});});
+
+step({t:'写代码时 ②',k:['dev'],h:'错误 2：依赖了清单里没写的模块',
+  b:'开发者调了自进化模块的接口，但发布模块的「允许的依赖」里没有自进化模块（而且自进化模块本身依赖发布模块，这会形成环）。',why:'',
+  crash:[{w:'被谁拦',left:'<b>Spring Modulith 模块校验</b>：不允许的依赖；循环依赖。',next:'<b>启动失败</b>。',end:'要么改设计（比如改用事件），要么经评审改依赖关系。'}]},
+  s=>{s.res.push({e:'依赖未声明的模块 / 形成环',g:'Modulith 校验 → 启动失败'});});
+
+step({t:'写代码时 ③',k:['dev'],h:'错误 3：直接查别的模块的表',
+  b:'开发者用 identity_users 的 jOOQ 生成类去查账号的姓名。',why:'',
+  crash:[{w:'被谁拦',left:'<b>CI 检查</b>：模块代码只能用本模块前缀的 jOOQ 生成类。',next:'<b>CI 失败</b>，合不进去。',end:'改成调身份模块 api 包里的「取账号信息」接口。'}]},
+  s=>{s.res.push({e:'用别的模块的 jOOQ 类',g:'CI 检查 → 合不进去'});});
+
+step({t:'写代码时 ④',k:['dev','man'],h:'错误 4：给自己的任务声明了 long 池',
+  b:'开发者觉得发布任务跑得久，在清单里把 agents.publish 的池写成 long。',why:'',
+  crash:[{w:'被谁拦',left:'<b>启动校验</b>：业务模块不能声明 long 池（池名写错也一样）。',next:'<b>启动失败</b>。',end:'发布任务不写池（default）。long 只给框架自己的跟随器、应答通道。'}]},
+  s=>{s.man[3].v='agents.publish（pool: long）';s.res.push({e:'业务模块声明 long 池',g:'启动校验 → 启动失败'});});
+
+step({t:'运行时 ⑤',k:['dev'],h:'错误 5：提交了清单里没登记的任务类型',
+  b:'开发者新写了一个任务类型 agents.rebuild，代码里提交它，但忘了登记到清单的「任务」里。',why:'',
+  crash:[{w:'被谁拦',left:'<b>运行时</b>：提交任务时框架按类型查清单，没登记就拒绝。',next:'提交被拒，报错。',end:'把类型和处理器登记进清单。'}]},
+  s=>{s.man[3].v='agents.publish（pool 不写 = default）';s.res.push({e:'提交未登记的任务类型',g:'运行时 → 提交被拒'});});
+
+step({t:'写代码时 ⑥',k:['dev'],h:'错误 6：用了一个没被允许使用的契约接口',
+  b:'开发者在清单的「要用的契约接口」里加了会话模块的某个接口，但会话模块的契约目录里，这个接口的使用方清单没有发布模块。',why:'',
+  crash:[{w:'被谁拦',left:'<b>只有评审</b>：机器不查「提供方是否允许你用」。',next:'评审时发现，要么提供方同意并把你加进使用方，要么换做法。',end:'这是验收时要人工看的一条（⑤）。'}]},
+  s=>{s.res.push({e:'使用未授权的契约接口',g:'只有评审'});});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m04:['M04','#38bdf8']},
+  procs:{
+    dev:{n:'发布模块的代码',s:'开发者写的',chips:[['dev','m04','M04 的代码和清单','']]},
+    chk:{n:'检查关卡',s:'',chips:[['boot','fw','框架 · 启动校验','起不来就不运行'],['man','fw','框架 · 清单与池校验','']]}},
+  cols:[['dev','chk'],'db'],
+  dbTitle:'模块清单和检查结果',dbSub:'',
+  boomLabel:'🚫 被拦住时',stripe:false,crashLabels:['检查','结果','怎么改'],
+  tables:[
+    {n:'发布模块的清单（节选）',o:'package-info.java + module.yaml',cols:['字段','值'],rows:s=>s.man.map(r=>[r.k,r.v])},
+    {n:'到目前为止的错误',o:'',cols:['错误','在哪被拦'],rows:s=>s.res.map(r=>[r.e,r.g])}]});
+</script>
+</body>
+</html>
