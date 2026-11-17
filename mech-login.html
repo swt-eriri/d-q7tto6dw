@@ -1,0 +1,303 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 登录与登录会话</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#B3">← 学习清单</a>（第 B3 题）</p>
+<h1>登录与登录会话：输错、锁定、重置、改密、停用</h1>
+<p class="lead">机制：登录、会话、作废（身份与权限 0006 第 3 节；后端框架 0004 第 4.2 节）。例子：李四在两台电脑上登录过；他忘了密码连续输错，被锁；管理员重置；他改密；后来他被停用。</p>
+<p class="sub">这一页想让你讲得出：登录时按什么顺序判断，为什么先比对密码再判停用；会话为什么存库；哪些情况会作废一个人的全部会话、不作废会怎样；cookie 双提交防什么。
+<span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006；<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（入口的认证缓存和防跨站）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 参数</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>登录会话 ≠ 对话会话</h3><dl>
+    <dt>登录会话</dt><dd>「这个浏览器登录着谁」，存在会话表里，cookie 的值就是它的钥匙。</dd>
+    <dt>对话会话</dt><dd>和 Agent 的一次对话（会话模块管）。</dd></dl>
+    <div class="eg">退出登录不影响正在运行的对话执行（PRD：登录状态与 Agent 会话分别管理）。</div></div>
+  <div class="pair"><h3>存库的会话 ≠ 不存库的签名令牌</h3><dl>
+    <dt>存库</dt><dd>cookie 是随机串，库里存它的 SHA-256；每次请求查库（入口缓存 30 秒）。<b>能随时作废。</b></dd>
+    <dt>签名令牌（JWT）</dt><dd>令牌自带信息和签名，不用查库。但<b>作废不了</b>：被盗了一直能用到过期。</dd></dl>
+    <div class="eg">平台用存库的会话（④ 第 2 条）。</div></div>
+  <div class="pair"><h3>锁定 ≠ 停用</h3><dl>
+    <dt>锁定</dt><dd>连续 5 次输错，<b>15 分钟后自动解锁</b>，管理员重置密码立即解锁。防猜密码。</dd>
+    <dt>停用</dt><dd>管理员手动停用，不能登录、不能操作，历史保留，要管理员再启用。</dd></dl>
+    <div class="eg">锁定不作废已有会话；停用作废全部会话。</div></div>
+  <div class="pair"><h3>作废全部 ≠ 作废其他</h3><dl>
+    <dt>作废全部</dt><dd>停用、移除、管理员重置密码：这个人所有的登录会话都失效。</dd>
+    <dt>作废其他</dt><dd>本人改密：其他设备上的会话失效，<b>当前这个保留</b>。</dd></dl>
+    <div class="eg">一条 UPDATE，和状态变更在同一个事务里，随后发账号变更通知清缓存。</div></div>
+</div>
+<details class="basics"><summary>用到的两个基础概念（不熟就点开）</summary>
+  <p><b>bcrypt</b>：专门用来存密码的哈希算法，故意算得慢，库泄露后也很难一个个试出原密码。登录时把输入的密码用同样的方法算一遍，和库里的比。</p>
+  <p><b>SHA-256</b>：普通的哈希，算得快。cookie 是 32 字节的随机串，猜不出来，不需要故意算慢，用 SHA-256 存就够了。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>有按钮的步骤可以看「换一种情况」</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 参数 <small>组长 11-16 答复后定</small></h2>
+<table class="plain">
+<tr><th>项</th><th>默认</th><th>理由</th></tr>
+<tr><td>会话时长</td><td>固定 12 小时，不做闲置超时</td><td>一个工作日；闲置超时要每个请求都写库更新时间。行内有硬性要求时再加</td></tr>
+<tr><td>失败锁定</td><td>连续 5 次失败锁 15 分钟，自动解锁；管理员重置密码立即解锁</td><td>防猜密码，不用管理员介入</td></tr>
+<tr><td>密码规则</td><td>至少 8 位，含字母和数字；改密要输旧密码；不强制定期改</td><td>组长：要有一定复杂度，不要求定期换。行内要求更严时只改密码规则一处</td></tr>
+<tr><td>登录审计</td><td>只记登录失败</td><td>需求没有要求记登录成功；行内要求时补一条审计即可</td></tr>
+<tr><td>cookie</td><td>HttpOnly（页面脚本读不到）、Secure（只走 HTTPS，固定开）、SameSite=Lax</td><td>行内部署用 HTTPS（组长 11-16）</td></tr>
+</table>
+<p class="sub">本期用工号 + 密码。以后接统一认证（SSO）时只换登录和密码表，入口用的「cookie → 主体」接口不变。</p>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么先比对密码，再判断是否停用？（第 1、7 步）</summary>
+  <p class="if">先判停用：任何人输入一个工号，就能从「账号已停用」这个提示知道这个工号存在、而且被停用了，不需要知道密码。</p>
+  <p>先比对密码：只有知道密码的人才会看到「已停用」。账号不存在和密码错误一律提示「工号或密码错误」，不透露账号是否存在。</p>
+  <p>例外：锁定提示会让人知道这个工号存在。接受，因为工号不算秘密，被锁的人需要知道原因。</p></details>
+<details><summary>2. 为什么会话存库，不用签名令牌？</summary>
+  <p class="if">签名令牌不查库，退出、停用、重置密码后，被盗的令牌一直能用到过期。</p>
+  <p>存库：作废就是写一个作废时间，下一个请求就失效（本进程立即，其他请求进程最多 30 秒，B6）。代价是每次请求查库，入口用 30 秒缓存抵掉大部分。</p></details>
+<details><summary>3. 为什么这些情况要作废全部会话？不作废会怎样？</summary>
+  <p class="if">重置密码不作废：密码泄露后管理员重置了，偷到 cookie 的人还能一直用到会话到期。</p>
+  <p class="if">停用不作废：停用后再启用，旧电脑上的登录自己又能用了。</p>
+  <p>本人改密保留当前会话：他正在用这个浏览器改密，没理由把自己踢出去。</p></details>
+<details><summary>4. 新建、重置时为什么由系统生成随机初始密码，还必须改密？</summary>
+  <p>需求里添加用户只填工号、姓名、角色。系统生成随机密码，只在那一次响应里给管理员，由管理员转告；用户首次登录必须改，管理员就不知道他的最终密码。</p></details>
+<details><summary>5. 有了 SameSite，为什么还要 cookie 双提交防跨站？</summary>
+  <p class="if">SameSite=Lax 挡不住同一个主域名下的其他系统，行内很多系统共用主域名。</p>
+  <p>入口下发页面脚本能读的 XSRF-TOKEN cookie，前端写请求时抄进请求头。别的站点读不到本站的 cookie，抄不出来。不存库、不用密钥（A3 第 4 步）。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>锁定能被人故意触发。</b>知道李四工号的人连续输错 5 次，就能把他锁 15 分钟。管理员重置密码可立即解锁（RFC 列为缺点）。</li>
+  <li><b>唯一的管理员忘了密码就没人能重置。</b>部署要求至少两个管理员。</li>
+  <li><b>其他请求进程上最多晚 30 秒。</b>作废后本进程立即清缓存；多个请求进程时，其他进程最多 30 秒（B6）。</li>
+  <li><b>不管已经在跑的对话执行。</b>退出、作废会话不影响正在运行的执行；停用后执行怎么处理由会话模块定（0006 Q6）。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 有人输入一个不存在的工号和任意密码，看到什么？会锁谁吗？</summary>
+  <p>「工号或密码错误」，和密码错时一模一样。账号不存在，没有失败次数可加，不锁任何人；照样发一条登录失败审计，对象记输入的工号。</p></details>
+<details><summary>2. 李四被锁定期间，输入了正确的密码，能登录吗？</summary>
+  <p>不能。判断顺序里「锁定期内拒绝」在比对密码之前，返回「已锁定」。等 15 分钟自动解锁，或请管理员重置密码。</p></details>
+<details><summary>3. 李四在电脑 A 上改了密码，电脑 B 上的登录会怎样？</summary>
+  <p>电脑 B 的会话被作废，下一个请求 401，要重新登录；电脑 A（当前会话）保留。</p></details>
+<details><summary>4. 李四被停用后又被启用，他电脑上 3 小时前的登录还能用吗？</summary>
+  <p>不能。停用时全部会话已经作废，启用不会恢复它们，要重新登录。</p></details>
+<details><summary>5. 为什么不做「30 分钟不操作自动退出」？</summary>
+  <p>闲置超时要每个请求都写库更新最后活动时间。本期固定 12 小时，行内有硬性要求时再加。</p></details>
+</div>
+
+<p class="src">出处：0006 第 2.1 节（新建与重置的随机密码、必须改密、初始管理员）、第 3.1 节（登录流程与判断顺序）、第 3.2 节（参数）、第 3.3 节（cookie 与防跨站）、第 3.4 节（何时作废全部会话）、第 8.3 节（账号变更通知、登录失败审计）、第 9 节（密码表、会话表）、第 10 节；0004 第 4.2 节。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、工号、设备。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'李四（工号 A1024）在办公电脑和会议室电脑上都登录过。',
+  user:[{u:'李四',no:'A1024',st:'启用'}],
+  cred:[{u:'李四',fail:'0',lock:'—',must:'否'}],
+  sess:[{id:'wss_1',dev:'办公电脑',exp:'今天 20:00',rev:'—'},{id:'wss_2',dev:'会议室电脑',exp:'今天 21:30',rev:'—'}]});
+
+step({t:'14:00',k:['br','login'],at:['br','api'],h:'李四输错密码：统一提示，失败次数加一',
+  b:'李四在第三台电脑上登录，输入「a1024 」和一个错的密码。身份模块：工号规范化（去空格、转大写 → A1024）→ 找到未移除的账号 → 不在锁定期 → bcrypt 比对：不对 → 失败次数 0→1 → 返回「<b>工号或密码错误</b>」，发一条登录失败审计（独立事务，A7）。',
+  why:'账号不存在时也返回同一句话，不透露账号是否存在（④ 第 1 条）。',crash:null},
+  s=>{s.page='';s.cred[0].fail='1';});
+
+step({t:'14:02',k:['br','login'],at:['br','api'],h:'连续第 5 次输错：锁 15 分钟',
+  b:'又输错了 4 次，失败次数到 5 → 锁定到 14:17。之后的登录请求在「锁定期内拒绝」这一步就被挡住，返回「已锁定」，连密码都不比对。<b>已有的两个会话不受影响。</b>',
+  why:'锁定只防继续猜密码，不踢人（① 第 3 对）。',boomText:'🔀 换一种情况',stripe:false,
+  crash:[{w:'锁定期内输入了正确的密码',left:'仍然返回「已锁定」。',next:'等 14:17 自动解锁，或请管理员重置密码。',end:'锁定判断在比对密码之前。'},{w:'别人故意用李四的工号输错 5 次',left:'李四同样被锁 15 分钟。',next:'管理员重置密码可立即解锁。',end:'RFC 接受这个代价（⑤）。'}]},
+  s=>{s.cred[0].fail='5';s.cred[0].lock='14:17';});
+
+step({t:'14:05',k:['adm','cache'],at:'api',h:'管理员重置密码：解锁、作废全部会话',
+  b:'管理员在用户管理里重置李四的密码。同一个事务里：系统生成随机初始密码（只在这次响应里显示给管理员）、标为必须改密、立即解锁；<b>一条 UPDATE 作废李四全部会话</b>；发账号变更通知（会话已作废）和审计。提交后，本进程的入口立刻清掉李四的认证缓存。',
+  why:'密码可能泄露了才重置，旧 cookie 必须一起失效（④ 第 3 条）。',crash:null},
+  s=>{s.cred[0]={u:'李四',fail:'0',lock:'—',must:'是'};s.sess.forEach(x=>x.rev='14:05');s.page='办公电脑和会议室电脑上的李四：下一个请求 401，跳到登录页。';});
+
+step({t:'14:10',k:['br','login'],at:['br','api'],h:'李四用初始密码登录：只能改密',
+  b:'李四用管理员转告的初始密码登录。比对成功 → 失败次数清零 → 生成 32 字节随机串作为 cookie，库里存它的 SHA-256，过期时间 = 现在 + 12 小时 → 返回本人信息、<b>空的能力清单</b>、「必须改密」。前端只显示改密页。',
+  why:'能力清单为空，改密前所有判权自然被拒，不用另写拦截（B1）。',crash:null},
+  s=>{s.page='李四只看到改密页。';s.sess.push({id:'wss_3',dev:'第三台电脑',exp:'明天 02:10',rev:'—'});});
+
+step({t:'14:11',k:['br','login'],at:['br','api'],h:'李四改密：其他会话作废，当前保留',
+  b:'李四输入旧密码（初始密码）和新密码（至少 8 位，含字母和数字）。身份模块更新密码哈希、清除必须改密；<b>作废他除当前会话以外的所有会话</b>（这里其他的已经作废过了）；发审计（本人改密）和账号变更通知。',
+  why:'当前这个浏览器是他自己，不踢（① 第 4 对）。',crash:null},
+  s=>{s.cred[0].must='否';s.page='李四正常使用。';});
+
+step({t:'第二周 10:00',k:['adm','cache'],at:'api',h:'李四被停用：全部会话作废',
+  b:'管理员停用李四。同一个事务：状态改为停用，作废全部会话，作废他的进程令牌（B5），发账号变更通知。提交后本进程清缓存。第三台电脑上的 cookie 下一个请求 401。',
+  why:'停用后再启用，旧登录也不会「自己又能用了」（④ 第 3 条）。后面发生什么见 B6。',crash:null},
+  s=>{s.user[0].st='停用';s.sess[2].rev='第二周 10:00';s.page='';});
+
+step({t:'第二周 10:05',k:['br','login'],at:['br','api'],h:'停用的李四尝试登录',
+  b:'李四输入正确的密码：找到账号 → 不在锁定期 → bcrypt 比对正确 → 账号已停用 → 返回「<b>账号已停用，请联系管理员</b>」，不建会话。',
+  why:'只有知道密码的人才会看到「已停用」；密码错的人看到的仍是「工号或密码错误」（④ 第 1 条）。',boomText:'🔀 换一种情况',stripe:false,
+  crash:[{w:'输入的密码是错的',left:'返回「工号或密码错误」。',next:'失败次数照常加一。',end:'不知道密码的人探不出这个账号被停用了。'}]},
+  s=>{s.page='李四看到：账号已停用，请联系管理员。';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6']},
+  procs:{
+    br:{n:'李四的浏览器',s:'',chips:[['br','fw','登录页 / 改密页','']]},
+    api:{n:'请求进程',s:'',chips:[['login','m07','M07 · 登录、改密','判断顺序见第 1 步'],['adm','m07','M07 · 用户管理','重置、停用'],['cache','fw','框架 · 认证缓存','收到通知立刻清']]}},
+  cols:[['br','api'],'db'],
+  tables:[
+    {n:'账号',o:'M07 · identity_users',cols:['人','工号','状态'],rows:s=>s.user.map(r=>[r.u,r.no,r.st])},
+    {n:'密码表',o:'M07 · identity_user_credentials',cols:['人','失败次数','锁定到','必须改密'],rows:s=>s.cred.map(r=>[r.u,r.fail,r.lock,r.must])},
+    {n:'登录会话',o:'M07 · identity_web_sessions（只存 cookie 的 SHA-256）',cols:['会话','设备','过期','作废时间'],rows:s=>s.sess.map(r=>[r.id,r.dev,r.exp,r.rev])}]});
+</script>
+</body>
+</html>
