@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 跟随 DSH、替用户回答问题</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A10">← 学习清单</a>（第 A10 题）</p>
+<h1>跟随 DSH、替用户回答问题：Agent 问「按哪个口径？」之后</h1>
+<p class="lead">机制：DSH 跟随器与应答通道（后端框架 0004 第 6.2、6.3 节；DSH 适配层 0002 第 3.2 节）。例子：张三的执行中，Agent 问他一个问题，他在页面上回答。</p>
+<p class="sub">这一页想让你讲得出：跟随器做什么、崩了谁接手、从哪接着跟；为什么每个 DSH 进程只能有一个应答者；同一个问题来两次怎么去重；回答怎么送回 DSH；临近超时才回答会怎样。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（让它们一直跑）；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏，存什么、状态怎么变）；<span class="who" style="--c:#94a3b8">DSH 适配层</span> = 0002（和 DSH 说话的协议）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（可以让它崩）</a><a href="#s3">③ 职责怎么分</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>跟随器 ≠ 应答通道</h3><dl>
+    <dt>跟随器</dt><dd><b>每个活动的 DSH 会话一个</b>。把 DSH 里发生的事（模型输出、tool 调用、结束）取回来，交给会话模块存下。只读不答。</dd>
+    <dt>应答通道</dt><dd><b>每个 DSH 进程一个</b>。一条专门的连接，接收 DSH 发来的前台问题和工具审批，并用同一条连接回复。</dd></dl>
+    <div class="eg">两者都是后台进程里的长任务，靠任务表的租约保证各自只有一个在跑。</div></div>
+  <div class="pair"><h3>限时提问 ≠ 阻塞提问</h3><dl>
+    <dt>限时</dt><dd>等 30 秒（可配置），没人答就返回「待回答」，这一轮不会一直挂着。<b>平台组装的 Agent 一律用这个。</b></dd>
+    <dt>阻塞</dt><dd>一直等到有人答。没有应答者时会永远挂着；而且它从应答通道来时不带调用 ID，没法和跟随器那一份去重。</dd></dl>
+    <div class="eg">工具审批没有限时，只能等通道恢复。</div></div>
+  <div class="pair"><h3>前台回答 ≠ 「待回答」之后再答</h3><dl>
+    <dt>前台回答</dt><dd>问题还在 30 秒内：必须经<b>持有应答通道的那条连接</b>回复（DSH 要求同一连接的 clientId）。</dd>
+    <dt>待回答之后</dt><dd>问题已超时变成「待回答」：调一个无状态的接口回答，<b>任何一个请求进程或后台进程都能调</b>，不需要通道。只能答一次，再答返回 false。</dd></dl>
+    <div class="eg">用户在第几秒回答，决定了回答走哪条路。</div></div>
+  <div class="pair"><h3>同一个问题 ≠ 只来一次</h3><dl>
+    <dt>跟随器那一份</dt><dd>跟随流里看到 Agent 调了「提问」tool。</dd>
+    <dt>应答通道那一份</dt><dd>应答通道收到「有个问题要回答」，限时模式下带着同一个调用 ID。</dd></dl>
+    <div class="eg">会话模块一律按 tool 调用 ID 去重，页面上只出现一个待回答的问题。</div></div>
+</div>
+<details class="basics"><summary>用到的三个基础概念（不熟就点开）</summary>
+  <p><b>WebSocket</b>：浏览器或程序和服务器之间一条双向、一直开着的连接，双方随时能发消息。跟随器和应答通道都是后台进程开向 DSH 的 WebSocket 连接。</p>
+  <p><b>异步</b>：等消息的时候不占着一个线程干等，消息到了再借一个线程处理。所以几十个跟随器只需要 4 个回调线程（JDK 17 没有虚拟线程，只能这样省）。</p>
+  <p><b>clientId</b>：应答通道连上 DSH 时，DSH 给这条连接发一个编号。回复前台问题和审批时必须带它，所以只能由持有这条连接的那个任务来回复。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>有 💥 按钮的步骤可以看「在这里出事会怎样」</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 职责怎么分 <small>同一件事，三方各管一段</small></h2>
+<table class="plain">
+<tr><th></th><th>框架（你，0004）</th><th>DSH 适配层（0002）</th><th>会话模块（嘉敏）</th></tr>
+<tr><td><b>跟随器</b></td><td>建任务（执行开始的事件 → 长任务）、让它一直跑、续租、崩了让别人接手</td><td>开跟随流、按 DSH 序号去重、用翻页补缺口、跟随子 Agent、把 DSH 事件规范化成平台事件</td><td>记下「上次处理到的 DSH 序号」、存事件、编平台序号、更新执行状态</td></tr>
+<tr><td><b>应答通道</b></td><td>每个 DSH 进程一个长任务、租约保证只有一个持有者、每秒替持有者向会话模块取待发送的回答</td><td>开通道连接、拿 clientId、收问题和审批、用同一连接回复</td><td>把问题变成待决定事项、按调用 ID 去重、受理用户回答、提供「取待发送的回答」「标记已发送」两个接口</td></tr>
+</table>
+<p class="sub">「谁让它一直跑」和「它跑的时候做什么」分开：框架不知道 DSH 协议，也不知道会话状态怎么转。</p>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么每个 DSH 进程只能有一个应答者？</summary>
+  <p class="if">两个应答者：DSH 把同一个问题发给两个，先到的回答生效，后到的<b>也返回成功</b>。平台从返回值发现不了被抢答，用户的回答可能被另一份覆盖掉。</p>
+  <p>所以：每个 DSH 进程一个长任务，去重键是进程编号，租约保证同一时刻只有一个后台进程持有；续租失败立刻关连接；每次发送前确认自己仍是持有者（代次）。其他连接（包括适配层自己的其他连接、运维排查）一律以「不应答」身份登录。</p></details>
+<details><summary>2. 用户的回答为什么不建个任务交给应答通道去发？（第 4 步）</summary>
+  <p class="if">任务谁都能领。部署两个后台进程时，这个任务可能被<b>不持有通道</b>的那个领走，它没有那条连接、没有 clientId，发不出去。</p>
+  <p>所以反过来：会话模块只把待决定事项标成「已回答、待发送」，持有通道的任务每秒查一次（一次查它持有的所有 DSH 进程），自己取回来发。</p></details>
+<details><summary>3. 为什么平台一律用限时提问？</summary>
+  <p class="if">阻塞提问：应答通道一断（后台进程崩了、重启中），这一轮就永远挂着；而且应答通道那一份不带调用 ID，和跟随器那一份对不上，没法去重。</p>
+  <p>限时提问到时变成「待回答」，之后用无状态接口回答，不依赖通道。Agent 拿到「待回答」后要停下来等，不自己假设答案（写在 Agent 包的提示词里）；即使它没停，没有口径许可取数模块也不会取数。</p></details>
+<details><summary>4. 回答经通道发出去、返回了成功，为什么还要再核对一次？（第 5 步）</summary>
+  <p class="if">用户在接近 30 秒时回答，经通道发出时 DSH 可能刚好已经超时。这时回复<b>也返回成功，但不生效</b>，回答悄悄丢了。</p>
+  <p>所以发出后看跟随器拿到的「提问」tool 结果：是用户的答案，就好了；是「待回答」，改用无状态接口再答一次。这个接口只能答一次，重复调返回 false，不会答两遍。</p></details>
+<details><summary>5. 跟随器崩了，新接手的怎么知道从哪接着跟？</summary>
+  <p>进度不在跟随器的内存里，在会话模块的表里：「上次处理到的 DSH 序号」。接手的跟随器先读它，再开跟随流（DSH 先给一个快照：游标和最近若干条），按 DSH 序号去重；中间缺的用翻页接口补齐。会话模块写入远端事件也按 DSH 序号幂等，重复交过去不会多存。</p></details>
+<details><summary>6. 长任务为什么不限尝试次数？</summary>
+  <p>跟随器、应答通道本来就要一直跑，断线重连、被接手是常态，按「5 次就进死信」算会误杀。改为：1 小时内被重新领取超过 10 次就告警，说明有东西在反复把它搞崩。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>后台进程是单点。</b>只部署一个后台进程时它挂了，跟随和应答都停（A1 讲）。</li>
+  <li><b>发现不了平台之外的抢答者。</b>如果有人绕过规程以「应答」身份连上了 DSH 进程，平台无法从返回值发现，只能靠运维规程和守护程序限制谁能拿到启动令牌。</li>
+  <li><b>审批没有限时。</b>通道中断期间审批一直等，会话模块不派发新执行，页面提示「执行服务暂不可用」，通道恢复后接上 DSH 重发的审批。</li>
+  <li><b>Agent 拿到「待回答」后不一定停。</b>停不停靠提示词；能兜底的是取数模块没有口径许可不取数。</li>
+  <li><b>跟随器只保证事件最终取回来。</b>中间断开的那段时间，页面上的进展会停住，接手后补齐。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 张三在问题出现后第 10 秒回答。回答经哪条路到 DSH？</summary>
+  <p>问题还在前台（30 秒内）：会话模块把它标成「已回答、待发送」；持有应答通道的任务每秒来取，经通道用 clientId 回复；再告诉会话模块「已发送」。</p></details>
+<details><summary>2. 张三在第 45 秒才回答，会怎样？</summary>
+  <p>第 30 秒时 DSH 已经把问题变成「待回答」。会话模块直接调无状态的「回答待回答问题」接口，不需要应答通道，任一进程都能发；DSH 收到后自动开新一轮。</p></details>
+<details><summary>3. 页面上会不会出现两个一样的问题？为什么？</summary>
+  <p>不会。同一个问题从跟随器和应答通道各来一次，限时模式下都带同一个调用 ID，会话模块按调用 ID 去重。</p></details>
+<details><summary>4. 部署了两个后台进程，应答通道的持有者网络卡住、续租失败。它该做什么？另一个进程呢？</summary>
+  <p>持有者续租失败立刻关闭连接，不再回复任何东西。租约过期后另一个后台进程领到这个任务（代次加一），重新连上 DSH、拿新的 clientId；DSH 会重发还没人答的请求。</p></details>
+<details><summary>5. 跟随器崩溃时，DSH 那边的执行会停吗？</summary>
+  <p>不会。DSH 照常执行，只是没人把事件取回平台。接手的跟随器从会话模块记下的 DSH 序号接着跟，缺的补齐。</p></details>
+</div>
+
+<p class="src">出处：0004 第 3.4 节（长任务池不限次数、10 次告警）、第 3.5 节（应答通道每 DSH 进程一个、去重键）、第 6.2 节（跟随器四步、子 Agent、按 DSH 序号幂等）、第 6.3 节（应答通道、按调用 ID 去重、回答不用任务表转交、超时边界、通道中断、不允许第二个应答者）、第 6.4 节（异步 WebSocket、回调线程 4）；0002 第 3.2 节（follow、page、answerPending 只能答一次、openAnswerChannel、replyForeground、应答的规则）。<br>
+<b>示意，不是 RFC 定的</b>：时间、所有 ID、问题和回答的内容、DSH 序号。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三在问：「上个月存款余额是多少？」Agent 不确定该按哪个口径。',
+  jobs:[{id:'job_fol',use:'跟随 · DSH 会话 dss_9',st:'运行中',who:'后台进程 A · 代次 1'},{id:'job_ans',use:'应答通道 · DSH 进程 dshp_张三',st:'运行中',who:'后台进程 A · 代次 1（clientId c_7）'}],
+  prog:[{s:'dss_9',seq:'1203'}],
+  q:[],ev:[]});
+
+step({t:'10:00:00',k:[],h:'开始之前',
+  b:'后台进程 A 持有两个长任务：张三这个 DSH 会话的跟随器、张三这个 DSH 进程的应答通道。应答通道以「应答」身份连上 DSH，DSH 给了这条连接一个 clientId c_7。会话模块记着跟随进度：dss_9 已处理到 DSH 序号 1203。',
+  why:'记住两点：问题要经 c_7 这条连接回复；跟随器的进度在会话模块的表里，不在内存里。',crash:null});
+
+step({t:'10:00:01',k:['agent'],at:'dsh',h:'Agent 发起限时提问',
+  b:'Agent 调「提问」tool（ask_user_question，限时 30 秒）：「存款余额按日均还是按月末？」调用 ID call_50。DSH 把这件事<b>同时</b>放进跟随流（一条 tool 调用事件，DSH 序号 1204）和应答通道（一个「请回答」请求，事件 ID ev_88，带着调用 ID call_50）。',
+  why:'同一个问题会从两条路来（① 第 4 对）。',crash:null},
+  s=>{s.page='';});
+
+step({t:'10:00:01.2',k:['fol','ans','m01w'],at:'wk',h:'两路都到了：会话模块按调用 ID 合成一个',
+  b:'跟随器收到 DSH 序号 1204，规范化后交给会话模块写入：存为会话事件（平台序号 61「需要你决定」），进度更新为 1204，生成待决定事项 q_1（调用 ID call_50）。应答通道也收到 ev_88，按 DSH 会话交给会话模块：调用 ID 也是 call_50 → <b>是同一个问题</b>，只在 q_1 上记下 ev_88（回复时要用）。',
+  why:'页面通过事件流（A9）看到第 61 条，显示一个问题。两路谁先到都一样，按调用 ID 去重。',
+  crash:[{w:'跟随器所在的后台进程 A 在这时崩了',left:'会话模块已经存到 1204、q_1 已建；跟随任务和应答通道任务都还是「运行中」但没人续租。',next:'租约过期后，后台进程 B（或重启后的 A）领走两个任务。跟随器读到进度 1204，重开跟随流，按 DSH 序号去重，缺的用翻页补。应答通道重新连上 DSH，拿到新的 clientId，DSH 重发还没人答的请求。',end:'问题不丢、不重复；只是期间页面停住一会儿（A1 讲过时间）。'}]},
+  s=>{s.prog[0].seq='1204';s.q.push({id:'q_1',call:'call_50',st:'等待回答（前台）',evt:'ev_88',ans:'—'});s.ev.push({seq:61,ty:'需要你决定：日均还是月末？'});s.page='张三看到一个问题：「存款余额按日均还是按月末？」';});
+
+step({t:'10:00:12',k:['m01a'],at:'api',h:'张三在第 11 秒回答：只标记，不建任务',
+  b:'张三选「月末」。请求在请求进程里由会话模块受理：问题还在前台（30 秒内），于是把 q_1 标成「<b>已回答、待发送</b>」，记下答案。会话事件第 62 条「已回答」。',
+  why:'请求进程没有那条连接，发不了；也不建任务转交，因为任务可能被不持有通道的后台进程领走（④ 第 2 条）。',crash:null},
+  s=>{Object.assign(s.q[0],{st:'已回答、待发送',ans:'月末'});s.ev.push({seq:62,ty:'已回答：月末'});s.page='';});
+
+step({t:'10:00:13',k:['ans','m01w'],at:'wk',h:'应答通道取走回答，经 c_7 回复',
+  b:'持有通道的任务每秒查一次会话模块「我持有的 DSH 进程有没有待发送的回答」，取到 q_1。<b>发送前确认自己仍是持有者</b>（代次还是 1），用 c_7 这条连接回复：事件 ev_88、答案「月末」。然后告诉会话模块「已发送」。',
+  why:'确认持有者是为了不出现两个应答者（④ 第 1 条）。',
+  crash:[{w:'取到回答、还没发出去，后台进程 A 崩了',left:'q_1 还是「已回答、待发送」。DSH 那边没人应答，限时提问在第 30 秒变成「待回答」。',next:'应答通道被接手后，新的持有者取到 q_1 照常发出，但这时问题已经超时，回复返回成功却不生效。',end:'第 5 步的核对会发现「待回答」，改用无状态接口再答一次，回答最终送到。'}]},
+  s=>{s.q[0].st='已发送';});
+
+step({t:'10:00:14',k:['fol','m01w'],at:'wk',h:'核对：跟随器看到的 tool 结果是不是用户的答案',
+  b:'跟随器取回「提问」tool 的结果（DSH 序号 1205）：是「月末」，说明回答生效了。q_1 结束。Agent 按月末口径继续。',
+  why:'这一步专门防「临近超时才回答」的情况（④ 第 4 条）。点下面的按钮看如果结果是「待回答」怎么办。',
+  boomText:'⏱ 如果张三第 29 秒才回答',stripe:false,
+  crash:[{w:'经通道发出时，DSH 刚好已超时',left:'通道回复返回成功，但跟随器取回的 tool 结果是「待回答」，不是「月末」。',next:'会话模块改用无状态的「回答待回答问题」接口再答一次（只能答一次，重复返回 false）。任一进程都能调，不需要通道。',end:'DSH 收到后自动开新一轮，Agent 拿到「月末」继续。回答没有悄悄丢掉。'}]},
+  s=>{s.prog[0].seq='1205';s.q[0].st='已完成';s.ev.push({seq:63,ty:'tool 结果：月末'});});
+
+step({t:'10:00:40',k:['fol'],at:'wk',h:'执行结束，跟随任务也结束',
+  b:'跟随器看到执行进入终态（DSH 的 turn/end），并且没有待处理的事项，任务正常结束（成功）。应答通道任务不结束：它属于 DSH 进程，进程还在，就一直持有。',
+  why:'跟随器跟着「一次执行」走，应答通道跟着「一个 DSH 进程」走（① 第 1 对）。',crash:null},
+  s=>{s.jobs[0].st='成功';s.jobs[0].who='—';s.ev.push({seq:64,ty:'执行结束'});s.page='张三看到完整的回答。';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m01:['M01','#22d3ee'],dsh:['DSH','#94a3b8']},
+  procs:{
+    dsh:{n:'DSH 进程 dshp_张三',s:'',chips:[['agent','dsh','Agent','调「提问」tool']]},
+    wk:{n:'后台进程 A',s:'两个长任务',chips:[['fol','fw','框架 · 跟随器','每个 DSH 会话一个'],['ans','fw','框架 · 应答通道','每个 DSH 进程一个'],['m01w','m01','M01 · 写入事件、待决定事项','']]},
+    api:{n:'请求进程',s:'',chips:[['m01a','m01','M01 · 受理用户回答','']]}},
+  cols:[['dsh','api'],'db',['wk']],
+  tables:[
+    {n:'任务表',o:'框架 · platform_jobs',cols:['ID','做什么','状态','持有者'],rows:s=>s.jobs.map(j=>[j.id,j.use,j.st,j.who])},
+    {n:'跟随进度',o:'M01 的表',cols:['DSH 会话','上次处理到的 DSH 序号'],rows:s=>s.prog.map(r=>[r.s,r.seq])},
+    {n:'待决定事项',o:'M01 的表',cols:['ID','调用 ID','状态','回复用的事件 ID','答案'],rows:s=>s.q.map(r=>[r.id,r.call,r.st,r.evt,r.ans])},
+    {n:'会话事件',o:'M01 的表',cols:['平台序号','内容'],rows:s=>s.ev.map(e=>[String(e.seq),e.ty])}]});
+</script>
+</body>
+</html>
