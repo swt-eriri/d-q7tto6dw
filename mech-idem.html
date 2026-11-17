@@ -1,0 +1,302 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 重复请求怎么挡（幂等）</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A4">← 学习清单</a>（第 A4 题）</p>
+<h1>重复请求怎么挡：同一个请求来两次，只做一次</h1>
+<p class="lead">机制：幂等（后端框架 0004 第 3.2 节）。例子：管理员点「发布」时网络卡住，前端带同一个幂等键重试，两次请求几乎同时到达。</p>
+<p class="sub">这一页想让你讲得出：为什么先插一条占位记录再执行；两个相同请求同时到达时，后到的等什么、拿到什么；内容不同时怎么办；24 小时以后靠什么。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（提供 idempotency.run）；<span class="who" style="--c:#38bdf8">M04</span> = Agent 配置与发布（蕴颐，在自己的事务里调用它）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（可以换情况）</a><a href="#s3">③ 幂等的几个层次</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>幂等键 ≠ 请求摘要</h3><dl>
+    <dt>幂等键</dt><dd>调用方给的「这是同一次操作」的标记，放在请求头 <code>Idempotency-Key</code>，最长 64 个字符。重试时不变。</dd>
+    <dt>请求摘要</dt><dd>平台算的「内容是什么」：请求体规范化（键排序、去空白）后和方法、路径拼起来，取 SHA-256。</dd></dl>
+    <div class="eg">键相同、摘要也相同 → 真正的重试；键相同、摘要不同 → 调用方用错了键，返回 409。</div></div>
+  <div class="pair"><h3>先占位 ≠ 先查询</h3><dl>
+    <dt>先查询</dt><dd>先查「做过没有」，没做过再做。两个请求同时到，都查到「没做过」，都去做。</dd>
+    <dt>先占位</dt><dd>直接插一条结果为空的记录占住这个键。后到的插入撞上同一个主键，要<b>等</b>先到的事务结束。</dd></dl>
+    <div class="eg">平台用先占位（④ 第 1 条）。</div></div>
+  <div class="pair"><h3>幂等记录 ≠ 业务唯一约束</h3><dl>
+    <dt>幂等记录</dt><dd>保留 24 小时，挡的是「短时间内的重试」，并把第一次的结果原样还给重试者。</dd>
+    <dt>业务唯一约束</dt><dd>写在业务表上，永久有效，挡的是业务上不允许发生两次的事，比如「同一个草稿修订号只发布一次」。</dd></dl>
+    <div class="eg">24 小时以后的重复，靠业务唯一约束。</div></div>
+  <div class="pair"><h3>请求幂等 ≠ 任务处理器幂等</h3><dl>
+    <dt>请求幂等</dt><dd>本页：同一个入口请求重复到达，只执行一次。</dd>
+    <dt>处理器幂等</dt><dd>A6：同一个任务被领取、执行了好几次，业务效果只生效一次。靠处理器自己看业务表。</dd></dl>
+    <div class="eg">口试笔记里的「四层防重」：任务去重键、收件记录、租约代次、处理器幂等，加上本页这一层。</div></div>
+</div>
+<details class="basics"><summary>用到的两个基础概念（不熟就点开）</summary>
+  <p><b>主键冲突时的等待</b>：事务 A 插入了一行还没提交，事务 B 插入同一个主键，B 会被挡住，等 A 结束：A 提交了，B 报「主键重复」；A 回滚了，B 的插入成功。最多等 20 秒（锁等待超时），超时 B 报错。</p>
+  <p><b>幂等</b>：同一个操作做一次和做很多次，效果一样。比如「把状态设为停用」天然幂等；「发起一次发布」不是，做两次就发布两次，所以要靠记录挡住。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>有按钮的步骤可以看「换一种情况会怎样」</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 幂等的几个层次</h2>
+<table class="plain">
+<tr><th>层次</th><th>键</th><th>做法</th></tr>
+<tr><td><b>入口请求</b></td><td>请求头 Idempotency-Key</td><td>本页：处理请求的模块调 <code>idempotency.run(范围, 键, 请求摘要, 处理函数)</code></td></tr>
+<tr><td><b>tool 回调</b></td><td>DSH 会话 ID : 调用 ID : 第几次回调</td><td>带上 DSH 会话 ID，不同会话的调用 ID 即使相同也不会串；桥接插件重试时，模块事务里的幂等记录挡住重复写入（A8）</td></tr>
+<tr><td><b>跨模块命令</b></td><td><code>上游键:步骤名</code></td><td>调用方从自己的键派生下游的键传下去。整条流程重试时，每一步都返回原结果</td></tr>
+<tr><td><b>任务、事件</b></td><td>任务 ID、事件 ID</td><td>任务和事件进入模块时，调用上下文里的根键分别是任务 ID、事件 ID；事件处理另有收件记录（A5）</td></tr>
+<tr><td><b>长期唯一</b></td><td>业务字段</td><td>业务表上的唯一约束，比如发布记录（草稿、修订号）在「已发布」时唯一</td></tr>
+<tr><td><b>对 DSH 的写</b></td><td>平台生成的 requestId</td><td>结果不确定时按它对账，不盲目重发</td></tr>
+</table>
+
+<h2 id="s4">④ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么先插占位记录，而不是先查有没有做过？（第 1、3 步）</summary>
+  <p class="if">先查：两个请求同时到，都查到「没做过」，都去执行。好一点的情况是第二个撞上业务唯一约束，返回一个和幂等无关的错误（比如「冲突」），前端以为发布失败了；差一点的是业务上没有唯一约束，就真的做了两次。</p>
+  <p>先占位：后到的插入被挡住，等先到的结束，然后<b>拿到第一次的结果</b>，前端看到的就是「发布已受理」。</p></details>
+<details><summary>2. 为什么幂等记录要和业务写入在同一个事务里？（第 4 步）</summary>
+  <p class="if">幂等记录先单独提交、再做业务：中间崩了，记录说「做过了」（结果为空），业务其实没做，重试永远拿到一个空结果。</p>
+  <p class="if">业务先提交、幂等记录后写：中间崩了，重试查不到记录，再做一次。</p>
+  <p>放在一个事务里：要么「业务做了 + 记录在」，要么都没有。处理失败整个回滚，不留记录，重试可以重新来。全平台一个库，所以模块的业务表和框架的幂等表天然能在一个事务里。</p></details>
+<details><summary>3. 请求摘要为什么不包含时间戳、签名和请求头？</summary>
+  <p class="if">包含了：同一个请求重试时，时间戳、签名都会变，摘要就不同，真正的重试反而被判成「内容不一致」返回 409。</p>
+  <p>只用「方法 + 路径 + 规范化后的请求体」：内容真的一样，摘要就一样。</p></details>
+<details><summary>4. 为什么幂等记录只留 24 小时？</summary>
+  <p>它的用途是挡「短时间内的重试」（网络超时、用户连点），并把结果还给重试者。几小时后还在重试的，基本不是同一次操作了。</p>
+  <p class="if">永久保留：表越来越大。真正要永久挡住的事，应该写成业务唯一约束，那才是业务规则该在的地方。</p></details>
+<details><summary>5. 后到的请求在等的时候占着什么？为什么等不超过 20 秒？</summary>
+  <p>它占着一个页面请求线程和一条数据库连接。锁等待超时是 20 秒（行内实例默认值），超时返回 <code>409 common.idempotency-in-progress</code>「处理中，请重试」。</p>
+  <p class="if">这也是请求里不能做长工作的原因之一：先到的请求事务开得越久，后到的等得越久。</p></details>
+<details><summary>6. 跨模块调用时为什么要「派生」下游的键？</summary>
+  <p class="if">下游用自己生成的新键：整条流程重试时，上游挡住了，但如果上游的第一次执行在调完下游后、提交前崩了，重试会以新键再调一次下游，下游做了两次。</p>
+  <p>用 <code>上游键:步骤名</code>：重试时同一步拿到同一个下游键，下游返回原结果。步骤名区分同一流程里对同一个下游的多次调用。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>调用方不带键、或重试时换了键，就挡不住。</b>键由调用方给，平台没法替它判断「这是不是同一次操作」。</li>
+  <li><b>只管同一个事务里的数据库写入。</b>处理函数里如果调了外部系统，那一下可能发生两次；外部调用按「先落记录再外呼」另行处理。</li>
+  <li><b>只管 24 小时。</b>之后的重复靠业务唯一约束。</li>
+  <li><b>「同一个键要不要区分是谁发的」还没定。</b>上游 0003 说「同一主体、同一路由、同一键」，0004 的幂等表主键是（范围, 键），不含主体。不同的人用了相同的键（比如前端生成键的方式有缺陷）时会互相干扰。已经问组长（第九批），等答复。</li>
+  <li><b>等待有代价。</b>后到的请求最多占着一个线程和一条连接等 20 秒。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 两个相同请求同时到达，先到的那个执行失败回滚了。后到的会怎样？</summary>
+  <p>后到的插入原本在等，先到的回滚后，它的插入成功，接着正常执行。等于先到的从来没发生过。</p></details>
+<details><summary>2. 先到的请求事务开了 25 秒才提交，后到的会怎样？</summary>
+  <p>后到的等到 20 秒锁等待超时，返回 409 common.idempotency-in-progress「处理中，请重试」。前端稍后再重试，就能拿到先到的结果。</p></details>
+<details><summary>3. 前端代码有 bug：两次不同内容的请求用了同一个键。会怎样？</summary>
+  <p>第二次插入撞键，读出已有记录，摘要不同 → 返回 409 common.idempotency-mismatch。不会把第一次的结果错当成第二次的结果返回。</p></details>
+<details><summary>4. 管理员 3 天后带同一个键又发了一次「发布修订 7」。会怎样？</summary>
+  <p>幂等记录早被清理了，挡不住，请求会正常执行到业务逻辑。真正挡住的是业务规则：发布记录上「同一个草稿修订号只发布一次」的唯一约束，以及发布时对修订号的检查。</p></details>
+<details><summary>5. 为什么不先查业务表「这次发布有没有做过」来代替幂等记录？</summary>
+  <p>先查后做会被并发插队（④ 第 1 条）；而且就算用业务唯一约束挡住了第二次，重试者拿到的是「冲突」错误，而不是第一次的结果。</p></details>
+</div>
+
+<p class="src">出处：0004 第 3.1 节（调用上下文里的根键）、第 3.2 节（各层次做法、先占位、并发等待、409 两种、摘要算法、24 小时、派生键超过 191 字符存摘要）、第 3.6 节（platform_idempotency 表结构，主键（范围, 键））、第 2.5 节（锁等待超时 20 秒）；0011 第 7.5 节（同一草稿修订号只发布一次）；给组长的问题清单第九批。<br>
+<b>示意，不是 RFC 定的</b>：时间、键 k_77、请求内容、前端多久超时重试、幂等键由前端怎样生成（以前端 RFC 为准）。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'王经理在页面上点了「发布客服 Agent（修订 7）」。前端为这次点击生成幂等键 k_77。',
+  idem:[],biz:[],req:[{r:'第一次请求',st:'还没到'},{r:'重试',st:'还没发'}]});
+
+step({t:'10:00:00.000',k:['t1'],at:'t1',h:'第一次请求到达：先占位',
+  b:'请求进程的线程 T1 处理它。入口把 <code>Idempotency-Key: k_77</code> 放进调用上下文。M04 的处理器开事务，调 <code>idempotency.run(\'agents.publish\', k_77, 摘要, 处理函数)</code>：框架<b>先往幂等表插一行</b>：范围 agents.publish、键 k_77、请求摘要 c4e2…、结果为空。插入成功，事务还没提交。',
+  why:'这一行没提交前，任何想插同一个（范围, 键）的事务都会被挡住（④ 第 1 条）。',crash:null},
+  s=>{s.page='';s.idem.push({sc:'agents.publish',k:'k_77',dg:'c4e2…',res:'（空，占位中）',vis:'未提交'});s.req[0].st='执行中（线程 T1）';});
+
+step({t:'10:00:00.001 → 10:00:08',k:['t1'],at:'t1',h:'执行处理函数；前端等不及了',
+  b:'处理函数做受理发布的业务写入（同一个事务里：登记「发布已申请」事件，A5 第 1 步）。这时王经理的网络卡了，前端 8 秒没收到响应，<b>带着同一个键 k_77、同样的请求体</b>自动重试。',
+  why:'到这里，业务写入和占位记录都还没提交，别人看不到。',crash:null},
+  s=>{s.biz.push({w:'事件登记：发布已申请（修订 7）',vis:'未提交'});s.req[1].st='已发出';});
+
+step({t:'10:00:08.010',k:['t2'],at:'t2',h:'重试到达：插入同一个键，被挡住，开始等',
+  b:'线程 T2 处理重试。同样开事务、调 idempotency.run，往幂等表插（agents.publish, k_77）→ 撞上 T1 那行还没提交的记录 → <b>T2 的插入被挡住，等 T1 的事务结束</b>。',
+  why:'先占位的好处在这里体现：T2 不会去执行业务，只能等。',crash:null},
+  s=>{s.req[1].st='等待中（线程 T2，占着一条连接）';});
+
+step({t:'10:00:09',k:['t1','t2'],at:['t1','t2'],h:'T1 写回结果、提交；T2 拿到第一次的结果',
+  b:'T1 的处理函数完成，框架把结果（「发布已受理，任务 job_1」）写回幂等记录，<b>和业务写入一起提交</b>，返回给第一次请求（但前端已经不等它了）。T2 的插入这时报「主键重复」→ T2 回滚自己的事务 → 读出已有记录：摘要和自己的一样 → <b>直接返回记录里的结果</b>。',
+  why:'王经理的页面拿到的是第一次的结果「发布已受理」，不是一个莫名其妙的错误；业务只做了一次。',
+  boomText:'🔀 换一种情况',stripe:false,
+  crash:[{w:'T1 执行失败、回滚了',left:'占位记录和业务写入一起消失。',next:'T2 的插入不再被挡，插入成功，接着正常执行。',end:'等于第一次从没发生过，重试顶上。'},
+         {w:'T1 的事务开了 25 秒才提交',left:'T2 等到锁等待超时（20 秒）。',next:'T2 返回 409 common.idempotency-in-progress「处理中，请重试」。',end:'前端稍后再试，就能拿到 T1 的结果。'},
+         {w:'重试时请求体不一样（前端 bug）',left:'T2 读出已有记录，摘要不同。',next:'返回 409 common.idempotency-mismatch。',end:'不会把第一次的结果错当成这次的结果。'}]},
+  s=>{s.idem[0].res='发布已受理，任务 job_1';s.idem[0].vis='已提交';s.biz[0].vis='已提交';s.req[0].st='完成（前端已不等）';s.req[1].st='返回第一次的结果';s.page='王经理看到：发布已受理。';});
+
+step({t:'10:30:00',k:['t3'],at:'t2',h:'半小时后又来一次：直接返回原结果',
+  b:'王经理刷新后又点了一次（前端仍带 k_77）。插入撞键，记录已提交，摘要相同 → 立刻返回「发布已受理，任务 job_1」，不等待、不执行。',
+  why:'24 小时内，同一个键、同样的内容，永远拿到第一次的结果。',crash:null},
+  s=>{s.page='';s.req.push({r:'半小时后再来',st:'立刻返回原结果'});});
+
+step({t:'第二天之后',k:[],h:'24 小时后：记录被清理，靠业务唯一约束',
+  b:'清理任务分批删掉超过 24 小时的幂等记录。之后再带 k_77 来，框架挡不住了，请求会走到业务逻辑。真正挡住重复发布的是业务规则：发布记录上「同一个草稿修订号只发布一次」的唯一约束，以及发布时对修订号的检查。',
+  why:'短期重试靠幂等记录，长期唯一靠业务表（③）。',crash:null},
+  s=>{s.idem[0].res='（已清理）';s.idem[0].vis='—';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m04:['M04','#38bdf8']},
+  procs:{
+    t1:{n:'请求进程 · 线程 T1',s:'第一次请求',chips:[['t1','m04','M04 受理发布 → 框架 idempotency.run','同一个事务']]},
+    t2:{n:'请求进程 · 线程 T2',s:'前端的重试',chips:[['t2','m04','M04 受理发布 → 框架 idempotency.run','同一个事务'],['t3','m04','半小时后的又一次','']]}},
+  cols:[['t1'],'db',['t2']],
+  tables:[
+    {n:'幂等记录',o:'框架 · platform_idempotency',cols:['范围','键','请求摘要','结果','提交了吗'],rows:s=>s.idem.map(r=>[r.sc,r.k,r.dg,r.res,r.vis])},
+    {n:'M04 的业务写入',o:'和幂等记录同一个事务',cols:['写了什么','提交了吗'],rows:s=>s.biz.map(r=>[r.w,r.vis])},
+    {n:'请求状态',o:'示意（不在库里）',cols:['请求','状态'],rows:s=>s.req.map(r=>[r.r,r.st])}]});
+</script>
+</body>
+</html>
