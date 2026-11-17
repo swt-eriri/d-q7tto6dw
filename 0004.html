@@ -48,8 +48,8 @@ body.touring #legend{display:none}
 .belt{cursor:pointer}.belt .bh{fill:none;stroke:transparent;stroke-width:24}
 .belt .bb{fill:none;stroke:#141c2b;stroke-width:10;stroke-linecap:round;stroke-linejoin:round;opacity:.7}
 .belt .bm{fill:none;stroke:#475569;stroke-width:2.5;opacity:.45}
-.belt.hl .bb{stroke:#0a101c;stroke-width:18;opacity:1}.belt.hl .bm{stroke:var(--ic);stroke-width:5;opacity:1;stroke-dasharray:12 12}
-body:not(.still) .belt.hl .bm{animation:flow .9s linear infinite}
+.belt.hl .bb{stroke:#0a101c;stroke-width:18;opacity:1}.belt.hl .bm{stroke:var(--ic);stroke-width:5;opacity:1}
+body:not(.still) .belt.hl.ask .bm{animation:flow .9s linear infinite}
 .belt.ask .bm{stroke-dasharray:1 9;stroke-linecap:round;stroke-width:3.5}
 .belt.hl.ask .bm{stroke-dasharray:1 11;stroke-linecap:round;stroke-width:7}
 .blab{display:none;cursor:pointer}.blab.on{display:block}.blab rect{fill:#020617;stroke:#facc15;stroke-width:2}.blab text{fill:#fde68a;font-size:20px;text-anchor:middle}
@@ -126,7 +126,7 @@ const GLOSSARY=[
 const SW_L=220; // 请求分路左侧文字区宽度
 const NAME_F=24, NAME_LH=30, DESC_F=18, DESC_LH=27, ITEM_GAP=44, SEC_PAD=24;
 const LAYOUT={
- top:{y:70, cols:[{x:1380,w:470,items:["N_ID"]},{x:2020,w:700,items:["N_CONV"]},{x:3050,w:370,items:["N_PUB"]},{x:3480,w:370,items:["N_DATA"]},{x:3910,w:370,items:["N_RES"]},{x:4340,w:370,items:["N_FILE"]},{x:4770,w:370,items:["N_AUD"]},{x:5250,w:440,items:["N_T04"]},{x:5840,w:430,items:["DSH"]}]},
+ top:{y:70, cols:[{x:1380,w:470,items:["N_ID"]},{x:2020,w:700,items:["N_CONV"]},{x:3050,w:370,items:["N_PUB"]},{x:3480,w:370,items:["N_DATA"]},{x:3910,w:370,items:["N_RES"]},{x:4340,w:370,items:["N_FILE"]},{x:4770,w:370,items:["N_AUD"]},{x:5810,w:440,items:["N_T04"]},{x:6400,w:430,items:["DSH"]}]},
  mid:{gap:240, cols:[
    {x:40,w:340,items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"]},
    {x:640,w:560,items:["A1","E1"]},
@@ -134,11 +134,12 @@ const LAYOUT={
    {x:2020,w:420,secs:[{id:"s_out",name:"交给模块",items:["A7","A8"]},{id:"s_push",name:"实时推送给浏览器",items:["S2","S1","S3"]}]},
    {x:2630,w:210,items:["K1"],full:true},
    {x:3050,w:420,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB","T_DSHP"]},
-   {x:3610,w:420,secs:[{id:"s_db2",name:"后台进程用的表",items:["T_JOBS","T_INBOX","T_CUR"]},{id:"s_db3",name:"各模块自己的表",items:["T_BCONV","T_BAGT","T_BFILE","T_BAUD"]}]},
-   {x:4230,w:210,items:["K2"],full:true},
-   {x:4650,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
-   {x:5250,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
-   {x:5840,w:430,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
+   {x:3610,w:420,sec:{id:"s_db3",name:"各模块自己的表"},items:["T_BCONV","T_BAGT","T_BFILE","T_BAUD"]},
+   {x:4170,w:420,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_JOBS","T_INBOX","T_CUR"]},
+   {x:4790,w:210,items:["K2"],full:true},
+   {x:5210,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
+   {x:5810,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
+   {x:6400,w:430,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
  regions:[
    {id:"NB",name:"其他模块（只画对接口）",items:["N_ID","N_CONV","N_PUB","N_DATA","N_RES","N_FILE","N_AUD","N_T04"],cls:"r-nb"},
    {id:"DSHR",name:"DSH",items:["DSH"],cls:"r-gate"},
@@ -172,7 +173,7 @@ const INS={window:{t:46,l:22,r:22,b:20},building:{t:20,l:22,r:22,b:20,deco:44},p
 function measure(m){ const i=INS[m.shape]; const tw=m.w-i.l-i.r;
   if(m.shape==='switch'){ const lw=SW_L-i.l; m.nameH=nLines(m.name,lw-44,NAME_F)*NAME_LH; m.descH=nLines(m.one,lw,DESC_F)*DESC_LH; m.h=Math.max(i.t+m.nameH+10+m.descH+i.b,5*48+30); return; }
   if(m.shape==='cyl'){ m.nameH=nLines(m.name,tw,22)*28; m.descH=(m.cols||[]).length*28; m.h=i.t+m.nameH+10+m.descH+i.b; return; }
-  if(m.shape==='kernel'){ m.nameH=nLines(m.name,tw,NAME_F)*NAME_LH; m.descH=nLines(m.one,tw,DESC_F)*DESC_LH; m.h=0; return; }
+  if(m.shape==='kernel'){ m.nameH=nLines(m.name,tw,NAME_F)*NAME_LH; m.descH=nLines(m.one,tw,DESC_F)*DESC_LH; m.h=i.t+m.nameH+10+m.descH+30+5*124+20; return; }
   m.nameH=nLines(m.name,tw-44,NAME_F)*NAME_LH; m.descH=nLines(m.one,tw,DESC_F)*DESC_LH; m.h=i.t+m.nameH+10+m.descH+(i.ex||0)+i.b; }
 
 /* ---------- 布局 ---------- */
@@ -189,7 +190,7 @@ const SECS=[], REGIONS=[];
     if(secs){ secs.forEach(s=>{ const sy=y; y+=56; s.items.forEach(id=>{ y=place(id,c.x+SEC_PAD,c.w-SEC_PAD*2,y); }); y=y-ITEM_GAP+SEC_PAD; SECS.push({id:s.id,name:s.name,x:c.x,y:sy,w:c.w,h:y-sy}); y+=50; }); y-=50; }
     else c.items.forEach(id=>{ y=place(id,c.x,c.w,y); });
     midBottom=Math.max(midBottom,y); });
-  fulls.forEach(c=>{ const m=MM[c.items[0]]; m.x=c.x; m.w=c.w; measure(m); m.y=y0; m.h=midBottom-y0; });
+  fulls.forEach(c=>{ const m=MM[c.items[0]]; m.x=c.x; m.w=c.w; measure(m); m.y=y0; });
   LAYOUT.regions.forEach(r=>{ let x0=1e9,y1=1e9,x1=-1e9,y2=-1e9; r.items.forEach(id=>{ const m=MM[id]; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y1=Math.min(y1,m.y-d); x1=Math.max(x1,m.x+m.w+(m.shape==='booth'||m.shape==='booth3'||m.shape==='plug'?70:0)+(m.shape==='switch'?40:0)); y2=Math.max(y2,m.y+m.h); });
     SECS.forEach(s=>{ if(r.items.some(id=>MM[id].x>=s.x&&MM[id].x<s.x+s.w&&MM[id].y>=s.y&&MM[id].y<s.y+s.h)){ x0=Math.min(x0,s.x); y1=Math.min(y1,s.y); x1=Math.max(x1,s.x+s.w); y2=Math.max(y2,s.y+s.h); } });
     REGIONS.push({...r,x:x0-40,y:y1-96,w:x1-x0+80,h:y2-y1+96+40}); r.items.forEach(id=>MM[id].z=r.id); });
@@ -384,7 +385,7 @@ function shape(m){
    case 'bin': s=`<rect class="body c-clock" x="${x-8}" y="${y-22}" width="${w+16}" height="16" rx="6"/><rect class="body c-clock" x="${x+w/2-30}" y="${y-34}" width="60" height="14" rx="5"/><path class="body c-clock" d="M${x},${y} L${x+w},${y} L${x+w-34},${y+h} L${x+34},${y+h} Z"/>`+text(m,cx,cy,tw); break;
    case 'stack': s=`<rect class="back" x="${x+32}" y="${y-32}" width="${w}" height="${h}" rx="14"/><rect class="back" x="${x+16}" y="${y-16}" width="${w}" height="${h}" rx="14"/>`+R('c-long')+text(m,cx,cy,tw)+`<text class="note" x="${cx}" y="${y+h-24}">× N　${esc(STACK_NOTE[m.id]||'')}</text>`; break;
    case 'kernel': { s=R('c-ker',18)+text(m,cx,cy,tw,false); const chips=['数据库访问\n连接池 · 开事务','发事件\n和业务写入同一事务','防重复提交\n先占位再做事','任务\n提交 · 查询 · 取消','常用工具\n时钟 · 编号 · 日志 · 密钥'];
-     let yy=cy+m.nameH+m.descH+30; const ch=Math.min(110,(y+h-yy-20)/5-14); chips.forEach(t=>{ s+=`<rect class="chip" x="${cx}" y="${yy}" width="${tw}" height="${ch}" rx="12"/>`+fo(cx+10,yy+8,tw-20,ch-16,esc(t).replace('\n','<br>'),'cp'); yy+=ch+14; }); break; }
+     let yy=cy+m.nameH+m.descH+30; const ch=110; chips.forEach(t=>{ s+=`<rect class="chip" x="${cx}" y="${yy}" width="${tw}" height="${ch}" rx="12"/>`+fo(cx+10,yy+8,tw-20,ch-16,esc(t).replace('\n','<br>'),'cp'); yy+=ch+14; }); break; }
    case 'cyl': case 'cylg': { const g=m.shape==='cylg', ry=22;
      s=`<path class="body ${g?'c-cylg':'c-cyl'}" d="M${x},${y} L${x},${y+h-ry} A${w/2},${ry} 0 0 0 ${x+w},${y+h-ry} L${x+w},${y} Z"/><ellipse class="body ${g?'c-cylg':'c-cyl'} top" cx="${x+w/2}" cy="${y}" rx="${w/2}" ry="${ry}"/>`;
      s+=fo(cx,cy,tw,m.nameH+4,`<b>${m.icon} ${esc(m.name)}</b>`,'nm tb');
@@ -393,9 +394,22 @@ function shape(m){
   }
   return `<g class="node" data-node="${m.id}">${s}</g>`; }
 
+/* ---------- 线的颜色：一问一答同色；同一组件上、同一步里的线尽量不同色 ---------- */
+const PAL=['#60a5fa','#f472b6','#facc15','#4ade80','#fb923c','#a78bfa','#22d3ee','#f87171','#a3e635','#e879f9','#fdba74','#2dd4bf'];
+const COL={};
+function assignColors(bs){ const unit=b=>b.pr||b.id, U={}, W={};
+  bs.forEach(b=>{ const u=unit(b); (U[u]=U[u]||{ids:[],ends:new Set()}).ids.push(b.id); U[u].ends.add(b.f); U[u].ends.add(b.t); });
+  const keys=Object.keys(U), add=(a,c,w)=>{ if(a===c) return; (W[a]=W[a]||{})[c]=(W[a][c]||0)+w; (W[c]=W[c]||{})[a]=(W[c][a]||0)+w; };
+  keys.forEach((a,i)=>keys.slice(i+1).forEach(c=>{ if([...U[a].ends].some(e=>U[c].ends.has(e))) add(a,c,1); }));
+  const u2=Object.fromEntries(bs.map(b=>[b.id,unit(b)]));
+  TOURS.forEach(t=>t.steps.forEach(s=>{ const us=[...new Set(s.b.filter(id=>u2[id]).map(id=>u2[id]))]; us.forEach((a,i)=>us.slice(i+1).forEach(c=>add(a,c,5))); }));
+  const order=keys.sort((a,c)=>Object.values(W[c]||{}).reduce((x,y)=>x+y,0)-Object.values(W[a]||{}).reduce((x,y)=>x+y,0)), got={};
+  order.forEach(u=>{ const pen=PAL.map(()=>0); Object.entries(W[u]||{}).forEach(([v,w])=>{ if(got[v]!=null) pen[got[v]]+=w; });
+    let best=0; pen.forEach((p,k)=>{ if(p<pen[best]) best=k; }); got[u]=best; U[u].ids.forEach(id=>COL[id]=PAL[best]); }); }
+
 /* ---------- 绘制 ---------- */
 function render(){
-  const bs=computeBelts(); st.bs=bs; let s='';
+  const bs=computeBelts(); st.bs=bs; let s=''; assignColors(bs);
   s+=`<defs><pattern id="grid" width="60" height="60" patternUnits="userSpaceOnUse"><path d="M60 0H0V60" fill="none" stroke="#131c2c" stroke-width="1.2"/></pattern>
    <marker id="ah" viewBox="0 0 10 10" refX="7" refY="5" markerWidth="4" markerHeight="4" orient="auto"><path d="M0,0L10,5L0,10z" fill="#64748b"/></marker></defs>
    <rect x="-20000" y="-20000" width="60000" height="60000" fill="#0a101c"/><rect x="-20000" y="-20000" width="60000" height="60000" fill="url(#grid)"/>`;
@@ -406,17 +420,17 @@ function render(){
     [-26,0,26].forEach(o=>{ s+=`<line class="pipe" x1="${x0}" y1="${my+o}" x2="${tx}" y2="${my+o}"/>`; });
     s+=`<rect class="pplate" x="${lx-90}" y="${my-80}" width="180" height="44" rx="10"/><text class="ptxt" x="${lx}" y="${my-64}" text-anchor="middle">共享连接池</text><text class="ptxt s" x="${lx}" y="${my-44}" text-anchor="middle">每个进程 ${k==='K1'?'10–20 条':'5–10 条'}</text>`; });
   s+='<g id="belts">'+bs.map(b=>{ const it=ITEMS[b.item];
-    return `<g class="belt${b.q?' ask':''}" data-belt="${b.id}"><path class="bh" d="${b.d}"/><path class="bb" d="${b.d}"/><path id="p_${b.id}" class="bm" d="${b.d}" style="--ic:${it.c}" marker-end="url(#ah)"/></g>`; }).join('')+'</g>';
+    return `<g class="belt${b.q?' ask':''}" data-belt="${b.id}"><path class="bh" d="${b.d}"/><path class="bb" d="${b.d}"/><path id="p_${b.id}" class="bm" d="${b.d}" style="--ic:${COL[b.id]}" marker-end="url(#ah)"/></g>`; }).join('')+'</g>';
   s+='<g id="nodes">'+Object.values(MM).filter(m=>m.shape!=='kernel').map(shape).join('')+'</g><g id="titles">';
   REGIONS.forEach(r=>{ const t=r.name, tw=units(t)*32+50; s+=`<rect class="tplate" x="${r.x+24}" y="${r.y+18}" width="${tw}" height="56" rx="12"/><text class="rt" x="${r.x+48}" y="${r.y+58}">${esc(t)}</text>`;
     if(r.sub) s+=`<rect class="tplate s" x="${r.x+24+tw+12}" y="${r.y+28}" width="${units(r.sub)*21+40}" height="38" rx="10"/><text class="rs" x="${r.x+24+tw+32}" y="${r.y+55}">${esc(r.sub)}</text>`; });
   SECS.forEach(c=>{ const tw=units(c.name)*22+40; s+=`<rect class="tplate w" x="${c.x+14}" y="${c.y+12}" width="${tw}" height="38" rx="9"/><text class="st" x="${c.x+32}" y="${c.y+39}">${esc(c.name)}</text>`; });
   s+='</g><g id="beltsTop"></g><g id="items"></g><g id="kernels">'+Object.values(MM).filter(m=>m.shape==='kernel').map(shape).join('')+'</g><g id="labels">'+bs.map(b=>{ const it=ITEMS[b.item];
-    return `<g class="blab" data-belt="${b.id}"><rect x="${b.lab[0]-b.lw/2}" y="${b.lab[1]-18}" width="${b.lw}" height="36" rx="9"/><text x="${b.lab[0]}" y="${b.lab[1]+8}">${it.e} ${esc(b.label)}</text></g>`; }).join('')+'</g>';
+    return `<g class="blab" data-belt="${b.id}"><rect style="stroke:${COL[b.id]}" x="${b.lab[0]-b.lw/2}" y="${b.lab[1]-18}" width="${b.lw}" height="36" rx="9"/><text x="${b.lab[0]}" y="${b.lab[1]+8}">${it.e} ${esc(b.label)}</text></g>`; }).join('')+'</g>';
   $('#svg').innerHTML=s; setVB(); applyHL(); }
 function spawn(ids){ const g=$('#items'); g.innerHTML='';
   ids.forEach(id=>{ const b=st.bs.find(x=>x.id===id), p=document.getElementById('p_'+id); if(!b||!p) return; const len=p.getTotalLength(), dur=Math.max(2.2,len/280).toFixed(2), it=ITEMS[b.item];
-    const e=document.createElementNS(NS,'g'); e.setAttribute('class','item'); e.innerHTML=`<circle r="16" fill="#0b1220" stroke="${it.c}" stroke-width="2.5"/><text y="7" text-anchor="middle" font-size="18">${it.e}</text><animateMotion dur="${dur}s" repeatCount="indefinite"><mpath href="#p_${id}"/></animateMotion>`; g.appendChild(e); }); }
+    const e=document.createElementNS(NS,'g'); e.setAttribute('class','item'); e.innerHTML=`<circle r="16" fill="#0b1220" stroke="${COL[id]}" stroke-width="2.5"/><text y="7" text-anchor="middle" font-size="18">${it.e}</text><animateMotion dur="${dur}s" repeatCount="indefinite"><mpath href="#p_${id}"/></animateMotion>`; g.appendChild(e); }); }
 const curStep=()=>TOURS.find(x=>x.id===st.tour).steps[st.step];
 function focus(){
   if(st.tour){ const s=curStep(); const n=new Set(s.m.filter(id=>MM[id])); const b=new Set(s.b.filter(id=>BB.find(x=>x[0]===id))); b.forEach(id=>{ const x=BB.find(y=>y[0]===id); n.add(x[1]); n.add(x[2]); }); return {n,b}; }
@@ -473,10 +487,10 @@ function endTour(){ st.tour=null; document.body.classList.remove('touring'); $('
 $('#tp').onclick=()=>{ st.step--; tourGo(); }; $('#tn').onclick=()=>{ st.step++; tourGo(); }; $('#tx').onclick=endTour;
 document.addEventListener('keydown',e=>{ if(!st.tour) return; if(e.key==='ArrowRight'&&!$('#tn').disabled){st.step++;tourGo();} if(e.key==='ArrowLeft'&&!$('#tp').disabled){st.step--;tourGo();} if(e.key==='Escape') endTour(); });
 const usedIt=new Set(BB.map(b=>b[3]));
-$('#legend').innerHTML='<b>连线</b>　<span>⋯ 点点线：发起的一方去问、递过去</span><span>— 实线：答案回来、或送出的东西</span><span>两条挨着的线 = 一问一答</span><br><b>线上传的内容</b>　'+Object.entries(ITEMS).filter(([k])=>usedIt.has(k)).map(([k,i])=>i).map(i=>`<span><i style="border-color:${i.c}">${i.e}</i>${esc(i.n)}</span>`).join('');
+$('#legend').innerHTML='<b>连线</b>　<span>⋯ 点点线：发起的一方去问、递过去</span><span>— 实线：答案回来、或送出的东西</span><span>两条挨着、同一颜色的线 = 一问一答</span><span>颜色只为区分相邻的线，不代表种类；种类看线上的小图标</span><br><b>线上传的内容</b>　'+Object.entries(ITEMS).filter(([k])=>usedIt.has(k)).map(([k,i])=>i).map(i=>`<span><i style="border-color:#64748b">${i.e}</i>${esc(i.n)}</span>`).join('');
 $('#panel').innerHTML=`<h2>RFC-0004 后端框架</h2><ul>
 <li><b>两个进程</b>：平台后端是两个程序。<b>请求进程</b>（蓝框，程序名 platform-api）接住所有外部请求，处理完马上返回；<b>后台进程</b>（绿框，程序名 platform-worker）不接请求，只在后台跑任务、盯 DSH、定时清理。框后面的叠影表示可以部署多个（后台进程部署 2 个）。</li>
-<li><b>布局</b>：最上面一排是其他模块（只画和框架对接的地方）和 DSH；中间从左到右是外部入口 → 请求进程 → 数据库 → 后台进程。数据库夹在两个进程中间，左半是请求进程用的表，右半是后台进程用的表。</li>
+<li><b>布局</b>：最上面一排是其他模块（只画和框架对接的地方）和 DSH；中间从左到右是外部入口 → 请求进程 → 数据库 → 后台进程。数据库夹在两个进程中间，分三列：左列是请求进程用的表，中列是各模块自己的表，右列是后台进程用的表。</li>
 <li><b>内核</b>是两个进程里贴着数据库的紫色竖条：框架给各模块的公共服务。紫色粗管道是共享连接池，铭牌上的条数是<b>每个进程</b>的。</li>
 <li><b>外形</b>：岗亭（带黄黑栏杆）是认证；道岔是请求分路；表盘是定时类；天线塔是浏览器推送连接；托盘上的刻度是执行池的并发上限；叠在一起的卡片表示有很多个（每个会话 / 每个 DSH 进程一个）；圆柱是表，列的中文名后面灰色的是列名。</li>
 <li><b>连线</b>：箭头指向接收的一方。<b>点点线</b>是发起的一方去问（线上的小图标是递过去的东西，什么都不递就是 ❓）；<b>实线</b>是答案回来，或单向送出的东西。两条挨着的线就是一问一答，比如网页认证带 🍪 去问身份模块，身份模块回 🪪「张三」。</li><li><b>看不懂的词</b>点顶部「名词解释」。</li>
