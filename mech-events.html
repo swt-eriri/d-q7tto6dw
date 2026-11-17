@@ -195,6 +195,8 @@ function init(s0){ _cur=_clone(s0); }
 function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
 function mount(cfg){
   const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
   const $=id=>document.getElementById(id);
   const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
   const chipOwn={};
@@ -205,10 +207,10 @@ function mount(cfg){
   $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
     <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
     ${cols.map(c=>c==='db'
-      ?`<div class="db"><h4>数据库（全平台一个库）<small>只画这个例子用到的行和列</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
       :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
     </div><div class="explain" id="explain"></div>
-    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">💥 在这一步之后崩</button></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
     <div class="crash" id="crash"></div></div></div>`;
   let i=0,boom=false;
   function render(){
@@ -227,10 +229,10 @@ function mount(cfg){
     $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
     $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
     const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
-    const down=new Set(st.state.down||[]); if(boom&&cr) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
     Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
     $('crash').classList.toggle('show',boom&&!!cr);
-    $('crash').innerHTML=cr?cr.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
     history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
   }
   $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
