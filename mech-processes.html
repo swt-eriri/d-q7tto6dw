@@ -1,0 +1,318 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 两个进程：同一套代码，为什么分开跑</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A1">← 学习清单</a>（第 A1 题）</p>
+<h1>两个进程：同一套代码，为什么分开跑、隔离到哪一步</h1>
+<p class="lead">机制：进程与资源（后端框架 0004 第 2.1、2.5、6.1、6.4、10.2 节）。例子：张三的回答正在生成，后台进程突然崩了。</p>
+<p class="sub">这一页想让你讲得出：两个进程各开了什么；后台进程挂了，哪些功能照常、哪些停住、怎么恢复；分开以后隔离到哪一步，哪些东西仍然是共用的。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#38bdf8">M04</span> = Agent 配置与发布（蕴颐）。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（后台进程崩了）</a><a href="#s3">③ 每个进程里有什么</a><a href="#s4">④ 为什么这样分</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>同一套代码 ≠ 同一个进程</h3><dl>
+    <dt>代码</dt><dd>两个进程装的是<b>同一套</b>后端代码：平台内核 + 九个业务模块，一个都不少。</dd>
+    <dt>进程</dt><dd>区别只在启动时<b>开了哪些宿主职责</b>：请求进程开 HTTP 端口、不领任务；后台进程领任务、跑定时和跟随器，不开业务端口（只留健康检查和指标）。</dd></dl>
+    <div class="eg">代码在，不代表会运行。请求进程里也有「领任务」的代码，只是没有启动它。</div></div>
+  <div class="pair"><h3>线程 ≠ 数据库连接</h3><dl>
+    <dt>线程</dt><dd>执行代码的工人。每个进程有好几个线程池（页面请求、执行池、事件监听……）。</dd>
+    <dt>连接</dt><dd>和数据库之间的一条通道。每个进程<b>一个</b>共享连接池，线程要查库时借一条，用完就还。</dd></dl>
+    <div class="eg">请求进程有 200 个页面请求线程，但只有 10–20 条连接。连接数按「数据库同时要执行多少查询」配，和用户数无关。</div></div>
+  <div class="pair"><h3>分开 ≠ 完全隔离</h3><dl>
+    <dt>分开了的</dt><dd>内存、线程、连接池、崩溃。后台进程卡死、占满自己的连接，借不走请求进程的。</dd>
+    <dt>还共用的</dt><dd>同一个数据库：CPU、磁盘、<b>行锁</b>。后台进程的事务锁住一行，请求进程要改同一行，照样要等（最多等 20 秒就报错）。</dd></dl>
+    <div class="eg">隔离的是「进程挂了」，不是「数据库忙了」。</div></div>
+  <div class="pair"><h3>后台进程 ≠ 评估执行器</h3><dl>
+    <dt>后台进程</dt><dd>Java，装全部模块，直接连数据库领任务。</dd>
+    <dt>评估执行器</dt><dd>Python，<b>不装模块、不连数据库</b>，只调请求进程上的内部接口：由请求进程代它领评估任务、续租；它跑被测、模拟用户、评分会话，把结果交回自进化模块。</dd></dl>
+    <div class="eg">所以「请求进程不领任务」有一个例外：评估任务由请求进程代评估执行器领取。</div></div>
+</div>
+<details class="basics"><summary>用到的三个基础概念（不熟就点开）</summary>
+  <p><b>进程</b>：一个运行中的程序，有自己的内存和线程。两个进程之间不共享内存，要交流只能经数据库或网络。这里的两个进程是两个 Java 程序（两个 JVM）。</p>
+  <p><b>Spring 装配</b>：启动时，Spring 按配置把各模块的对象创建好、互相接上。两个进程的启动入口不同，开启的宿主组件就不同（比如只有请求进程启动 HTTP 服务器）。</p>
+  <p><b>租约</b>：领到任务的进程每 20 秒续一次「我还在做」，60 秒没续就算它没了，别人可以接手（A6 讲）。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>只部署一个后台进程时，它崩了会怎样</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 每个进程里有什么 <small>起步值，压测后调整</small></h2>
+<table class="plain">
+<tr><th>用途</th><th>请求进程</th><th>后台进程</th><th>说明</th></tr>
+<tr><td>页面请求</td><td>Tomcat 线程池 200</td><td>—（不开业务端口）</td><td>请求里只做数据库操作和带超时的外部调用（DSH 普通调用 10 秒）</td></tr>
+<tr><td>事件流推送</td><td>异步，1 个轮询线程</td><td>—</td><td>空闲连接不占线程（A9 讲）</td></tr>
+<tr><td>执行池 default / background</td><td>—（不领任务）</td><td>固定线程池 8 / 2</td><td>普通任务 / 自进化、评估相关任务（A6）</td></tr>
+<tr><td>执行池 long</td><td>—</td><td>异步，回调线程 4</td><td>DSH 跟随器、应答通道；不独占线程（A10）</td></tr>
+<tr><td>事件监听</td><td>4</td><td>4</td><td>提交后监听器在提交事务的进程里跑，所以两边都有（A5）</td></tr>
+<tr><td>续租、领取、清理、轮询</td><td>调度线程 2</td><td>调度线程 2</td><td></td></tr>
+<tr><td><b>数据库连接</b></td><td><b>10–20 条</b></td><td><b>每个 5–10 条</b></td><td>每个进程一个共享连接池、一个事务管理器</td></tr>
+</table>
+<div class="note">
+  <p><b>10 分钟的任务，不占 10 分钟连接。</b>领取是一个短事务，提交后就还连接；中间等 DSH、等模型的时候不开事务；要写结果时再借一条，短事务写完再还。规则写在数据访问规则第 1 条：事务里不调用外部系统。</p>
+  <p><b>实例数：</b>MVP 请求进程 1 个、后台进程 1 个、评估执行器 1 个，都能加。RFC 建议生产部署 2 个后台进程（第 ④ 节第 4 条讲为什么）。</p>
+</div>
+
+<h2 id="s4">④ 为什么这样分 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么不放在一个进程里？</summary>
+  <p class="if">放在一起：后台的长任务出了问题（卡死、内存涨爆、进程崩），页面也一起挂；想多加几个跑任务的实例，只能连页面服务一起加。</p>
+  <p>分开后：后台进程崩了，登录、看历史、管理页面照常（第 3–4 步）；后台进程可以单独加实例。</p></details>
+<details><summary>2. 为什么不干脆拆成九个服务，每个模块一个？</summary>
+  <p class="if">拆成九个服务：模块之间的调用都变成网络调用，要多处理超时、重试、部署和运维九套东西，团队现在承担不起。</p>
+  <p>现在模块之间是进程内的 Java 接口调用。接口按契约定义，以后真要拆，把调用换成远程适配器，<b>调用方的写法不变</b>（0004 第 2.4 节）。请求进程和后台进程之间本来就只靠任务表和事件交流，拆不拆都不用改。</p></details>
+<details><summary>3. 后台进程重启只要 30 秒，为什么张三的回答要停一分钟左右？（第 5–6 步）</summary>
+  <p>重启后的进程是一个新的执行者。旧进程持有的跟随任务，租约还没到期，任务表还认为它在做；新进程必须等租约过期才能接手，不然可能出现两个跟随器。</p>
+  <p>对比：<b>正常停机</b>（比如发版）时，后台进程先停止领取，等进行中的任务 30 秒，结束不了的<b>主动放弃租约</b>，别人马上能接，不用等过期。</p></details>
+<details><summary>4. 既然重启也要等租约过期，为什么还建议部署两个后台进程？</summary>
+  <p>恢复速度差不多，差别在<b>会不会恢复</b>。</p>
+  <p class="if">只有一个：如果它起不来（机器坏了、反复崩），跟随器、应答通道、所有后台任务就一直停着。</p>
+  <p>有两个：一个没了，另一个的过期检查照常运行，租约一过期就接手，不依赖重启成功。RFC 把这一条列为缺点：后台进程是执行链路的单点（0004 第 10.2 节、Q4）。</p></details>
+<details><summary>5. 为什么评估执行器不直接连数据库？</summary>
+  <p>RFC 的规定：它不装模块、不连数据库，只调内部接口；用哪个 Agent 版本、哪个评估账号，一律由自进化模块从评估记录里取，执行器改不了（0004 第 2.1 节）。</p>
+  <p class="if">我的理解（RFC 没明说理由）：让它连库，就要在 Python 里再实现一遍任务表的领取、租约规则和权限判断，两套实现很容易不一致；不连库，规则只在 Java 这一边。</p></details>
+<details><summary>6. 为什么连接池这么小？用户多了不会不够吗？</summary>
+  <p>连接按「数据库同时在执行多少查询」配。一次查询几毫秒，十几条连接每秒能服务上千次查询。</p>
+  <p class="if">配太大：数据库同时处理的查询太多，反而都变慢；三个进程加起来很容易超过数据库允许的连接数。这也是每个进程只用一个连接池、不按模块各开一个的原因（0004 第 10.1 节）。</p></details>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>不是完全隔离。</b>两个进程共用一个数据库：后台进程的慢查询会拖慢数据库，后台进程的事务锁住的行，请求进程要改也得等（锁等待超时 20 秒）。</li>
+  <li><b>只部署一个后台进程时，它是执行链路的单点。</b>它挂了，进行中的回答停住、审批一直等、新执行不派发，直到它恢复。</li>
+  <li><b>内存不共享。</b>一个进程清了自己的缓存，另一个进程的缓存还在（停用账号后，其他请求进程最多 30 秒后才生效，B6 讲）。</li>
+  <li><b>代码在不代表会运行。</b>哪个进程跑什么，取决于启动时开了哪些宿主组件。配置错了（比如请求进程也开了领取），RFC 没有专门的启动检查拦住，要靠部署配置和评审。</li>
+  <li><b>重启不等于马上恢复。</b>崩溃后要等旧租约过期，跟随器才能被接手，大约一分钟。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 只有一个后台进程，它挂了 2 分钟。这期间：张三能登录吗？能看历史对话吗？他正在看的回答会怎样？他能发一个新问题吗？</summary>
+  <p>能登录、能看历史，这些都在请求进程里。正在看的回答停住不动（跟随器在后台进程里），DSH 那边其实还在跑。发新问题：应答通道断了，会话模块不派发新执行，页面提示「执行服务暂不可用」。</p></details>
+<details><summary>2. 同一时间，管理员点了「发布」。会怎样？</summary>
+  <p>请求进程照常受理，事件登记、建任务都在请求进程里完成（A5 第 1–3 步），任务在任务表里排队。后台进程恢复后马上领走，因为这个任务没有被任何人持有，不用等租约。</p></details>
+<details><summary>3. 后台进程崩溃后 25 秒就重启好了，最后一次续租在崩溃前 10 秒。跟随任务什么时候被接手？</summary>
+  <p>租约在最后一次续租后 60 秒到期，也就是崩溃后约 50 秒；之后下一次过期检查（每 10 秒一次）退回排队，再被领走。所以大约在崩溃后 50–60 秒，和重启快慢无关（只要重启比这快）。</p></details>
+<details><summary>4. 后台进程的 8 个 default 线程都在忙，连接也借光了。张三在页面上登录，会受影响吗？</summary>
+  <p>一般不会。请求进程有自己的线程和连接池，后台进程借光的是它自己的。除非后台进程的事务正好锁着登录要改的那一行，或者把数据库本身拖慢了。</p></details>
+<details><summary>5. 「请求进程不领任务」有没有例外？</summary>
+  <p>有。评估执行器不连数据库，它的评估任务由请求进程上的内部接口代它领取、续租。真正跑评估的是评估执行器自己。</p></details>
+</div>
+
+<p class="src">出处：0004 第 2.1 节（三个进程各做什么、评估执行器的接入方式）、第 2.4 节（以后拆服务契约不变）、第 2.5 节（连接池大小、锁等待超时 20 秒）、第 3.4 节（租约、过期检查）、第 3.7 节第 1 条、第 5.2 节（逐字增量由后台进程推给请求进程）、第 6.1 节（后台进程关闭时的处理）、第 6.2 节（跟随器从会话模块记下的 DSH 序号接着跟、补缺口）、第 6.3 节（通道中断时不派发新执行、限时提问到时变「待回答」）、第 6.4 节（线程预算）、第 10.1 节、第 10.2 节（后台进程是单点、守护进程 30 秒内重启）。<br>
+<b>示意，不是 RFC 定的</b>：所有时间、ID、会话事件的序号和类型、DSH 进程编号。<br>
+<b>我的理解，RFC 没明说</b>：④ 第 5 条「评估执行器不连库的理由」；⑤ 第 4 条「请求进程误开了领取没有专门的启动检查」（RFC 只说任何一项与清单不一致启动失败，没说宿主职责开关怎么检查）。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>数据库（全平台一个库）<small>只画这个例子用到的行和列</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">💥 在这一步之后崩</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'09:00 部署启动：请求进程、后台进程各一个。',down:[],
+  jobs:[],ev:[]});
+
+step({t:'09:00',k:['a_http','a_tool','a_stream','w_claim','w_cron','w_redo'],h:'启动：同一套代码，开的东西不同',
+  b:'两个进程从同一个后端代码包启动，都装好九个模块。请求进程启动 HTTP 服务器，注册页面 API、开放 API、tool 回调、事件流；后台进程启动领取、定时调度、事件登记表的定时重提。后台进程领到了 DSH 进程 dshp_1 的应答通道任务（长任务，每个 DSH 进程一个）。',
+  why:'看右边：后台进程这一栏没有「页面 API」，请求进程这一栏没有「领取」。代码两边都有，只是没启动。',crash:null},
+  s=>{s.jobs.push({id:'job_ans',use:'应答通道 · dshp_1',pool:'long',st:'运行中',who:'后台进程',gen:1,lease:'续租中'});});
+
+step({t:'10:00:00',k:['a_http','m01a'],at:'api',h:'张三发送一条消息',
+  b:'请求到了请求进程，一个页面请求线程处理它：会话模块受理，借一条连接，在一个事务里写入用户消息（会话事件序号 41）、发布一个事件（作用是「该开始跟随 DSH 了」，RFC 没给它起名），提交，还连接。提交后，<b>请求进程里</b>的框架监听器建出跟随任务（长任务池，串行键 dsh-follow:张三的 DSH 会话）。',
+  why:'会话模块的代码这一步在请求进程里跑。下一步，同一个模块的另一段代码会在后台进程里跑。',
+  crash:[{w:'事务提交后、建跟随任务之前，请求进程崩了',left:'用户消息和这条事件登记都在，跟随任务还没建。',next:'1 分钟后，后台进程的定时重提发现这条登记没完成，在<b>后台进程</b>里再跑一次建任务的监听器。',end:'跟随任务晚 1 分钟建出来（A5 讲过同样的情况）。'}]},
+  s=>{s.page='';s.ev.push({seq:41,ty:'用户消息',by:'请求进程（会话模块）'});s.jobs.push({id:'job_fol',use:'跟随 · 张三的会话',pool:'long',st:'排队',who:'—',gen:0,lease:'—'});});
+
+step({t:'10:00:01 → 10:00:21',k:['w_claim','w_follow','m01w','a_stream'],at:'wk',h:'后台进程领取跟随任务，事件流开始推送',
+  b:'后台进程领到跟随任务（代次 1），从会话模块读上次处理到的 DSH 序号，开始跟随 DSH。每收到一批事件，就调会话模块写入（编平台序号 42、43、44……）；模型的逐字输出用 HTTP 推给请求进程，再由请求进程推给张三的浏览器。10:00:21 续租，租约到 10:01:21。',
+  why:'这一步会话模块的代码在<b>后台进程</b>里跑：同一个模块，两个进程都在用。浏览器只连请求进程，请求进程每 0.5 秒查一次新事件推出去。',
+  crash:null},
+  s=>{Object.assign(s.jobs[1],{st:'运行中',who:'后台进程',gen:1,lease:'10:01:21'});s.jobs[0].lease='10:01:15';
+      s.ev.push({seq:42,ty:'执行开始',by:'后台进程（跟随器 → 会话模块）'},{seq:43,ty:'模型调用',by:'后台进程（跟随器 → 会话模块）'},{seq:44,ty:'tool 调用：取数',by:'后台进程（跟随器 → 会话模块）'});
+      s.page='张三看到：回答正在一个字一个字地出来…';});
+
+step({t:'10:00:30',k:[],at:'wk',h:'后台进程崩了',
+  b:'后台进程突然退出（比如内存耗尽）。跟随任务、应答通道任务在任务表里仍是「运行中」，租约分别到 10:01:21、10:01:15。<b>DSH 那边不受影响</b>，张三的执行还在 DSH 里跑，只是没人把它的事件取回来了。',
+  why:'从这一刻起，看哪些功能还在：凡是在请求进程里的都照常；凡是依赖后台进程的都停住。',
+  crash:null},
+  s=>{s.down=['wk'];s.page='张三看到：回答停在半句话，不动了。';});
+
+step({t:'10:00:40',k:['a_http','m04a'],at:'api',h:'后台进程不在的时候：哪些照常、哪些停住',
+  b:'<b>照常</b>：李四登录、看历史对话、管理员打开管理页面，这些都在请求进程里。管理员点「发布」也能受理：事件登记、建发布任务都在请求进程里完成，任务在任务表里排队。<br><b>停住</b>：张三的回答不再更新；DSH 里如果来了审批，没有应答者，一直等；应答通道断了，会话模块不派发新执行，张三再发新问题会看到「执行服务暂不可用」；发布任务排着队没人领。',
+  why:'限时提问不会一直挂着：到时（默认 30 秒）变成「待回答」，之后用户回答走另一个不需要应答通道的接口（A10 讲）。',
+  crash:[{w:'这时请求进程也崩了',left:'两个进程都不在。任务表、事件登记表里的东西都还在。',next:'守护进程把它们各自拉起来。',end:'页面打不开，直到请求进程恢复；数据都在库里，什么都不会丢。'}]},
+  s=>{s.jobs.push({id:'job_pub',use:'发布 · 客服 Agent',pool:'default',st:'排队',who:'—',gen:0,lease:'—'});s.page='李四：登录正常。张三：回答停住；再发新问题，提示「执行服务暂不可用」。';});
+
+step({t:'10:00:55',k:['w_claim','w_reap'],at:'wk',h:'守护进程把后台进程拉起来（新的执行者）',
+  b:'守护进程在 30 秒内重启了后台进程。它马上开始领任务：<b>发布任务</b>没人持有，直接领走（代次 1）开始做。<b>跟随任务和应答通道</b>的租约还没到期，任务表认为它们仍被旧进程持有，新进程不能碰。',
+  why:'重启后的进程和崩掉的那个，对任务表来说是两个不同的执行者。不等租约过期就接手，万一旧进程没真死（只是卡住），就会出现两个跟随器（④ 第 3 条）。',
+  crash:null},
+  s=>{s.down=[];Object.assign(s.jobs[2],{st:'运行中',who:'后台进程（重启后）',gen:1,lease:'10:01:55'});});
+
+step({t:'10:01:25 → 10:01:30',k:['w_reap','w_claim','w_follow','m01w','a_stream'],at:'wk',h:'租约过期：接手跟随和应答通道，补上缺的事件',
+  b:'10:01:25 过期检查发现两个租约都过了 → 退回排队 → 马上被领走（代次 2）。跟随器从会话模块读到「上次处理到」的 DSH 序号，重新跟随 DSH，发现中间缺了一段，用翻页接口补齐；会话模块把补回来的事件编上序号 45、46…… 张三的页面接着往下出字。应答通道重新连上 DSH，DSH 重发还在等的审批。',
+  why:'恢复不靠内存：跟随器的进度记在会话模块的表里（上次处理到的 DSH 序号），所以新进程能从断开的地方接着跟，事件不丢也不重（按 DSH 序号去重）。',
+  crash:null},
+  s=>{Object.assign(s.jobs[0],{st:'运行中',who:'后台进程（重启后）',gen:2,lease:'10:02:25'});Object.assign(s.jobs[1],{st:'运行中',who:'后台进程（重启后）',gen:2,lease:'10:02:30'});
+      s.ev.push({seq:45,ty:'tool 结果（补回）',by:'后台进程（跟随器补缺口）'},{seq:46,ty:'完整回答（补回）',by:'后台进程（跟随器补缺口）'});
+      s.page='张三看到：停了一分钟左右的回答接着出来了。';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m01:['M01','#22d3ee'],m04:['M04','#38bdf8']},
+  procs:{
+    api:{n:'请求进程 platform-api',s:'开 HTTP 端口；不领任务',chips:[['a_http','fw','框架 · 页面 API、开放 API','Tomcat 线程池 200'],['a_tool','fw','框架 · tool 回调核验',''],['a_stream','fw','框架 · 事件流推送','每 0.5 秒查新事件'],['m01a','m01','M01 · 受理发送','模块代码'],['m04a','m04','M04 · 受理发布','模块代码']]},
+    wk:{n:'后台进程 platform-worker',s:'不开业务端口；只留健康检查',chips:[['w_claim','fw','框架 · 执行池领取','default 8 / background 2 / long'],['w_reap','fw','框架 · 过期检查','每 10 秒'],['w_cron','fw','框架 · 定时调度',''],['w_redo','fw','框架 · 事件登记重提','每分钟'],['w_follow','fw','框架 · DSH 跟随器','长任务'],['m01w','m01','M01 · 写入远端事件','同一个模块，在这里也跑']]}},
+  cols:[['api'],'db',['wk']],
+  tables:[
+    {n:'任务表',o:'框架 · platform_jobs',cols:['ID','做什么','池','状态','持有者','代次','租约到'],
+     rows:s=>s.jobs.map(j=>[j.id,j.use,j.pool,j.st,j.who,String(j.gen),j.lease])},
+    {n:'会话事件',o:'M01 的表（只画最近几条）',cols:['序号','内容','谁写入的'],rows:s=>s.ev.slice(-4).map(e=>[String(e.seq),e.ty,e.by])}]});
+</script>
+</body>
+</html>

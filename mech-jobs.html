@@ -252,7 +252,7 @@ function mount(cfg){
     $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
     $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
     const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
-    const down=new Set(); if(boom&&cr) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    const down=new Set(st.state.down||[]); if(boom&&cr) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
     Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
     $('crash').classList.toggle('show',boom&&!!cr);
     $('crash').innerHTML=cr?cr.map(c=>`<h4>💥 ${c.w}</h4><p><b>留下了什么：</b>${c.left}</p><p><b>接下来谁接手：</b>${c.next}</p><p><b>结果：</b>${c.end}</p>`).join(''):'';
