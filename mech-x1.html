@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>综合 · 从张三提问到看到回答</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+.explain a,.crash a,.note a,.qa a,table.plain a,.pair a,ul.no a{color:#93c5fd}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#X1">← 学习清单</a>（综合 X1：前面各题都过一遍之后再看）</p>
+<h1>从张三提问到看到回答：一次提问经过的所有机制</h1>
+<p class="lead">综合题：把 0004 和 0006 的机制串在一次真实提问里。例子：张三登录后问「上个月各分行的存款余额」，Agent 取了一次数、查了一次记忆，中途张三的网络断了一下。</p>
+<p class="sub">这一页想让你讲得出三件事：每一段由哪个进程、谁的代码负责；身份是怎么一段一段传下去的；任意一段出问题时，页面上看到什么、怎么恢复。每一步都链到讲细节的那一页。
+<span class="who" style="--c:#a78bfa">框架</span> = 你的 0004；<span class="who" style="--c:#f472b6">M07</span> = 你的 0006；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#4ade80">M03</span> = 取数；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理；<span class="who" style="--c:#94a3b8">DSH</span>。</p>
+<nav class="toc"><a href="#s2">① 走一遍</a><a href="#s3">② 身份是怎么传下去的</a><a href="#s4">③ 哪一段出事，看到什么</a><a href="#s5">④ 自测</a></nav>
+
+<h2 id="s2">① 走一遍 <small>每一步的💥看「这一段出事会怎样」</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">② 身份是怎么传下去的 <small>每一段都不靠「对方自己说」</small></h2>
+<table class="plain">
+<tr><th>段</th><th>凭什么认人</th><th>认出来是谁</th><th>细节</th></tr>
+<tr><td>浏览器 → 请求进程</td><td>登录 cookie（库里存哈希）→ 身份模块查会话和账号</td><td>UserPrincipal(张三)</td><td><a href="mech-login.html">B3</a>、<a href="mech-request.html">A3</a></td></tr>
+<tr><td>请求进程里的模块之间</td><td>只读的调用上下文，入口构造，模块原样传</td><td>同上</td><td><a href="mech-request.html">A3</a></td></tr>
+<tr><td>请求进程 → 后台进程</td><td>不传身份：靠任务表和事件。跟随器只是把 DSH 的事件取回来，不以张三的身份做操作</td><td>—</td><td><a href="mech-events.html">A5</a>、<a href="mech-follow.html">A10</a></td></tr>
+<tr><td>DSH → 平台（业务 tool）</td><td>桥接插件签名 + 平台按 DSH 会话查执行凭据</td><td>张三的这一次执行</td><td><a href="mech-toolcb.html">A8</a></td></tr>
+<tr><td>平台 → 取数网关</td><td>按执行凭据里的主体取登记的 uid，不猜</td><td>uid A1001</td><td><a href="mech-gateway-id.html">B4</a></td></tr>
+<tr><td>DSH → MCP 代理</td><td>进程环境变量里的进程令牌</td><td>张三的这个进程</td><td><a href="mech-proc-token.html">B5</a></td></tr>
+</table>
+
+<h2 id="s4">③ 哪一段出事，看到什么</h2>
+<table class="plain">
+<tr><th>出事的地方</th><th>张三看到</th><th>怎么恢复</th></tr>
+<tr><td>请求进程在受理提交后、建跟随任务前崩</td><td>回答晚一点开始</td><td>后台进程每分钟重提，建出跟随任务（<a href="mech-events.html">A5</a>）</td></tr>
+<tr><td>请求进程在调 DSH 之前退出</td><td>回答迟迟不开始</td><td>会话模块的对账任务处理「已受理超过 30 秒仍未发送」的执行：按请求 ID 查 DSH，没收到才用同一个 ID 重发（<a href="mech-processes.html">A1</a>）</td></tr>
+<tr><td>后台进程崩</td><td>回答停住约一分钟</td><td>租约过期后接手，从会话模块记下的 DSH 序号接着跟、补缺口（<a href="mech-processes.html">A1</a>、<a href="mech-follow.html">A10</a>）</td></tr>
+<tr><td>tool 回调网络超时</td><td>没感觉</td><td>桥接插件用同一个键重试，返回原结果或接手重做，不重复取数（<a href="mech-toolcb.html">A8</a>）</td></tr>
+<tr><td>张三的网络断开</td><td>断开期间不更新，重连后补齐</td><td>按序号补读，逐字输出丢一段，完整消息替换（<a href="mech-stream.html">A9</a>）</td></tr>
+<tr><td>DSH 主机不可用</td><td>新提问返回「执行服务暂不可用」，历史照常</td><td>就绪检查不受影响，执行类操作 503（<a href="mech-ops.html">A11</a>）</td></tr>
+</table>
+
+<h2 id="s5">④ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 这次提问里，会话模块的代码在几个进程里跑过？各做什么？</summary>
+  <p>两个。请求进程里：受理执行、写用户消息、发事件、把消息发给 DSH。后台进程里：跟随器把 DSH 的事件交给它写入、编序号、更新状态，最后写终态。</p></details>
+<details><summary>2. Agent 取数时，取数网关拿到的 uid 是从哪一步一路传过来的？</summary>
+  <p>不是「传」过来的，是一段段重新认出来的：桥接插件不带身份；入口按 DSH 会话向会话模块查出这次执行的凭据（主体张三）；取数模块调身份模块，按这个主体查登记的 uid。</p></details>
+<details><summary>3. 跟随器以谁的身份在跑？它会不会替张三做操作？</summary>
+  <p>它是框架承载的后台任务，只负责把 DSH 里发生的事取回来交给会话模块写入，不替张三发起操作。张三的身份在 DSH 那边由执行凭据（业务 tool）和进程令牌（MCP）体现。</p></details>
+<details><summary>4. 这次提问一共产生了哪几类「要保证不丢」的东西？分别靠什么？</summary>
+  <p>用户消息和执行记录：和受理同一个事务。事件（建跟随任务、版本引用）：和业务同事务登记，提交后处理，失败每分钟重提（A5、A7）。跟随任务：任务表 + 租约（A6）。DSH 事件：跟随进度记在会话模块，按 DSH 序号幂等（A10）。浏览器看到的事件：先存后推，按序号续读（A9）。</p></details>
+</div>
+
+<p class="src">依据：前面各页（A1、A3–A11、B3–B5）及其出处；0012（受理、对账任务、执行状态）、0002 第 3.2 节（send 的 requestId 幂等）。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、序号、问题和回答的内容、DSH 序号。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三已经登录（B3），浏览器里有登录 cookie。',
+  id:[],ev:[],jobs:[]});
+
+step({t:'10:00:00.000',k:['p','m07r','m01'],at:'api',h:'发送：入口认人，会话模块受理',
+  b:'请求进入请求进程（<a href="mech-request.html">A3</a>）：cookie → 身份模块查出张三，防跨站检查，按契约校验；会话模块判权（有对话能力、会话是他的），然后<b>一个事务</b>里：解析这次用的 Agent 版本、写执行记录和执行凭据、写用户消息（序号 41）、登记「版本引用 +1」事件（<a href="mech-special-events.html">A7</a>）。提交。',
+  why:'受理只做「可靠地记下来」，真正的执行在 DSH 里（<a href="mech-events.html">A5</a>）。',
+  crash:[{w:'提交前请求进程崩',left:'整个事务回滚，什么都没留下。',next:'页面报错，张三再发一次（带同一个幂等键也安全，<a href="mech-idem.html">A4</a>）。',end:'要么记下了，要么什么都没发生。'}]},
+  s=>{s.page='';s.id.push({seg:'浏览器 → 请求进程',how:'登录 cookie',who:'UserPrincipal(张三)'});s.ev.push({seq:41,t:'用户消息',by:'请求进程 · 会话模块'});});
+
+step({t:'10:00:00.030',k:['m01','dshsend'],at:['api','dsh'],h:'把消息发给 DSH（先落记录再外呼）',
+  b:'会话模块经 DSH 适配层把消息发给张三的 DSH 进程，带平台生成的请求 ID（受理时已经记下）。DSH 按请求 ID 幂等，入队即返回，执行在 DSH 里异步进行。',
+  why:'请求 ID 先落库再发，结果不明时只按它对账、不盲目重发（<a href="mech-jobs.html">A6</a> ⑤ 第 6 条）。',
+  crash:[{w:'请求进程在调 DSH 之前退出',left:'执行是「已受理」，还没发出去。',next:'会话模块的对账任务发现「已受理超过 30 秒仍未发送」，按请求 ID 查 DSH，没收到才用同一个 ID 重发。',end:'不会发两遍。'}]},
+  s=>{});
+
+step({t:'10:00:00.050 → 10:00:01',k:['lis','claim','fol'],at:['api','wk'],h:'建跟随任务，后台进程领走开始跟随',
+  b:'会话模块在执行开始时发布一个事件（具体时机由会话模块的 0012 定），提交后由框架监听器建出跟随任务（长任务池，<a href="mech-events.html">A5</a>）。后台进程领走（<a href="mech-jobs.html">A6</a>），从会话模块读上次处理到的 DSH 序号，开始跟随 DSH（<a href="mech-follow.html">A10</a>）。',
+  why:'请求进程和后台进程之间不传身份，只靠任务表和事件交流（② 第 3 行）。',
+  crash:[{w:'后台进程崩',left:'跟随任务「运行中」，没人续租。',next:'租约过期后被接手，从记下的 DSH 序号接着跟。',end:'张三的回答停住一分钟左右（<a href="mech-processes.html">A1</a>）。'}]},
+  s=>{s.jobs.push({j:'跟随 · 张三的 DSH 会话',st:'运行中',who:'后台进程'});s.ev.push({seq:42,t:'执行开始',by:'后台进程 · 跟随器 → 会话模块'});});
+
+step({t:'10:00:02',k:['agent','plug','v','m03','m07g'],at:['dsh','api'],h:'Agent 调「取数」：一段段重新认人',
+  b:'Agent 调取数 tool，桥接插件签名回调平台。入口验签、防重放，按 DSH 会话向会话模块取执行凭据（主体张三、这次执行、允许的 tool、限额），构造可信执行上下文交给取数模块（<a href="mech-toolcb.html">A8</a>）。取数模块按口径许可检查后，调身份模块取取数身份：按执行凭据里的主体返回张三登记的 uid（<a href="mech-gateway-id.html">B4</a>），再调取数网关。',
+  why:'身份不是从请求里「带」过来的，是平台按 DSH 会话自己查出来的。',
+  crash:[{w:'回调网络超时，桥接插件重试',left:'回调记录表里这个键已有记录。',next:'已完成就返回原结果；处理中返回「可重试」；超过 60 秒可接手。',end:'不会取两次数（<a href="mech-toolcb.html">A8</a>）。'}]},
+  s=>{s.id.push({seg:'DSH → 平台（业务 tool）',how:'签名 + 按 DSH 会话查执行凭据',who:'张三的这次执行'},{seg:'平台 → 取数网关',how:'按主体取登记的 uid',who:'uid A1001'});s.ev.push({seq:43,t:'tool 调用：取数',by:'后台进程 · 跟随器'},{seq:44,t:'tool 结果',by:'后台进程 · 跟随器'});});
+
+step({t:'10:00:04',k:['agent','m05','m07v'],at:['dsh','api'],h:'Agent 查记忆：MCP 走进程令牌',
+  b:'Agent 调 mem0，请求直接发给 MCP 代理，带着张三 DSH 进程环境变量里的进程令牌。代理向身份模块校验：种类「用户」、主体张三 → 按对象授权放行，并把张三的身份传给 mem0（<a href="mech-proc-token.html">B5</a>）。',
+  why:'MCP 不经桥接插件，只能精确到「张三的这个进程」。',crash:null},
+  s=>{s.id.push({seg:'DSH → MCP 代理',how:'进程令牌',who:'张三的这个进程'});});
+
+step({t:'10:00:05 → 10:00:15',k:['fol','push','sse'],at:['wk','api','br'],h:'模型逐字输出；张三的网断了一下',
+  b:'跟随器把逐字输出按 100 毫秒一批推给请求进程，请求进程推给浏览器（不带序号、不存库）。10:00:10 张三的网络断了 5 秒；这期间跟随器照常写入事件 45–48（包括完整回答）。重连时浏览器带着最后的序号 44，请求进程补发 45–48，完整回答替换了显示一半的文字（<a href="mech-stream.html">A9</a>）。',
+  why:'先存后推、按序号续读：不重、不漏、不乱序。',
+  crash:[{w:'不是张三断网，而是请求进程重启',left:'事件都在库里；逐字输出丢一段。',next:'浏览器自动重连到请求进程，带最后序号补读。',end:'完整消息到了以后显示恢复。'}]},
+  s=>{s.ev.push({seq:'45–47',t:'模型输出等',by:'后台进程 · 跟随器'},{seq:48,t:'完整回答',by:'后台进程 · 跟随器'});s.page='张三看到：完整的回答。';});
+
+step({t:'10:00:20',k:['fol','m01w'],at:'wk',h:'执行结束：跟随任务结束，版本引用 −1',
+  b:'跟随器看到执行进入终态、没有待处理事项，交给会话模块写终态：同一个事务里登记「版本引用 −1」（<a href="mech-special-events.html">A7</a>）。跟随任务成功结束（<a href="mech-follow.html">A10</a>）。',
+  why:'从发送到这里，张三的请求只在最开始用过一次 cookie，之后每一段都由平台自己认人（② ）。',crash:null},
+  s=>{s.jobs[0].st='成功';s.jobs[0].who='—';s.ev.push({seq:49,t:'执行结束',by:'后台进程 · 跟随器 → 会话模块'});});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6'],m01:['M01','#22d3ee'],m03:['M03','#4ade80'],m05:['M05','#fb923c'],dsh:['DSH','#94a3b8']},
+  procs:{
+    br:{n:'张三的浏览器',s:'',chips:[['sse','fw','事件流','']]},
+    api:{n:'请求进程',s:'',chips:[['p','fw','框架 · 请求管道','A3'],['m07r','m07','M07 · cookie → 主体','B3'],['m01','m01','M01 · 受理、发给 DSH',''],['lis','fw','框架 · 建任务监听器','A5'],['v','fw','框架 · tool 回调核验','A8'],['m03','m03','M03 · 取数',''],['m07g','m07','M07 · 取数身份','B4'],['m05','m05','M05 · MCP 代理',''],['m07v','m07','M07 · 令牌校验','B5'],['push','fw','框架 · 推送','A9']]},
+    wk:{n:'后台进程',s:'',chips:[['claim','fw','框架 · 领取','A6'],['fol','fw','框架 · 跟随器','A10'],['m01w','m01','M01 · 写事件、写终态','']]},
+    dsh:{n:'张三的 DSH 进程',s:'',chips:[['dshsend','dsh','接收消息',''],['agent','dsh','Agent',''],['plug','dsh','桥接插件','']]}},
+  cols:[['br','api'],'db',['wk','dsh']],
+  dbTitle:'身份链 + 库里的事件和任务',dbSub:'',
+  tables:[
+    {n:'身份是怎么一段段认出来的',o:'',cols:['段','凭什么','认出来是谁'],rows:s=>s.id.map(r=>[r.seg,r.how,r.who])},
+    {n:'会话事件',o:'M01 的表',cols:['序号','内容','谁写的'],rows:s=>s.ev.map(r=>[String(r.seq),r.t,r.by])},
+    {n:'任务表',o:'框架 · platform_jobs',cols:['任务','状态','持有者'],rows:s=>s.jobs.map(r=>[r.j,r.st,r.who])}]});
+</script>
+</body>
+</html>

@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>综合 · 李四被停用时执行正在跑，后台进程又刚好重启</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+.explain a,.crash a,.note a,.qa a,table.plain a,.pair a,ul.no a{color:#93c5fd}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#X2">← 学习清单</a>（综合 X2：前面各题都过一遍之后再看）</p>
+<h1>李四被停用时，他的执行正在跑，后台进程又刚好重启</h1>
+<p class="lead">综合题：停用（0006）和故障恢复（0004）同时发生。例子：李四的执行在 DSH 里跑着，后台进程崩了；20 秒后管理员停用了李四；后台进程重启后接手了跟随任务。</p>
+<p class="sub">这一页想让你讲得出：哪些东西立刻失效、哪些最多 30 秒、哪些要等别的模块回收；后台进程重启后接手的任务，会不会替一个已经停用的人继续做事。
+<span class="who" style="--c:#a78bfa">框架</span> = 你的 0004；<span class="who" style="--c:#f472b6">M07</span> = 你的 0006；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理；<span class="who" style="--c:#94a3b8">DSH</span>。</p>
+<nav class="toc"><a href="#s2">① 走一遍</a><a href="#s3">② 一张总表</a><a href="#s4">③ 自测</a></nav>
+
+<h2 id="s2">① 走一遍</h2>
+<div id="walk"></div>
+
+<h2 id="s3">② 一张总表 <small>李四被停用、后台进程重启之后</small></h2>
+<table class="plain">
+<tr><th>什么</th><th>结果</th><th>靠什么</th><th>细节</th></tr>
+<tr><td>李四登录、页面操作</td><td>立刻不行（多请求进程时认证最多晚 30 秒，但判权立刻拒）</td><td>同事务作废会话；判权不缓存</td><td><a href="mech-disable.html">B6</a>、<a href="mech-login.html">B3</a></td></tr>
+<tr><td>CRM 替李四调用</td><td>立刻不行</td><td>resolveAppCall 查实际用户已停用</td><td><a href="mech-eval-app.html">B7</a></td></tr>
+<tr><td>他执行里的取数</td><td>立刻不行</td><td>取数身份每次查库，已停用返回「不允许」</td><td><a href="mech-gateway-id.html">B4</a></td></tr>
+<tr><td>他执行里的 MCP 调用</td><td>立刻不行（其他进程上的代理最多 30 秒）</td><td>同事务作废进程令牌；代理清缓存；校验时查状态</td><td><a href="mech-proc-token.html">B5</a></td></tr>
+<tr><td>他在 DSH 里的执行本身</td><td>不会因停用而停</td><td>会话模块按规则回收（0006 Q6，问嘉敏）；等待用户超过上限（默认 7 天）自动停止</td><td><a href="mech-disable.html">B6</a></td></tr>
+<tr><td>跟随任务</td><td>租约过期后被接手，继续把事件取回来</td><td>任务表租约；跟随进度在会话模块</td><td><a href="mech-processes.html">A1</a>、<a href="mech-follow.html">A10</a></td></tr>
+<tr><td>后台进程不在的那段时间</td><td>回答停住、审批等待、不派发新执行</td><td>后台进程是执行链路的单点</td><td><a href="mech-processes.html">A1</a></td></tr>
+</table>
+
+<h2 id="s4">③ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 后台进程重启后接手了李四的跟随任务。这算不算「替一个已停用的人继续做事」？</summary>
+  <p>不算。跟随器只是把 DSH 里已经在发生的事取回来交给会话模块写入，不以李四的身份发起任何操作。真正「以李四身份做事」的两条路（业务 tool、MCP）都已经被拒了。执行本身要不要停，是会话模块的规则（Q6）。</p></details>
+<details><summary>2. 停用发生时后台进程不在，变更通知会不会丢？</summary>
+  <p>不会影响结果。通知登记在事件登记表里，提交后在<b>请求进程</b>（管理员的请求所在的进程）里触发，清的是请求进程里的认证缓存和令牌校验缓存，和后台进程无关。</p></details>
+<details><summary>3. 李四的执行里 Agent 问了一个问题，会怎样？</summary>
+  <p>李四登录不了，答不了。限时提问 30 秒后变成「待回答」，执行进入等待用户；等待超过上限（默认 7 天），会话模块自动停止这个执行并释放版本引用。在那之前是否提前停，由会话模块定（Q6）。</p></details>
+<details><summary>4. 如果管理员很快又启用了李四，会怎样？</summary>
+  <p>他能重新登录（旧会话不会恢复）。但他旧的 DSH 进程如果还没回收，进程令牌已经作废，MCP 调用会失败，直到进程重新拉起、签发新令牌（0006 第 10.2 节）。</p></details>
+</div>
+
+<p class="src">依据：A1、A6、A10、B4–B7 各页及其出处；0006 第 10.2 节、第 13 节 Q6；0012（等待上限 7 天后自动停止并释放引用）。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、事件发生的先后安排。<b>待定</b>：停用后会话模块是否立即停止执行、回收进程（0006 Q6）。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'李四的执行 exe_9 在 DSH 里跑着。部署：一个请求进程、一个后台进程。',
+  user:[{u:'李四',st:'启用'}],tok:[{k:'李四的进程令牌',st:'有效'}],
+  jobs:[{j:'跟随 · 李四的会话',st:'运行中',who:'后台进程 · 代次 1',lease:'10:00:50'}],exe:[{e:'exe_9',st:'运行中'}],res:[]});
+
+step({t:'10:00:00',k:[],at:'wk',h:'后台进程崩了',
+  b:'后台进程突然退出。跟随任务还是「运行中」，租约到 10:00:50（最后一次续租在 09:59:50）。李四的执行在 DSH 里照常跑，只是没人把事件取回来；页面上回答停住（<a href="mech-processes.html">A1</a>）。',
+  why:'',crash:null},
+  s=>{s.down=['wk'];s.page='';});
+
+step({t:'10:00:20',k:['adm','cache'],at:'api',h:'管理员停用李四',
+  b:'请求进程里，身份模块一个事务：账号停用、作废全部会话、作废全部进程令牌、登记变更通知。提交后，<b>请求进程里</b>的入口和 MCP 代理立刻清掉李四的缓存（<a href="mech-disable.html">B6</a>）。',
+  why:'后台进程不在，不影响这一步：通知在提交它的请求进程里处理。',crash:null},
+  s=>{s.user[0].st='停用';s.tok[0].st='已作废';s.res.push({w:'李四登录、页面操作',r:'立刻不行'});});
+
+step({t:'10:00:30',k:['agent','v','m07g','m05'],at:['dsh','api'],h:'李四的执行还在跑：以他身份做事的两条路都断了',
+  b:'DSH 里，Agent 调「取数」：回调到请求进程，入口能取到执行凭据（执行还是活动的），但取数时身份模块查到李四已停用 → 「不允许」，取数被拒（<a href="mech-gateway-id.html">B4</a>）。Agent 调 mem0：进程令牌已作废 → 代理校验失败（<a href="mech-proc-token.html">B5</a>）。',
+  why:'执行本身没停：停不停、什么时候回收进程，由会话模块决定（0006 Q6）。',crash:null},
+  s=>{s.res.push({w:'执行里的取数',r:'立刻不行（不允许）'},{w:'执行里的 MCP 调用',r:'立刻不行（令牌已作废）'});});
+
+step({t:'10:00:40',k:['claim'],at:'wk',h:'后台进程重启：跟随任务的租约还没过期',
+  b:'守护进程把后台进程拉起来（新的执行者）。跟随任务的租约到 10:00:50 才过期，新进程现在不能碰它（<a href="mech-processes.html">A1</a> ④ 第 3 条）。',
+  why:'',crash:null},
+  s=>{s.down=[];});
+
+step({t:'10:01:00',k:['reap','claim','fol','m01w'],at:'wk',h:'接手跟随任务：继续取事件，但不替李四做事',
+  b:'过期检查把跟随任务退回排队，马上被领走（代次 2）。跟随器从会话模块记下的 DSH 序号接着跟，补上缺的事件：其中有两条被拒的 tool 结果（取数「不允许」、mem0 失败）。会话模块照常写入。',
+  why:'跟随器只是「把 DSH 里发生的事取回来」，不以李四的身份发起任何操作（③ 第 1 题）。',crash:null},
+  s=>{s.jobs[0].st='运行中';s.jobs[0].who='后台进程（重启后）· 代次 2';s.jobs[0].lease='10:02:00';s.res.push({w:'跟随任务',r:'被接手，继续取回事件'});});
+
+step({t:'10:01:30 之后',k:['agent','m01w'],at:['dsh','wk'],h:'执行最后怎么收场',
+  b:'Agent 拿不到数据，可能直接结束这一轮（跟随器看到终态 → 跟随任务结束 → 版本引用 −1），也可能问李四一个问题：李四登录不了，限时提问 30 秒后变「待回答」，执行进入等待用户。等待超过上限（默认 7 天），会话模块自动停止它并释放版本引用。会话模块是否在停用时就提前停掉、回收进程，是 0006 Q6 待定的事。',
+  why:'',crash:null},
+  s=>{s.exe[0].st='结束，或等待用户（最多 7 天后自动停止）';s.res.push({w:'执行本身',r:'不因停用而停（Q6 待定）'});});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6'],m01:['M01','#22d3ee'],m05:['M05','#fb923c'],dsh:['DSH','#94a3b8']},
+  procs:{
+    api:{n:'请求进程',s:'',chips:[['adm','m07','M07 · 停用（一个事务）',''],['cache','fw','框架 · 清认证缓存','订阅变更通知'],['v','fw','框架 · tool 回调核验',''],['m07g','m07','M07 · 取数身份','每次查库'],['m05','m05','M05 · MCP 代理','']]},
+    dsh:{n:'李四的 DSH 进程',s:'',chips:[['agent','dsh','Agent','']]},
+    wk:{n:'后台进程',s:'',chips:[['reap','fw','框架 · 过期检查',''],['claim','fw','框架 · 领取',''],['fol','fw','框架 · 跟随器',''],['m01w','m01','M01 · 写入事件','']]}},
+  cols:[['api','dsh'],'db',['wk']],
+  tables:[
+    {n:'账号',o:'M07',cols:['人','状态'],rows:s=>s.user.map(r=>[r.u,r.st])},
+    {n:'进程令牌',o:'M07',cols:['令牌','状态'],rows:s=>s.tok.map(r=>[r.k,r.st])},
+    {n:'任务表',o:'框架 · platform_jobs',cols:['任务','状态','持有者','租约到'],rows:s=>s.jobs.map(r=>[r.j,r.st,r.who,r.lease])},
+    {n:'执行',o:'M01',cols:['执行','状态'],rows:s=>s.exe.map(r=>[r.e,r.st])},
+    {n:'结果',o:'',cols:['什么','结果'],rows:s=>s.res.map(r=>[r.w,r.r])}]});
+</script>
+</body>
+</html>
