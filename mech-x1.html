@@ -95,7 +95,7 @@ table.plain td{color:#d6dee9}
 .note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
 .note p{margin:6px 0}
 .explain a,.crash a,.note a,.qa a,table.plain a,.pair a,ul.no a{color:#93c5fd}
-/* 新排版 wide（先只用在 A7）：左边窄栏步骤；右边上方讲解横跨、粘在顶部；按钮固定在讲解左上角 */
+/* 走一遍排版（11-17 定）：左边窄栏步骤；右边上方讲解横跨、粘在顶部；按钮固定在讲解左上角 */
 .walk.wide{grid-template-columns:210px 1fr}
 .walk.wide .steps{margin-top:0;border-top:0;padding-top:0}
 .wide .main{min-width:0}
@@ -291,11 +291,11 @@ function mount(cfg){
   const procBox=id=>{const p=procs[id];
     return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
       p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
-  // 布局：左边一栏（粘在屏幕上）= 讲解 + 上一步/下一步 + 崩溃 + 步骤列表；右边 = 进程（竖排一列）+ 数据库
+  // 布局：左边窄栏 = 步骤列表；右边上方 = 讲解（横跨、粘在屏幕顶部；上一步/下一步固定在左上角，崩溃按钮在最右，没有时只隐藏不挪位），下方 = 进程 + 数据库
   // 组件多（超过 10 个）时进程分两列，否则竖排一列
   const groups=cols.filter(c=>c!=='db'), nChips=groups.flat().reduce((n,id)=>n+procs[id].chips.length,0);
   const pcols=nChips>10&&groups.length>1?[groups[0],groups.slice(1).flat()]:[groups.flat()];
-  if(cfg.wide) $('walk').innerHTML=`<div class="walk wide"><aside class="side"><div class="steps" id="steps"></div></aside><div class="main">
+  $('walk').innerHTML=`<div class="walk wide"><aside class="side"><div class="steps" id="steps"></div></aside><div class="main">
     <div class="exbox"><div class="explain"><div class="exbar">
       <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button></div><div class="t" id="exT"></div>
       <button class="boom" id="boom">${boomLabel}</button></div>
@@ -304,15 +304,6 @@ function mount(cfg){
       ${pcols.map(c=>`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
       <div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>
     </div></div></div>`;
-  else $('walk').innerHTML=`<div class="walk"><aside class="side">
-    <div class="explain" id="explain"></div>
-    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
-    <div class="crash" id="crash"></div>
-    <div class="steps" id="steps"></div></aside>
-    <div class="stage" style="grid-template-columns:${pcols.map(()=>'minmax(170px,220px)').join(' ')} minmax(0,1fr)"><div class="page" id="page"></div>
-      ${pcols.map(c=>`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
-      <div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>
-    </div></div>`;
   let i=0,boom=false;
   function render(){
     const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
@@ -328,9 +319,9 @@ function mount(cfg){
     const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
     const at=[].concat(st.at||[]);
     const meta=`第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}`, body=`<h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
-    if(cfg.wide){ $('exT').innerHTML=meta; $('explain').innerHTML=body; } else $('explain').innerHTML=`<div class="t">${meta}</div>`+body;
+    $('exT').innerHTML=meta; $('explain').innerHTML=body;
     $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
-    const cr=st.crash; if(cfg.wide) $('boom').style.visibility=cr?'':'hidden'; else $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const cr=st.crash; $('boom').style.visibility=cr?'':'hidden'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
     const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
     Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
     $('crash').classList.toggle('show',boom&&!!cr);
