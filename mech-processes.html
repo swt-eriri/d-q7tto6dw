@@ -240,8 +240,8 @@ function mount(cfg){
     const at=[].concat(st.at||[]);
     $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
     $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
-    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').classList.toggle('on',boom&&!!cr);
-    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
     Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
     $('crash').classList.toggle('show',boom&&!!cr);
     $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
@@ -314,7 +314,7 @@ mount({
   tables:[
     {n:'任务表',o:'框架 · platform_jobs',cols:['ID','做什么','池','状态','持有者','代次','租约到'],
      rows:s=>s.jobs.map(j=>[j.id,j.use,j.pool,j.st,j.who,String(j.gen),j.lease])},
-    {n:'会话事件',o:'M01 的表（只画最近几条）',cols:['序号','内容','谁写入的'],rows:s=>s.ev.slice(-4).map(e=>[String(e.seq),e.ty,e.by])}]});
+    {n:'会话事件',o:'M01 的表',cols:['序号','内容','谁写入的'],rows:s=>s.ev.map(e=>[String(e.seq),e.ty,e.by])}]});
 </script>
 </body>
 </html>

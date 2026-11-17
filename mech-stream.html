@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 浏览器断线后怎么接着看</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#A9">← 学习清单</a>（第 A9 题）</p>
+<h1>浏览器断线后怎么接着看：不重、不漏、不乱序</h1>
+<p class="lead">机制：事件流与断线续读（后端框架 0004 第 5 节）。例子：张三正在看 Agent 的回答，网断了 10 秒又连上。</p>
+<p class="sub">这一页想让你讲得出：浏览器靠什么知道自己看到哪了；序号为什么要在锁下分配；逐字输出丢了怎么办；新事件是怎么从后台进程到浏览器的。
+<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）：拥有这些事件，负责编号和存储。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍（可以让它出错）</a><a href="#s3">③ 为什么这样做</a><a href="#s4">④ 部署要求和退路</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>平台序号 ≠ DSH 序号</h3><dl>
+    <dt>平台序号</dt><dd>会话模块给每个会话的事件编的号：从 1 开始，一条一号，<b>没有空洞</b>。浏览器只认它。</dd>
+    <dt>DSH 序号</dt><dd>DSH 自己的事件编号，只在跟随器内部用来去重、补缺口。浏览器看不到。</dd></dl>
+    <div class="eg">一个会话的事件不只来自 DSH：用户消息、待决定事项、状态变化是会话模块自己写的，也占平台序号。</div></div>
+  <div class="pair"><h3>持久事件 ≠ 逐字输出</h3><dl>
+    <dt>持久事件</dt><dd>先存库再推送，有序号，断线后能补。比如完整的一条回答、一次 tool 调用。</dd>
+    <dt>逐字输出</dt><dd>模型一个字一个字吐出来的增量，<b>只推送、不存库、没有序号</b>，丢了就丢了。</dd></dl>
+    <div class="eg">一条回答写完后，完整消息会作为持久事件存库，占一个序号，替换掉已经显示的逐字文字。</div></div>
+  <div class="pair"><h3>补读 ≠ 实时推送</h3><dl>
+    <dt>补读</dt><dd>连上时，先从库里读出「序号大于我已经看到的」所有事件，按顺序发过去。</dd>
+    <dt>实时推送</dt><dd>补完后转入实时：请求进程每 0.5 秒查一次有没有新事件，有就读出来推。</dd></dl>
+    <div class="eg">浏览器不用知道这两段的区别，它只会收到连续的序号。</div></div>
+  <div class="pair"><h3>after 参数 ≠ Last-Event-ID</h3><dl>
+    <dt>after</dt><dd>首次连接时放在网址里：<code>…/events?after=41</code>。浏览器自带的事件流对象首连时设不了请求头。</dd>
+    <dt>Last-Event-ID</dt><dd>自动重连时浏览器自己带上的请求头，值是最后收到的事件 ID（就是序号）。</dd></dl>
+    <div class="eg">两个都有时取较大的。</div></div>
+</div>
+<details class="basics"><summary>用到的两个基础概念（不熟就点开）</summary>
+  <p><b>SSE（Server-Sent Events）</b>：浏览器和服务器之间一条一直开着的 HTTP 连接，服务器可以随时往下推消息。每条消息可以带一个 id；连接断了，浏览器会自动重连，并在请求头里带上最后收到的 id。</p>
+  <p><b>行锁下分配序号</b>：写事件的事务先锁住会话这一行（<code>SELECT … FOR UPDATE</code>），在它的计数器上加一当作序号，写事件，提交。另一个写入方要等锁释放才能拿下一个号，所以提交的顺序就是序号的顺序。</p>
+</details>
+
+<h2 id="s2">② 走一遍 <small>有 💥 按钮的步骤可以看「如果这里出问题」</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 为什么不直接用 DSH 的序号续读？</summary>
+  <p class="if">DSH 没有「按序号往后读」的接口；而且浏览器不能直接接触 DSH。</p>
+  <p class="if">再者，一个会话的事件不全来自 DSH，用户消息、待决定事项是平台自己写的，DSH 的序号覆盖不了它们。</p>
+  <p>所以由拥有这些事件的会话模块自己编号、自己存，浏览器只认平台序号。</p></details>
+<details><summary>2. 为什么序号必须在会话行的锁下分配？（第 2 步）</summary>
+  <p>一个会话有多个写入方：后台进程里的跟随器写 DSH 事件，请求进程里的会话模块写用户消息、待决定事项。</p>
+  <p class="if">不锁：A 拿到 57、B 拿到 58，B 先提交。推送线程读到 58 推出去，浏览器把「看到哪了」记成 58；57 稍后提交，但浏览器以后只要「大于 58」的，57 永远补不回来。</p>
+  <p>锁住会话行再加一：拿到 57 的事务没提交前，别人拿不到 58，提交顺序等于序号顺序，浏览器不会先收到 58 再出现 57。</p></details>
+<details><summary>3. 为什么逐字输出不存库？</summary>
+  <p class="if">存库：一条回答几百个字，每个增量写一行，写入量放大几十上百倍。</p>
+  <p>逐字输出只影响「显示得快不快」，完整消息落库后就能完全恢复。丢一段增量，用户最多看到文字跳了一下。</p></details>
+<details><summary>4. 为什么持久事件靠每 0.5 秒查一次，不用数据库通知？</summary>
+  <p class="if">原设计用 PostgreSQL 的 LISTEN/NOTIFY，换成 MySQL 后没有对应的机制。</p>
+  <p>每个请求进程一个线程，每 0.5 秒批量查一次「本进程正在推的这些流，最大序号变了没有」（一批最多 500 个流），对数据库几乎没有负担。本进程自己写的事件提交后直接唤醒推送，不用等这 0.5 秒。</p></details>
+<details><summary>5. 逐字输出为什么由后台进程推给请求进程，不让请求进程自己去跟 DSH？</summary>
+  <p class="if">请求进程自己跟 DSH：DSH 连接数翻倍，事件规范化要在两个进程各做一遍。</p>
+  <p>跟随器已经在后台进程里收着 DSH 事件，顺手把增量按 100 毫秒合并，用 HTTP 发到请求进程的内部接口就行。发送失败直接丢弃。</p></details>
+<details><summary>6. 为什么要 15 秒一次心跳、30 分钟主动断开？</summary>
+  <p class="if">没有心跳：反向代理、网关看到连接长时间没数据，会以为它死了把它掐掉。</p>
+  <p class="if">永不断开：连接一直挂在某个请求进程上，发版重启或要换实例时没法平滑迁走。</p>
+  <p>30 分钟主动断开，浏览器带最新的 ID 自动重连，正好走一遍断线续读，用户感觉不到。</p></details>
+</div>
+
+<h2 id="s4">④ 部署要求和退路</h2>
+<div class="note">
+  <p><b>要求</b>：反向代理和网关对事件流路径<b>关闭响应缓冲</b>（否则推送的消息被攒着不发），空闲超时<b>大于心跳间隔 15 秒</b>。行内网关是否支持还没确认（0004 Q8），部署前要确认。</p>
+  <p><b>退路</b>：网关不支持长连接时，浏览器每秒调一次补读接口，回答在完成后整段显示（没有逐字效果）。</p>
+  <p><b>刷新页面</b>时，浏览器先取资源当前状态，再接事件流。执行的真实状态以会话模块为准：跟随任务还在就接上；已结束按结果显示；跟随任务异常退出、DSH 那边也查不清，显示「待核实」并禁止盲目重试。</p>
+</div>
+
+<h2 id="s5">⑤ 它不保证什么</h2>
+<ul class="no">
+  <li><b>逐字输出可能丢。</b>请求进程重启、网络断开、内部推送失败都会丢一段，完整消息到了以后恢复。</li>
+  <li><b>持久事件最多晚 0.5 秒</b>（别的进程写的；本进程写的立刻推）。</li>
+  <li><b>续读只依赖序号。</b>如果有人绕过「锁会话行再加一」直接写事件，序号顺序和提交顺序就可能不一致，浏览器会漏事件，而且不会报错。所以会话模块里所有写事件的地方都要走同一个写法。</li>
+  <li><b>不保证网关配合。</b>网关缓冲响应或空闲超时太短，事件流就不能用，只能退回每秒补读。</li>
+  <li><b>不负责 DSH 那一侧。</b>DSH 事件的游标、补缺口由跟随器负责（A10）；这里只管平台序号之后的部分。</li>
+</ul>
+
+<h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 张三断线时最后收到的是 44，重连时库里已经到 57。他会收到什么，顺序怎样？</summary>
+  <p>先补发 45 到 57，按序号升序、不重复、不遗漏；然后转入实时推送。断线期间的逐字输出不补，正在写的那条回答会在完整消息到达时整段替换。</p></details>
+<details><summary>2. 跟随器正在写 DSH 事件，同一时刻张三在请求进程里回答了一个待决定的问题。两条事件的序号谁先谁后？</summary>
+  <p>谁先锁住会话行谁先拿号。后到的要等先到的提交才能拿下一个号，所以提交顺序一定等于序号顺序，浏览器看到的顺序和库里一致。</p></details>
+<details><summary>3. 部署了两个请求进程，张三连在 B 上，跟随器写的事件怎么到他那里？逐字输出呢？</summary>
+  <p>持久事件：B 每 0.5 秒查一次它在推的流，看到最大序号变了就读出来推。逐字输出：跟随器发给配置里列出的每个请求进程，各自只推给自己连着的浏览器，所以 B 也能收到。</p></details>
+<details><summary>4. 浏览器带 after=80，但这个会话最大序号只有 57，会怎样？</summary>
+  <p>返回 400（common.bad-request）。会话已经被清理的，返回 404。</p></details>
+<details><summary>5. 请求进程正在推逐字输出时重启了。张三会看到什么？</summary>
+  <p>连接断开，浏览器自动重连到（重启后的或另一个）请求进程，带着最后的序号补读。这期间的逐字输出丢了；那条回答写完后，完整消息作为持久事件补上，替换掉显示了一半的文字。</p></details>
+</div>
+
+<p class="src">出处：0004 第 5.1 节（平台序号、行锁下分配、先存后推、增量不入库）、第 5.2 节（流程、0.5 秒批量轮询、100 毫秒合并、发给每个请求进程、心跳 15 秒、30 分钟断开、after 与 Last-Event-ID、部署要求与退路）、第 5.3 节（刷新与对账）、第 5.4 节（事件类型、续读规则、400 与 404）、第 10.1–10.2 节。<br>
+<b>示意，不是 RFC 定的</b>：时间、序号、事件内容、回答文字。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'张三正在看一条回答，浏览器已经收到第 41 条事件。',
+  sess:[{id:'ses_1',last:41}],ev:[{seq:41,ty:'tool 调用：取数',by:'跟随器'}],br:[{k:'最后收到的序号',v:'41'},{k:'屏幕上',v:'（等待回答）'}]});
+
+step({t:'10:00:00',k:[],h:'开始之前',
+  b:'张三的浏览器和请求进程之间开着一条事件流连接（SSE），已经收到第 41 条。会话 ses_1 这一行上有个计数器，现在是 41。',
+  why:'下面盯住三个数：会话行上的计数器、库里的事件、浏览器「最后收到的序号」。',crash:null});
+
+step({t:'10:00:01',k:['w_follow','m01w','a_poll'],at:['wk','api'],h:'跟随器写入一条事件，请求进程推给浏览器',
+  b:'后台进程的跟随器从 DSH 收到「tool 结果」，交给会话模块写入：开事务，<b>锁住会话行</b>，计数器 41→42，写入第 42 条，提交。请求进程的推送线程每 0.5 秒查一次「最大序号变了没有」，看到 42，读出 <code>序号 &gt; 41</code> 的事件推出去：<code>id: 42</code>。',
+  why:'先存后推：事件落库之后才推给浏览器，所以浏览器收到的任何一条，库里一定有。',
+  crash:[{w:'推送前请求进程重启',left:'第 42 条已经在库里。',next:'浏览器自动重连，带着 Last-Event-ID: 41。',end:'补读时拿到 42，不会丢。'}]},
+  s=>{s.sess[0].last=42;s.ev.push({seq:42,ty:'tool 结果',by:'跟随器（后台进程）'});s.br[0].v='42';});
+
+step({t:'10:00:02',k:['m01a','m01w'],at:['api','wk'],h:'两个写入方同时写：锁保证顺序',
+  b:'同一时刻：张三在页面上回答了一个待决定的问题（请求进程里的会话模块要写「已回答」），跟随器也要写「模型调用」。两边都去锁会话行：请求进程先拿到锁，计数器 42→43，写第 43 条、提交、释放锁；跟随器这才拿到锁，计数器 43→44，写第 44 条。',
+  why:'提交顺序等于序号顺序（③ 第 2 条）。点下面的按钮看：如果不锁会怎样。',boomText:'💥 如果不锁会怎样',stripe:false,
+  crash:[{w:'如果不锁会话行，各自读计数器再加一',left:'可能两边都读到 42，都想用 43（撞号）；或者 A 拿 43、B 拿 44，B 先提交。',next:'推送线程读到 44 推出去，浏览器把「最后收到」记成 44。43 稍后提交。',end:'浏览器以后只要「大于 44」的，<b>43 永远补不回来，也不会报任何错</b>。'}]},
+  s=>{s.sess[0].last=44;s.ev.push({seq:43,ty:'问题已回答',by:'会话模块（请求进程）'},{seq:44,ty:'模型调用',by:'跟随器（后台进程）'});s.br[0].v='44';});
+
+step({t:'10:00:03 → 10:00:09',k:['w_push','a_push'],at:['wk','api'],h:'模型开始一个字一个字地输出',
+  b:'跟随器收到模型的逐字增量，按 100 毫秒合并成一批，用 HTTP 发到请求进程的内部接口 <code>/internal/stream/v1/push</code>；请求进程推给浏览器：<code>message.delta</code>，<b>不带 id</b>。这些增量不存库、不占序号。',
+  why:'浏览器的「最后收到的序号」不变，还是 44。',
+  crash:[{w:'内部推送失败（比如请求进程正在重启）',left:'这一段增量没有了，库里本来也没有。',next:'不重试，直接丢弃。',end:'等回答写完，完整消息作为持久事件到达，替换掉显示的文字。'}]},
+  s=>{s.br[1].v='「上个月各分行的存款余额如下：一分行……」（逐字显示中）';});
+
+step({t:'10:00:10 → 10:00:20',k:['w_follow','m01w'],at:'wk',h:'张三的网断了 10 秒，事件照常写',
+  b:'张三的网络断了，事件流连接断开。后台进程不受影响：跟随器继续写入第 45 到 57 条（包括写完的完整回答）。这期间的逐字输出发到请求进程，但浏览器不在了，丢掉。',
+  why:'断线只影响「推」，不影响「存」。事件一条不少地在库里等着。',crash:null},
+  s=>{s.down=['br'];s.sess[0].last=57;s.ev.push({seq:'45…56',ty:'（中间若干事件）',by:'跟随器'},{seq:57,ty:'完整回答',by:'跟随器'});s.page='张三的网断了。';});
+
+step({t:'10:00:20',k:['br_re','a_auth','a_read'],at:['br','api'],h:'浏览器自动重连，先补读',
+  b:'浏览器自动重连，请求头带 <code>Last-Event-ID: 44</code>。请求进程先问会话模块「张三能不能看这个流」，可以；然后从库里分页读出 <code>序号 &gt; 44</code> 的事件，按顺序补发 45…57。张三屏幕上那条写了一半的回答，被第 57 条完整回答整段替换。',
+  why:'补读只依赖序号：不重复（只要大于 44 的）、不遗漏（序号没有空洞）、不乱序（按序号升序）。',boomText:'🚫 如果请求的序号不对',stripe:false,
+  crash:[{w:'带的序号比库里最大的还大（比如 after=80）',left:'返回 400（common.bad-request）。',next:'—',end:'说明浏览器拿到的序号不对。'},{w:'会话已经被清理',left:'返回 404。',next:'—',end:''}]},
+  s=>{s.down=[];s.br[0].v='57';s.br[1].v='完整回答（第 57 条，替换了逐字文字）';s.page='张三看到：回答完整地出现了。';});
+
+step({t:'10:00:20 之后',k:['a_poll','a_hb'],at:'api',h:'转入实时推送；心跳和 30 分钟重连',
+  b:'补完后回到实时：每 0.5 秒查一次新事件；每 15 秒发一次心跳，免得代理把连接当成死的掐掉。连接满 30 分钟，服务器主动断开，浏览器带最新的序号重连，又走一遍补读。',
+  why:'30 分钟主动断开让连接能平滑地换到别的请求进程（③ 第 6 条）。',crash:null},
+  s=>{s.page='';});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m01:['M01','#22d3ee']},
+  procs:{
+    br:{n:'张三的浏览器',s:'SSE 连接',chips:[['br_re','fw','自动重连','带 Last-Event-ID']]},
+    api:{n:'请求进程',s:'事件流的通用实现在框架',chips:[['a_auth','fw','框架 · 鉴权回调','问会话模块能不能看'],['a_read','fw','框架 · 补读','序号 > x，分页'],['a_poll','fw','框架 · 实时推送','每 0.5 秒查最大序号'],['a_push','fw','框架 · 转发逐字输出',''],['a_hb','fw','框架 · 心跳','每 15 秒'],['m01a','m01','M01 · 写用户回答','也要锁会话行']]},
+    wk:{n:'后台进程',s:'',chips:[['w_follow','fw','框架 · DSH 跟随器',''],['m01w','m01','M01 · 写入远端事件','锁会话行、编号'],['w_push','fw','框架 · 推逐字输出','100 毫秒一批']]}},
+  cols:[['br'],['api'],'db',['wk']],
+  dbTitle:'数据：库里的行 + 浏览器里的状态',dbSub:'',
+  tables:[
+    {n:'会话',o:'M01 的表（只画计数器）',cols:['会话','计数器（最后一个序号）'],rows:s=>s.sess.map(r=>[r.id,String(r.last)])},
+    {n:'会话事件',o:'M01 的表',cols:['序号','内容','谁写的'],rows:s=>s.ev.map(e=>[String(e.seq),e.ty,e.by])},
+    {n:'张三的浏览器',o:'浏览器内存（不在库里）',cols:['','值'],rows:s=>s.br.map(r=>[r.k,r.v])}]});
+</script>
+</body>
+</html>
