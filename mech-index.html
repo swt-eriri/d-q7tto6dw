@@ -5,8 +5,7 @@
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>机制 · 学习清单（0004 后端框架、0006 身份与权限）</title>
 <style>
-:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
---ok:#22c55e;--half:#facc15;--heard:#38bdf8;--none:#64748b}
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
 .wrap{max-width:1100px;margin:0 auto;padding:24px 20px 80px}
@@ -20,16 +19,15 @@ h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
 .box ol,.box ul{margin:4px 0;padding-left:22px}.box li{margin:3px 0;color:#d6dee9}
 .grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
 .legend{display:flex;gap:14px;flex-wrap:wrap;font-size:14px;color:var(--mute);margin-top:10px}
-.st{display:inline-block;font-size:12px;border-radius:999px;padding:0 8px;border:1px solid;white-space:nowrap}
-.st.ok{color:var(--ok);border-color:var(--ok)}.st.half{color:var(--half);border-color:var(--half)}
-.st.heard{color:var(--heard);border-color:var(--heard)}.st.none{color:var(--mute);border-color:var(--none)}
 .topic{background:var(--panel);border:1px solid var(--line);border-radius:10px;margin-top:10px}
 .topic summary{cursor:pointer;list-style:none;padding:10px 16px;display:grid;grid-template-columns:44px 1fr auto;gap:10px;align-items:baseline}
 .topic summary::-webkit-details-marker{display:none}
-.topic .id{color:var(--dim);font-family:ui-monospace,Consolas,monospace;font-size:14px}
+.topic .id b{color:#93c5fd;font-family:ui-monospace,Consolas,monospace;font-size:15px;font-weight:600}
 .topic .nm{font-weight:600;font-size:17px}
 .topic .nm small{display:block;font-weight:400;color:var(--mute);font-size:14px}
-.topic .tags{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}
+.topic .tags{display:flex;gap:10px;flex-wrap:wrap;justify-content:flex-end;align-items:center}
+.go{color:#e2e8f0;text-decoration:none;background:#1e3a5f;border:1px solid #3b5b8a;border-radius:8px;padding:4px 14px;font-size:15px;white-space:nowrap}
+.go:hover{background:#25497a;border-color:#93c5fd}
 .depth{font-size:12px;color:#cbd5e1;border:1px dashed #475569;border-radius:4px;padding:0 6px}
 .topic .body{padding:0 16px 12px 70px;color:#d6dee9}
 .topic .body p{margin:6px 0}
@@ -37,12 +35,7 @@ h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
 .topic .body ol{margin:4px 0;padding-left:22px}
 .topic .body li{margin:2px 0}
 .topic .src{font-size:13px;color:var(--dim)}
-.topic .page a{color:#93c5fd}
 .topic[open]{border-color:#475569}
-.order{counter-reset:o;display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
-.order span{counter-increment:o;border:1px solid var(--line);border-radius:999px;padding:2px 10px;font-size:14px;color:#cbd5e1}
-.order span::before{content:counter(o) ". ";color:var(--dim)}
-.order span.done{border-color:var(--ok);color:var(--ok)}
 footer{margin-top:40px;color:var(--dim);font-size:13px;border-top:1px solid var(--line);padding-top:10px}
 @media (max-width:640px){.topic summary{grid-template-columns:36px 1fr}.topic .tags{grid-column:2;justify-content:flex-start}.topic .body{padding-left:16px}}
 </style>
@@ -66,10 +59,8 @@ footer{margin-top:40px;color:var(--dim);font-size:13px;border-top:1px solid var(
 </div>
 
 <div class="legend"><span><span class="depth">机制级</span> 要能按时间走一遍；<span class="depth">架构级</span> 知道做什么、为什么即可</span></div>
-<p class="sub">点开每一题看场景和关键问题，再点「页面」进去看。</p>
+<p class="sub">按建议顺序排：先 0004（P0 就要用），再 0006，最后综合。点题目展开看场景和要能回答的问题；点右边「进入」直接看页面。顶部「目录」在每一页都能用。</p>
 
-<h2>建议顺序 <small>先 0004（P0 就要用），再 0006，最后综合</small></h2>
-<div class="order" id="order"></div>
 
 <h2>0004 后端框架 <small id="c4"></small></h2>
 <div id="t4"></div>
@@ -82,11 +73,123 @@ footer{margin-top:40px;color:var(--dim);font-size:13px;border-top:1px solid var(
 
 <footer>
 依据：claude-notes 里的 RFC 草稿 0004、0006（2026-11-16 版）。<br>
-场景都是 RFC 里写到的真实情形；人名（张三、李四、王经理）沿用 RFC 的例子。关键问题只列问题，答案在各题的机制页里。<br>
-「页面」一栏：已做的可以点开；其余按建议顺序陆续做，几道相近的题可能合成一页。
+场景都是 RFC 里写到的真实情形；人名（张三、李四、王经理）沿用 RFC 的例子。关键问题只列问题，答案在各题的机制页里。
 </footer>
 </div>
 
+<script>const PAGE_ID='index';
+// 顶部菜单：所有机制页和学习清单共用。build.py 会在每页 </body> 前插入本文件，并在前面写好 PAGE_ID（题号，清单页是 'index'）
+// 页面列表只在这里维护；顺序 = 建议学习顺序（目录、上一页 / 下一页都按它）
+const NAV = [
+  ['4','A1','两个进程','mech-processes.html'],
+  ['4','A3','请求管道','mech-request.html'],
+  ['4','A5','事件与任务','mech-events.html'],
+  ['4','A6','后台任务','mech-jobs.html'],
+  ['4','A8','tool 回调核验','mech-toolcb.html'],
+  ['4','A9','断线续读','mech-stream.html'],
+  ['4','A10','跟随与应答','mech-follow.html'],
+  ['4','A4','幂等','mech-idem.html'],
+  ['4','A7','特殊事件','mech-special-events.html'],
+  ['4','A2','模块装配','mech-modules.html'],
+  ['4','A11','密钥与监控','mech-ops.html'],
+  ['6','B1','主体与能力','mech-principal.html'],
+  ['6','B3','登录与会话','mech-login.html'],
+  ['6','B6','停用之后','mech-disable.html'],
+  ['6','B4','取数身份','mech-gateway-id.html'],
+  ['6','B5','进程令牌','mech-proc-token.html'],
+  ['6','B2','账号并发','mech-accounts.html'],
+  ['6','B7','评估账号与接入应用','mech-eval-app.html'],
+  ['x','X1','一次提问全链路','mech-x1.html'],
+  ['x','X2','停用遇上重启','mech-x2.html'],
+];
+const NAV_GROUPS = [['4','0004 后端框架'],['6','0006 身份与权限'],['x','综合']];
+const NAV_HOME = 'mech-index.html';
+(function(){
+  const css = `
+.nb{position:sticky;top:0;z-index:50;background:rgba(11,18,34,.96);backdrop-filter:blur(6px);border-bottom:1px solid #2a3a5c;font-family:inherit}
+.nb-in{max-width:1280px;margin:0 auto;padding:0 20px;height:52px;display:flex;align-items:center;gap:10px}
+.nb a{text-decoration:none}
+.nb-home{color:#e2e8f0;font-weight:700;font-size:16px;white-space:nowrap}
+.nb-btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:#e2e8f0;font-size:15px;border:1px solid #475569;border-radius:8px;padding:5px 12px;white-space:nowrap}
+.nb-btn:hover,.nb-btn.on{background:#1e2b4a;border-color:#64748b}
+.nb-cur{color:#cbd5e1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nb-cur b{color:#93c5fd;font-weight:600;margin-right:6px}
+.nb-sec{position:relative;min-width:0}
+.nb-sec .nb-btn{border-color:#2a3a5c;color:#cbd5e1;font-size:14px;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+.nb-sec .nb-btn b{font-weight:400;color:#94a3b8}
+.nb-dd{display:none;position:absolute;top:40px;left:0;min-width:280px;background:#0f172a;border:1px solid #2a3a5c;border-radius:10px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.nb-dd.show{display:block}
+.nb-dd a{display:block;color:#cbd5e1;font-size:14px;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.nb-dd a:hover{background:#1e2b4a;color:#e2e8f0}
+.nb-dd a.on{background:#1e3a5f;color:#e2e8f0}
+.nb-sp{flex:1}
+.nb-pn{display:flex;gap:6px;margin-left:auto}
+.nb-pn a{color:#cbd5e1;font-size:14px;border:1px solid #2a3a5c;border-radius:8px;padding:4px 10px;white-space:nowrap}
+.nb-pn a:hover{border-color:#64748b;color:#e2e8f0}
+.nb-panel{display:none;position:fixed;top:52px;left:0;right:0;z-index:49;background:#0f172a;border-bottom:1px solid #2a3a5c;box-shadow:0 18px 40px rgba(0,0,0,.5);max-height:calc(100vh - 52px);overflow:auto}
+.nb-panel.show{display:block}
+.nb-panel a{text-decoration:none}
+.nb-grid{max-width:1280px;margin:0 auto;padding:16px 20px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.nb-grid h5{margin:0 0 6px;font-size:13px;color:#94a3b8;font-weight:600}
+.nb-grid a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:8px;color:#e2e8f0;font-size:15px}
+.nb-grid a:hover{background:#1e2b4a}
+.nb-grid a.on{background:#1e3a5f;box-shadow:inset 3px 0 0 #93c5fd}
+.nb-grid a i{font-style:normal;color:#64748b;font-size:12px;width:22px;text-align:right;flex:none}
+.nb-grid a span{color:#93c5fd;font-family:ui-monospace,Consolas,monospace;font-size:13px;width:30px;flex:none}
+.nb-all{grid-column:1/-1;border-top:1px solid #2a3a5c;padding-top:10px;font-size:14px}
+.nb-all a{display:inline;color:#93c5fd;padding:0}
+.nb-foot{max-width:1280px;margin:40px auto 0;padding:0 20px 60px;display:flex;gap:12px;flex-wrap:wrap}
+.nb-foot a{flex:1;min-width:240px;text-decoration:none;background:#111c33;border:1px solid #2a3a5c;border-radius:10px;padding:12px 16px;color:#e2e8f0}
+.nb-foot a:hover{border-color:#64748b}
+.nb-foot a small{display:block;color:#94a3b8;font-size:13px}
+.nb-foot a.nx{text-align:right}
+h2[id]{scroll-margin-top:64px}
+@media (max-width:760px){.nb-pn a span,.nb-home,.nb-cur{display:none}}`;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const k = NAV.findIndex(p => p[1] === PAGE_ID), me = NAV[k];
+  const prev = k > 0 ? NAV[k-1] : null, next = k >= 0 ? NAV[k+1] : NAV[0];
+  const lab = p => `${p[1]} ${p[2]}`;
+  const secs = [...document.querySelectorAll('nav.toc a')].map(a => [a.getAttribute('href'), a.textContent]);
+  const bar = document.createElement('header'); bar.className = 'nb';
+  bar.innerHTML = `<div class="nb-in">
+    <a class="nb-home" href="${NAV_HOME}">机制学习</a>
+    <button class="nb-btn" id="nbBtn" aria-expanded="false">☰ 目录</button>
+    <span class="nb-cur">${me ? `<b>${me[1]}</b>${me[2]}` : '学习清单'}</span>
+    ${secs.length ? `<span class="nb-sec"><button class="nb-btn" id="nbSec"><b>本页</b> <span>${secs[0][1]}</span> ▾</button><span class="nb-dd">${secs.map(([h,t]) => `<a href="${h}">${t}</a>`).join('')}</span></span>` : ''}
+    <span class="nb-pn">${prev ? `<a href="${prev[3]}" title="上一页：${lab(prev)}">◀<span> ${prev[1]}</span></a>` : ''}${next ? `<a href="${next[3]}" title="下一页：${lab(next)}"><span>${next[1]} </span>▶</a>` : ''}</span>
+  </div>`;
+  const panel = document.createElement('div'); panel.className = 'nb-panel';
+  panel.innerHTML = `<div class="nb-grid">${NAV_GROUPS.map(([g,gn]) => `<div><h5>${gn}</h5>${
+    NAV.map((p,j) => p[0] !== g ? '' : `<a href="${p[3]}" class="${j===k?'on':''}"><i>${j+1}</i><span>${p[1]}</span>${p[2]}</a>`).join('')}</div>`).join('')}
+    <div class="nb-all">编号是建议的学习顺序 · <a href="${NAV_HOME}">学习清单（每题的场景和要能回答的问题）</a></div></div>`;
+  document.body.prepend(panel); document.body.prepend(bar);
+  const btn = bar.querySelector('#nbBtn');
+  const dd = bar.querySelector('.nb-dd'), sb = bar.querySelector('#nbSec');
+  const open = v => { panel.classList.toggle('show', v); btn.classList.toggle('on', v); btn.setAttribute('aria-expanded', v); };
+  const openSec = v => { if (dd) { dd.classList.toggle('show', v); sb.classList.toggle('on', v); } };
+  btn.onclick = e => { e.stopPropagation(); openSec(false); open(!panel.classList.contains('show')); };
+  if (sb) sb.onclick = e => { e.stopPropagation(); open(false); openSec(!dd.classList.contains('show')); };
+  document.addEventListener('click', e => { if (!panel.contains(e.target)) open(false); if (dd && !dd.contains(e.target)) openSec(false); if (dd && dd.contains(e.target) && e.target.closest('a')) openSec(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { open(false); openSec(false); } });
+  if (/menu=1/.test(location.hash)) open(true);
+  if (/sec=1/.test(location.hash)) openSec(true);
+  // 页面底部：上一页 / 下一页
+  if (me) {
+    const f = document.createElement('div'); f.className = 'nb-foot';
+    f.innerHTML = (prev ? `<a href="${prev[3]}"><small>◀ 上一页</small>${lab(prev)}</a>` : `<a href="${NAV_HOME}"><small>◀ 回到</small>学习清单</a>`) +
+      (next ? `<a class="nx" href="${next[3]}"><small>下一页 ▶</small>${lab(next)}</a>` : `<a class="nx" href="${NAV_HOME}"><small>全部看完 ▶</small>回到学习清单</a>`);
+    document.body.appendChild(f);
+  }
+  // 滚动时高亮当前所在的小节
+  if (secs.length) {
+    const links = [...dd.querySelectorAll('a')], label = sb.querySelector('span');
+    const heads = secs.map(([h]) => document.querySelector(h));
+    const onScroll = () => { let cur = 0; heads.forEach((h,j) => { if (h && h.getBoundingClientRect().top < 90) cur = j; });
+      links.forEach((a,j) => a.classList.toggle('on', j === cur)); label.textContent = secs[cur][1]; };
+    addEventListener('scroll', onScroll, {passive:true}); onScroll();
+  }
+})();
+</script>
 <script>
 const T = [
 // ---------- 0004 ----------
@@ -96,34 +199,34 @@ const T = [
      '分开之后隔离到哪一步：线程、连接各自独立，但数据库和行锁还是共用的。',
      '后台进程是执行链路的单点：只部署一个时它挂了，在途执行和审批会怎样，RFC 怎么应对。',
      '评估执行器为什么不连数据库、不装模块，只调内部接口。'],
- src:'0004 第 2.1、2.5、6.4、10.2 节', note:'', page:'mech-processes.html'},
+ src:'0004 第 2.1、2.5、6.4、10.2 节', note:''},
 {id:'A2', g:'4', nm:'九个模块怎么装在一起、怎么防越界', depth:'架构级',
  sc:'某个模块的代码想直接查别的模块的表，或者在清单里给自己的任务声明了框架专用的长任务池。',
  qs:['模块之间能怎么调用、不能怎么调用；分别由谁拦住，是启动时失败还是 CI 失败。',
      '模块清单里写了哪些东西，各自在哪一步被检查。',
      '为什么一个库、一个账号、一个连接池，而不是每个模块一个库或一个连接池。'],
- src:'0004 第 2.2、2.3、2.5、3.7、10.1 节', note:'', page:'mech-modules.html'},
+ src:'0004 第 2.2、2.3、2.5、3.7、10.1 节', note:''},
 {id:'A3', g:'4', nm:'一个请求进来经过什么', depth:'机制级',
  sc:'张三在页面上点「发送」，请求从进门到模块处理完、返回错误或结果的全过程。',
  qs:['入口只认证不授权：「你是谁」和「你能不能做」分别由谁判断，为什么这样分。',
      '调用上下文里的主体从哪来，为什么不能由调用方自己填。',
      '网页、开放 API、tool 回调、评估执行器这几类请求，进门时各凭什么认人。',
      '模块抛出的错误怎么变成返回给前端的错误；没分类的异常返回什么。'],
- src:'0004 第 3.1、4.1、4.2、4.5 节', note:'和 0006 的登录（B3）连着。', page:'mech-request.html'},
+ src:'0004 第 3.1、4.1、4.2、4.5 节', note:'和 0006 的登录（B3）连着。'},
 {id:'A4', g:'4', nm:'重复请求怎么挡（幂等）', depth:'机制级',
  sc:'管理员提交一个写操作时网络卡住，前端带同一个幂等键重试，两次请求几乎同时到达。',
  qs:['为什么先插一条占位记录再执行，而不是先查有没有做过。',
      '两个相同请求同时到达时，后到的会等什么、最后拿到什么。',
      '同一个键、内容不同时怎么办；请求摘要为什么不含时间戳和签名。',
      '幂等记录只留 24 小时，「同一草稿只发布一次」这类长期唯一靠什么保证。'],
- src:'0004 第 3.2 节', note:'「同一个键要不要区分是谁发的」已问组长（第九批），等答复。「任务处理器幂等」是另一层，在 A6。', page:'mech-idem.html'},
+ src:'0004 第 3.2 节', note:'「同一个键要不要区分是谁发的」已问组长（第九批），等答复。「任务处理器幂等」是另一层，在 A6。'},
 {id:'A5', g:'4', nm:'一件事做完之后：事件与任务', depth:'机制级',
  sc:'管理员发布「客服 Agent」：受理 → 建发布任务 → 后台执行 → 切换版本 → 自进化建议标为已发布。',
  qs:['业务写入和事件登记为什么必须在同一个事务里。',
      '两种接收方：建任务的靠什么去重，直接改业务数据的靠什么去重，为什么收件记录必须和业务写入同事务。',
      '登记按逻辑监听器算，不按进程副本算；事件处理完不等于事情做完。',
      '在每一步之后崩溃，留下了什么、谁来接手。'],
- src:'0004 第 3.3 节；0011 第 2 节；0016', note:'', page:'mech-events.html'},
+ src:'0004 第 3.3 节；0011 第 2 节；0016', note:''},
 {id:'A6', g:'4', nm:'后台任务：领取、排队、接手、重试', depth:'机制级',
  sc:'两个后台进程；同一个 Agent 连着提交两次发布；第一个发布跑到一半，进程崩了，或者卡住一会儿又醒过来。',
  qs:['同一个 Agent 的两次发布，怎么保证不同时跑、并且按提交顺序跑。',
@@ -131,13 +234,13 @@ const T = [
      '任务只建一次不等于只执行一次：处理器自己要做到什么，对 DSH 的请求结果不明时为什么不能盲目重发。',
      '取消、可重试失败、业务失败、次数用尽分别走到什么状态。',
      '只能由一个实例做的事（定时调度、每个 DSH 进程的应答通道）为什么落在任务表上而不选主。'],
- src:'0004 第 3.4、3.5、6.1 节；决定记录「先落记录再外呼，不盲目重发」', note:'', page:'mech-jobs.html'},
+ src:'0004 第 3.4、3.5、6.1 节；决定记录「先落记录再外呼，不盲目重发」', note:''},
 {id:'A7', g:'4', nm:'两种特殊事件：要排序的、回滚也要留下的', depth:'机制级',
  sc:'会话模块发出「版本引用 +1 / −1」，发布模块据此决定能不能卸载旧版本；有人登录失败，这条审计在业务回滚后也要留下。',
  qs:['框架默认不保证事件顺序，什么情况下才排序；序号由谁、在什么锁下分配。',
      '处理方怎么发现「前一条还没处理」，这时做什么。',
      '审计为什么要在独立的小事务里登记；和普通事件的区别。'],
- src:'0004 第 3.3 节规则 4、5；第 6.1 节旧版本清理', note:'', page:'mech-special-events.html'},
+ src:'0004 第 3.3 节规则 4、5；第 6.1 节旧版本清理', note:''},
 {id:'A8', g:'4', nm:'Agent 调业务 tool 时，平台怎么确认是谁', depth:'机制级',
  sc:'张三的会话里，Agent 调「取数」tool：桥接插件回调平台 → 验签、防重放 → 向会话模块取执行凭据 → 交给取数模块。',
  qs:['为什么不让 DSH 把平台令牌带进 tool 调用，也不放进工作目录的文件。',
@@ -145,14 +248,14 @@ const T = [
      '为什么不核对「跟随器已经看到这次调用」。',
      '服务密钥泄露时最坏能做到什么。',
      '发布探测进程上的回调为什么要例外处理。'],
- src:'0004 第 4.4、8、10.1 节', note:'', page:'mech-toolcb.html'},
+ src:'0004 第 4.4、8、10.1 节', note:''},
 {id:'A9', g:'4', nm:'浏览器断线后怎么接着看', depth:'机制级',
  sc:'张三正在看 Agent 回答，网络断了 10 秒后重连：已经收到第 41 条，要补齐 42–57，再接着收逐字输出。',
  qs:['为什么用平台自己的序号，不用 DSH 的序号。',
      '序号为什么要在会话行的锁下分配；不这样浏览器会看到什么。',
      '逐字输出不入库，丢了怎么办；为什么不入库。',
      '多个请求进程时，新事件和逐字输出分别怎么送到浏览器。'],
- src:'0004 第 5 节', note:'', page:'mech-stream.html'},
+ src:'0004 第 5 节', note:''},
 {id:'A10', g:'4', nm:'跟随 DSH、替用户回答问题', depth:'机制级',
  sc:'一次执行中，Agent 在 DSH 里问用户「按哪个口径？」：跟随器和应答通道各收到一次；张三回答后，回答怎么送回 DSH。',
  qs:['跟随器做什么；它崩了谁接手、从哪接着跟。',
@@ -160,13 +263,13 @@ const T = [
      '同一个问题来两次怎么去重；回答为什么不用任务表转交。',
      '应答通道断了会怎样，页面上看到什么。',
      '跟随器的职责怎么分：框架让它一直跑，协议在 0002，存什么在会话模块。'],
- src:'0004 第 6.2、6.3、10.2 节', note:'', page:'mech-follow.html'},
+ src:'0004 第 6.2、6.3、10.2 节', note:''},
 {id:'A11', g:'4', nm:'密钥、日志监控、上线检查', depth:'架构级',
  sc:'桥接服务密钥从生成到失效的一生；DSH 不可用时平台还算不算「就绪」。',
  qs:['每类密钥存在哪、谁能用；模块为什么不自己处理密钥。',
      '出问题时先看哪几个指标；没有追踪系统时怎么把请求进程和后台进程的日志串起来。',
      '健康检查和就绪检查分别看什么。'],
- src:'0004 第 8、9 节', note:'', page:'mech-ops.html'},
+ src:'0004 第 8、9 节', note:''},
 // ---------- 0006 ----------
 {id:'B1', g:'6', nm:'「这是谁」和「能不能做」', depth:'机制级',
  sc:'张三在页面提问；CRM 替李四调用；王经理发起一小时的自进化评估，半小时后被降级。',
@@ -175,34 +278,34 @@ const T = [
      '自进化这种后台任务按谁的能力判，为什么按「当前」能力。',
      '必须改密的账号：网页登录和接入应用替他调用时有什么不同，为什么。',
      '显示菜单和真正执行操作为什么用两个不同的接口。'],
- src:'0006 第 1.1、2.2、2.3 节', note:'', page:'mech-principal.html'},
+ src:'0006 第 1.1、2.2、2.3 节', note:''},
 {id:'B2', g:'6', nm:'账号管理里的并发和规则', depth:'机制级',
  sc:'两个管理员同时把对方降级；两个进程同时启动都要建初始管理员；更正某人的工号。',
  qs:['为什么要锁住所有启用的管理员行，而不是查一下数量。',
      '初始管理员靠什么只建一个。',
      '用户 ID 和工号为什么分开；移除和停用有什么不同。'],
- src:'0006 第 2.1 节', note:'', page:'mech-accounts.html'},
+ src:'0006 第 2.1 节', note:''},
 {id:'B3', g:'6', nm:'登录与登录会话', depth:'机制级',
  sc:'李四连续输错 5 次被锁；李四被停用后，他旧电脑上的登录还能不能用；李四改密后，其他设备上的登录怎样。',
  qs:['登录的判断顺序，为什么先比对密码再判断停用。',
      '会话为什么存库，而不用不存库的签名令牌。',
      '哪些情况作废一个人的全部会话；不作废会出什么事。',
      'cookie 双提交防的是什么；为什么有了 SameSite 还不够。'],
- src:'0006 第 3 节；0004 第 4.2 节', note:'', page:'mech-login.html'},
+ src:'0006 第 3 节；0004 第 4.2 节', note:''},
 {id:'B4', g:'6', nm:'取数用谁的身份', depth:'机制级',
  sc:'Agent 替张三取数，平台查出张三的网关 uid 交给取数网关；管理员清空了张三的 uid 之后再取数。',
  qs:['为什么 uid 为空时不拿工号临时顶替。',
      '为什么只能在 tool 回调里查取数身份；Agent 能不能替别人要 uid。',
      '自进化为什么不能取数。',
      'uid 为什么全表唯一；改 uid 为什么要审计。'],
- src:'0006 第 4 节', note:'', page:'mech-gateway-id.html'},
+ src:'0006 第 4 节', note:''},
 {id:'B5', g:'6', nm:'DSH 进程调 MCP 时怎么认人（进程令牌）', depth:'机制级',
  sc:'张三的 DSH 进程里，Agent 调 mem0 记忆服务：请求带着进程令牌到 MCP 代理，代理向身份模块核对。',
  qs:['tool 回调已经能认人了，为什么 MCP 调用还要另一套令牌。',
      '五种令牌各代表谁、各放行什么。',
      '令牌为什么不设过期；风险是什么，为什么能接受。',
      '开发环境单进程时所有人共用一把令牌意味着什么；多进程复测不通过时怎么办。'],
- src:'0006 第 1.1、5 节', note:'', page:'mech-proc-token.html'},
+ src:'0006 第 1.1、5 节', note:''},
 {id:'B6', g:'6', nm:'停用一个人之后发生什么', depth:'机制级',
  sc:'管理员经请求进程停用李四：同一事务里改状态、作废会话和令牌、登记变更通知；提交后清缓存。',
  qs:['同一个事务里改了哪些东西，为什么要放在一起。',
@@ -210,41 +313,39 @@ const T = [
      '这个变更通知处理失败为什么不需要重试保障，和普通事件有什么不同。',
      '判权和取数身份为什么是立刻生效的（每次都查库）。',
      '李四正在跑的执行和 DSH 进程会怎样。'],
- src:'0006 第 3.4、5.2、8.3 节；0004 第 4.2 节', note:'李四正在跑的执行停不停，等会话模块定（嘉敏 Q6）。', page:'mech-disable.html'},
+ src:'0006 第 3.4、5.2、8.3 节；0004 第 4.2 节', note:'李四正在跑的执行停不停，等会话模块定（嘉敏 Q6）。'},
 {id:'B7', g:'6', nm:'评估账号与接入应用', depth:'架构级',
  sc:'三档评估账号跑同一批用例，看受限账号是否按预期被拒；CRM 用应用凭据替李四调用。',
  qs:['评估账号为什么不放进账号表，而是单独一张表。',
      '接入应用替人调用时能力怎么算（实际用户的能力，再叠一道调用资格）。',
      '生成新凭据后旧凭据怎么处理。'],
- src:'0006 第 6、7 节', note:'接入应用是 P4，细节在 0017（还没定稿）。', page:'mech-eval-app.html'},
+ src:'0006 第 6、7 节', note:'接入应用是 P4，细节在 0017（还没定稿）。'},
 // ---------- 综合 ----------
 {id:'X1', g:'x', nm:'从张三提问到看到回答', depth:'机制级',
  sc:'登录 → 发送 → 后台跟随 DSH → Agent 调取数 tool → 事件写库并推到浏览器 → 中途断线重连。',
  qs:['每一段由哪个进程、谁的代码负责。','每一段的身份是怎么传下去的。','任意一段崩溃时，页面上看到什么、怎么恢复。'],
- src:'串起 A3、A8、A9、A10、B3、B4', note:'', page:'mech-x1.html'},
+ src:'串起 A3、A8、A9、A10、B3、B4', note:''},
 {id:'X2', g:'x', nm:'李四被停用时，他的执行正在跑，后台进程又刚好重启', depth:'机制级',
  sc:'停用、缓存、令牌作废、tool 回调被拒、任务被接手同时发生。',
  qs:['哪些东西立刻失效，哪些最多 30 秒，哪些要等别的模块回收。','重启后哪些任务被接手、会不会替一个已停用的人继续做事。'],
- src:'串起 A6、A10、B5、B6', note:'', page:'mech-x2.html'}
+ src:'串起 A6、A10、B5、B6', note:''}
 ];
-const ORDER = ['A1','A3','A5','A6','A8','A9','A10','A4','A7','A2','A11','B1','B3','B6','B4','B5','B2','B7','X1','X2'];
+const PG = Object.fromEntries(NAV.map((p,j) => [p[1], {url:p[3], n:j+1}]));
 const esc = s => s.replace(/[&<>]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
 function card(t){
-  return `<details class="topic" id="${t.id}"><summary><span class="id">${t.id}</span>
+  const p = PG[t.id];
+  return `<details class="topic" id="${t.id}"><summary><span class="id"><b>${t.id}</b></span>
   <span class="nm">${esc(t.nm)}<small>${esc(t.sc)}</small></span>
-  <span class="tags"><span class="depth">${t.depth}</span></span></summary>
+  <span class="tags"><span class="depth">${t.depth}</span><a class="go" href="${p.url}">进入 →</a></span></summary>
   <div class="body"><p><b>要能回答</b></p><ol>${t.qs.map(q=>`<li>${esc(q)}</li>`).join('')}</ol>
   ${t.note?`<p>${esc(t.note)}</p>`:''}
-  <p class="src">出处：${esc(t.src)}</p>
-  <p class="page">页面：${t.page?`<a href="${t.page}">已做，点开看</a>`:'待做'}</p></div></details>`;
+  <p class="src">出处：${esc(t.src)}</p></div></details>`;
 }
 for (const [g,box,cnt] of [['4','t4','c4'],['6','t6','c6'],['x','tx',null]]) {
-  const list = T.filter(t=>t.g===g);
+  const list = T.filter(t=>t.g===g).sort((a,b) => PG[a.id].n - PG[b.id].n);
   document.getElementById(box).innerHTML = list.map(card).join('');
   if (cnt) document.getElementById(cnt).textContent = `${list.length} 题`;
 }
-document.getElementById('order').innerHTML = ORDER.map(id=>{const t=T.find(x=>x.id===id);
-  return `<span class="${t.page?'done':''}"><a href="#${id}" style="color:inherit;text-decoration:none" onclick="document.getElementById('${id}').open=true">${id} ${esc(t.nm)}</a></span>`}).join('');
 if (location.hash) { const d = document.getElementById(location.hash.slice(1)); if (d) d.open = true; }
 </script>
 </body>

@@ -86,7 +86,7 @@ ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
 .walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
 @media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
 .who{color:var(--c);border-color:var(--c)}
-.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+.hint{margin:0 0 6px;font-size:14px;color:var(--mute)}.hint a{color:#93c5fd}
 table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
 table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
 table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
@@ -98,7 +98,7 @@ table.plain td{color:#d6dee9}
 </head>
 <body><div class="wrap">
 
-<p class="back"><a href="mech-index.html#B4">← 学习清单</a>（第 B4 题）· 先看过 <a href="mech-toolcb.html">A8 tool 回调核验</a> 再看这页</p>
+<p class="hint">先看过 <a href="mech-toolcb.html">A8 tool 回调核验</a> 再看这页。</p>
 <h1>取数用谁的身份：只用登记过的 uid，不猜</h1>
 <p class="lead">机制：取数身份（身份与权限 0006 第 4 节）。例子：Agent 替张三取数；张三的工号更正了；管理员清空了他的 uid；自进化和评估账号取数。</p>
 <p class="sub">这一页想让你讲得出：取数网关认的身份从哪来；为什么 uid 为空时不拿工号顶替；为什么只能在 tool 回调里查；自进化为什么不能取数；uid 为什么全表唯一、改它为什么要审计。
@@ -179,6 +179,119 @@ table.plain td{color:#d6dee9}
 <b>示意，不是 RFC 定的</b>：时间、工号、uid 的具体值、评估账号的 uid。</p>
 
 </div>
+<script>const PAGE_ID='B4';
+// 顶部菜单：所有机制页和学习清单共用。build.py 会在每页 </body> 前插入本文件，并在前面写好 PAGE_ID（题号，清单页是 'index'）
+// 页面列表只在这里维护；顺序 = 建议学习顺序（目录、上一页 / 下一页都按它）
+const NAV = [
+  ['4','A1','两个进程','mech-processes.html'],
+  ['4','A3','请求管道','mech-request.html'],
+  ['4','A5','事件与任务','mech-events.html'],
+  ['4','A6','后台任务','mech-jobs.html'],
+  ['4','A8','tool 回调核验','mech-toolcb.html'],
+  ['4','A9','断线续读','mech-stream.html'],
+  ['4','A10','跟随与应答','mech-follow.html'],
+  ['4','A4','幂等','mech-idem.html'],
+  ['4','A7','特殊事件','mech-special-events.html'],
+  ['4','A2','模块装配','mech-modules.html'],
+  ['4','A11','密钥与监控','mech-ops.html'],
+  ['6','B1','主体与能力','mech-principal.html'],
+  ['6','B3','登录与会话','mech-login.html'],
+  ['6','B6','停用之后','mech-disable.html'],
+  ['6','B4','取数身份','mech-gateway-id.html'],
+  ['6','B5','进程令牌','mech-proc-token.html'],
+  ['6','B2','账号并发','mech-accounts.html'],
+  ['6','B7','评估账号与接入应用','mech-eval-app.html'],
+  ['x','X1','一次提问全链路','mech-x1.html'],
+  ['x','X2','停用遇上重启','mech-x2.html'],
+];
+const NAV_GROUPS = [['4','0004 后端框架'],['6','0006 身份与权限'],['x','综合']];
+const NAV_HOME = 'mech-index.html';
+(function(){
+  const css = `
+.nb{position:sticky;top:0;z-index:50;background:rgba(11,18,34,.96);backdrop-filter:blur(6px);border-bottom:1px solid #2a3a5c;font-family:inherit}
+.nb-in{max-width:1280px;margin:0 auto;padding:0 20px;height:52px;display:flex;align-items:center;gap:10px}
+.nb a{text-decoration:none}
+.nb-home{color:#e2e8f0;font-weight:700;font-size:16px;white-space:nowrap}
+.nb-btn{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:6px;color:#e2e8f0;font-size:15px;border:1px solid #475569;border-radius:8px;padding:5px 12px;white-space:nowrap}
+.nb-btn:hover,.nb-btn.on{background:#1e2b4a;border-color:#64748b}
+.nb-cur{color:#cbd5e1;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.nb-cur b{color:#93c5fd;font-weight:600;margin-right:6px}
+.nb-sec{position:relative;min-width:0}
+.nb-sec .nb-btn{border-color:#2a3a5c;color:#cbd5e1;font-size:14px;max-width:340px;overflow:hidden;text-overflow:ellipsis}
+.nb-sec .nb-btn b{font-weight:400;color:#94a3b8}
+.nb-dd{display:none;position:absolute;top:40px;left:0;min-width:280px;background:#0f172a;border:1px solid #2a3a5c;border-radius:10px;padding:6px;box-shadow:0 18px 40px rgba(0,0,0,.5)}
+.nb-dd.show{display:block}
+.nb-dd a{display:block;color:#cbd5e1;font-size:14px;padding:6px 10px;border-radius:6px;white-space:nowrap}
+.nb-dd a:hover{background:#1e2b4a;color:#e2e8f0}
+.nb-dd a.on{background:#1e3a5f;color:#e2e8f0}
+.nb-sp{flex:1}
+.nb-pn{display:flex;gap:6px;margin-left:auto}
+.nb-pn a{color:#cbd5e1;font-size:14px;border:1px solid #2a3a5c;border-radius:8px;padding:4px 10px;white-space:nowrap}
+.nb-pn a:hover{border-color:#64748b;color:#e2e8f0}
+.nb-panel{display:none;position:fixed;top:52px;left:0;right:0;z-index:49;background:#0f172a;border-bottom:1px solid #2a3a5c;box-shadow:0 18px 40px rgba(0,0,0,.5);max-height:calc(100vh - 52px);overflow:auto}
+.nb-panel.show{display:block}
+.nb-panel a{text-decoration:none}
+.nb-grid{max-width:1280px;margin:0 auto;padding:16px 20px 20px;display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.nb-grid h5{margin:0 0 6px;font-size:13px;color:#94a3b8;font-weight:600}
+.nb-grid a{display:flex;gap:10px;align-items:baseline;padding:7px 10px;border-radius:8px;color:#e2e8f0;font-size:15px}
+.nb-grid a:hover{background:#1e2b4a}
+.nb-grid a.on{background:#1e3a5f;box-shadow:inset 3px 0 0 #93c5fd}
+.nb-grid a i{font-style:normal;color:#64748b;font-size:12px;width:22px;text-align:right;flex:none}
+.nb-grid a span{color:#93c5fd;font-family:ui-monospace,Consolas,monospace;font-size:13px;width:30px;flex:none}
+.nb-all{grid-column:1/-1;border-top:1px solid #2a3a5c;padding-top:10px;font-size:14px}
+.nb-all a{display:inline;color:#93c5fd;padding:0}
+.nb-foot{max-width:1280px;margin:40px auto 0;padding:0 20px 60px;display:flex;gap:12px;flex-wrap:wrap}
+.nb-foot a{flex:1;min-width:240px;text-decoration:none;background:#111c33;border:1px solid #2a3a5c;border-radius:10px;padding:12px 16px;color:#e2e8f0}
+.nb-foot a:hover{border-color:#64748b}
+.nb-foot a small{display:block;color:#94a3b8;font-size:13px}
+.nb-foot a.nx{text-align:right}
+h2[id]{scroll-margin-top:64px}
+@media (max-width:760px){.nb-pn a span,.nb-home,.nb-cur{display:none}}`;
+  const st = document.createElement('style'); st.textContent = css; document.head.appendChild(st);
+  const k = NAV.findIndex(p => p[1] === PAGE_ID), me = NAV[k];
+  const prev = k > 0 ? NAV[k-1] : null, next = k >= 0 ? NAV[k+1] : NAV[0];
+  const lab = p => `${p[1]} ${p[2]}`;
+  const secs = [...document.querySelectorAll('nav.toc a')].map(a => [a.getAttribute('href'), a.textContent]);
+  const bar = document.createElement('header'); bar.className = 'nb';
+  bar.innerHTML = `<div class="nb-in">
+    <a class="nb-home" href="${NAV_HOME}">机制学习</a>
+    <button class="nb-btn" id="nbBtn" aria-expanded="false">☰ 目录</button>
+    <span class="nb-cur">${me ? `<b>${me[1]}</b>${me[2]}` : '学习清单'}</span>
+    ${secs.length ? `<span class="nb-sec"><button class="nb-btn" id="nbSec"><b>本页</b> <span>${secs[0][1]}</span> ▾</button><span class="nb-dd">${secs.map(([h,t]) => `<a href="${h}">${t}</a>`).join('')}</span></span>` : ''}
+    <span class="nb-pn">${prev ? `<a href="${prev[3]}" title="上一页：${lab(prev)}">◀<span> ${prev[1]}</span></a>` : ''}${next ? `<a href="${next[3]}" title="下一页：${lab(next)}"><span>${next[1]} </span>▶</a>` : ''}</span>
+  </div>`;
+  const panel = document.createElement('div'); panel.className = 'nb-panel';
+  panel.innerHTML = `<div class="nb-grid">${NAV_GROUPS.map(([g,gn]) => `<div><h5>${gn}</h5>${
+    NAV.map((p,j) => p[0] !== g ? '' : `<a href="${p[3]}" class="${j===k?'on':''}"><i>${j+1}</i><span>${p[1]}</span>${p[2]}</a>`).join('')}</div>`).join('')}
+    <div class="nb-all">编号是建议的学习顺序 · <a href="${NAV_HOME}">学习清单（每题的场景和要能回答的问题）</a></div></div>`;
+  document.body.prepend(panel); document.body.prepend(bar);
+  const btn = bar.querySelector('#nbBtn');
+  const dd = bar.querySelector('.nb-dd'), sb = bar.querySelector('#nbSec');
+  const open = v => { panel.classList.toggle('show', v); btn.classList.toggle('on', v); btn.setAttribute('aria-expanded', v); };
+  const openSec = v => { if (dd) { dd.classList.toggle('show', v); sb.classList.toggle('on', v); } };
+  btn.onclick = e => { e.stopPropagation(); openSec(false); open(!panel.classList.contains('show')); };
+  if (sb) sb.onclick = e => { e.stopPropagation(); open(false); openSec(!dd.classList.contains('show')); };
+  document.addEventListener('click', e => { if (!panel.contains(e.target)) open(false); if (dd && !dd.contains(e.target)) openSec(false); if (dd && dd.contains(e.target) && e.target.closest('a')) openSec(false); });
+  document.addEventListener('keydown', e => { if (e.key === 'Escape') { open(false); openSec(false); } });
+  if (/menu=1/.test(location.hash)) open(true);
+  if (/sec=1/.test(location.hash)) openSec(true);
+  // 页面底部：上一页 / 下一页
+  if (me) {
+    const f = document.createElement('div'); f.className = 'nb-foot';
+    f.innerHTML = (prev ? `<a href="${prev[3]}"><small>◀ 上一页</small>${lab(prev)}</a>` : `<a href="${NAV_HOME}"><small>◀ 回到</small>学习清单</a>`) +
+      (next ? `<a class="nx" href="${next[3]}"><small>下一页 ▶</small>${lab(next)}</a>` : `<a class="nx" href="${NAV_HOME}"><small>全部看完 ▶</small>回到学习清单</a>`);
+    document.body.appendChild(f);
+  }
+  // 滚动时高亮当前所在的小节
+  if (secs.length) {
+    const links = [...dd.querySelectorAll('a')], label = sb.querySelector('span');
+    const heads = secs.map(([h]) => document.querySelector(h));
+    const onScroll = () => { let cur = 0; heads.forEach((h,j) => { if (h && h.getBoundingClientRect().top < 90) cur = j; });
+      links.forEach((a,j) => a.classList.toggle('on', j === cur)); label.textContent = secs[cur][1]; };
+    addEventListener('scroll', onScroll, {passive:true}); onScroll();
+  }
+})();
+</script>
 <script>
 // 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
 const STEPS=[]; let _cur=null;
