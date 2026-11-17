@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="zh-CN">
+<head><meta name="robots" content="noindex,nofollow">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>机制 · 评估账号与接入应用</title>
+<style>
+:root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
+--new:#22c55e;--chg:#facc15;--bad:#f87171}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 "PingFang SC","Microsoft YaHei",system-ui,sans-serif}
+.wrap{max-width:1280px;margin:0 auto;padding:24px 20px 80px}
+h1{font-size:28px;margin:0 0 6px}
+h2{font-size:22px;margin:44px 0 6px;padding-top:8px;border-top:1px solid var(--line)}
+h2 small{font-size:14px;color:var(--mute);font-weight:400;margin-left:8px}
+.lead{color:#cbd5e1;font-size:17px;margin:0 0 4px}
+.sub{color:var(--mute);font-size:14px}
+nav.toc{display:flex;gap:8px;flex-wrap:wrap;margin:16px 0 0}
+nav.toc a{color:#cbd5e1;text-decoration:none;border:1px solid var(--line);border-radius:999px;padding:4px 12px;font-size:14px}
+nav.toc a:hover{border-color:#64748b}
+.who{display:inline-block;font-size:12px;border-radius:4px;padding:0 6px;margin-left:4px;vertical-align:2px;border:1px solid}
+/* 先分清 */
+.pairs{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:12px;margin-top:12px}
+.pair{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px}
+.pair h3{margin:0 0 8px;font-size:17px}
+.pair dl{margin:0}.pair dt{font-weight:700;color:#f1f5f9;margin-top:6px}.pair dd{margin:0 0 2px;color:#cbd5e1}
+.pair .eg{margin-top:8px;font-size:14px;color:var(--mute);border-top:1px dashed var(--line);padding-top:6px}
+details.basics{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+details.basics summary{cursor:pointer;color:#cbd5e1}
+details.basics p{margin:8px 0;color:#cbd5e1}
+/* 走一遍 */
+.walk{display:grid;grid-template-columns:230px 1fr;gap:16px;margin-top:14px}
+.steps{display:flex;flex-direction:column;gap:4px}
+.steps button{all:unset;cursor:pointer;padding:6px 10px;border-radius:8px;font-size:14px;color:var(--mute);border:1px solid transparent}
+.steps button b{color:#cbd5e1;font-weight:600;margin-right:6px}
+.steps button.on{background:var(--panel2);border-color:#475569;color:var(--text)}
+.steps button:hover{color:var(--text)}
+.stage{display:grid;gap:12px;grid-template-columns:var(--cols)}
+.col{display:flex;flex-direction:column;gap:12px}
+.proc{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px}
+.proc h4,.db h4{margin:0 0 8px;font-size:15px;color:#cbd5e1}
+.proc h4 small,.db h4 small{color:var(--dim);font-weight:400;font-size:12px;display:block}
+.chip{border:1px solid var(--line);border-radius:8px;padding:6px 8px;margin:6px 0;font-size:13px;color:var(--dim);transition:.2s}
+.chip .o{font-size:11px;display:block}
+.chip.on{color:var(--text);background:#1e2b4a;box-shadow:0 0 0 2px var(--c,#64748b)}
+.chip.on .o{color:var(--c)}
+.proc.crashed{border-color:var(--bad);background:repeating-linear-gradient(135deg,#2a1215 0 10px,#111c33 10px 20px)}
+.db{background:#0c1426;border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.tbl{margin:0 0 10px}
+.tbl .tn{font-size:13px;color:#cbd5e1;display:flex;justify-content:space-between;gap:8px}
+.tbl .tn i{font-style:normal;color:var(--dim);font-size:12px}
+.tbl table{width:100%;border-collapse:collapse;font-size:13px;margin-top:3px}
+.tbl th{color:var(--dim);font-weight:400;text-align:left;padding:2px 6px;border-bottom:1px solid var(--line)}
+.tbl td{padding:3px 6px;border-bottom:1px solid #1b2742;color:#cbd5e1}
+.tbl td.empty{color:var(--dim);font-style:italic}
+.tbl tr.new td{background:rgba(34,197,94,.13)}
+.tbl td.chg{background:rgba(250,204,21,.18);color:#fef9c3}
+.tbl tr.gone td{color:var(--bad);text-decoration:line-through}
+.legend{font-size:12px;color:var(--dim);margin-top:4px}
+.legend span{display:inline-block;width:10px;height:10px;border-radius:2px;margin:0 4px 0 10px;vertical-align:-1px}
+.page{grid-column:1/-1;background:#0b1222;border:1px dashed var(--line);border-radius:10px;padding:6px 12px;font-size:14px;color:var(--mute)}
+.page b{color:var(--text)}
+.explain{margin-top:12px;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 18px}
+.explain .t{color:var(--mute);font-size:14px}
+.explain h3{margin:2px 0 6px;font-size:19px}
+.explain p{margin:6px 0;color:#d6dee9}
+.explain .why{border-left:3px solid #475569;padding-left:10px;color:#cbd5e1}
+.ctl{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap}
+.ctl button{background:var(--panel2);color:var(--text);border:1px solid #475569;border-radius:8px;padding:7px 14px;font-size:15px;cursor:pointer}
+.ctl button:disabled{opacity:.35;cursor:default}
+.ctl button.boom{border-color:#7f1d1d;color:#fecaca}
+.ctl button.boom.on{background:#3b1216}
+.crash{display:none;margin-top:10px;border:1px solid #7f1d1d;background:#1c0d10;border-radius:10px;padding:10px 16px}
+.crash.show{display:block}
+.crash h4{margin:4px 0;color:#fecaca;font-size:16px}
+.crash p{margin:4px 0;color:#f3d6d6}
+.crash p b{color:#fff}
+/* 为什么 / 不保证 */
+.qa{margin-top:12px;display:grid;gap:10px}
+.qa details{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px}
+.qa summary{cursor:pointer;font-weight:600;font-size:16px}
+.qa p{margin:8px 0;color:#d6dee9}
+.qa .if{color:#fecaca}
+ul.no{margin:10px 0 0;padding-left:20px}ul.no li{margin:6px 0;color:#d6dee9}
+.src{margin-top:40px;font-size:13px;color:var(--dim);border-top:1px solid var(--line);padding-top:10px}
+.walk>*,.stage>*,.pairs>*{min-width:0}.tbl{overflow-x:auto}
+@media (max-width:980px){.walk{grid-template-columns:1fr}.steps{flex-direction:row;flex-wrap:wrap}.stage{grid-template-columns:1fr}}
+.who{color:var(--c);border-color:var(--c)}
+.back{margin:0 0 6px;font-size:14px}.back a{color:#93c5fd}
+table.plain{border-collapse:collapse;margin-top:10px;font-size:15px;width:100%}
+table.plain th,table.plain td{border:1px solid var(--line);padding:6px 10px;text-align:left;vertical-align:top}
+table.plain th{background:var(--panel2);color:#cbd5e1;font-weight:600}
+table.plain td{color:#d6dee9}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 16px;margin-top:12px;color:#d6dee9}
+.note p{margin:6px 0}
+</style>
+</head>
+<body><div class="wrap">
+
+<p class="back"><a href="mech-index.html#B7">← 学习清单</a>（第 B7 题，架构级：知道做什么、为什么即可）</p>
+<h1>两种「不是普通用户」的身份：评估账号、接入应用</h1>
+<p class="lead">机制：评估账号（身份与权限 0006 第 6 节）、接入应用（0006 第 7 节，细节在 0017 开放 API）。例子：用三档评估账号跑同一批用例；CRM 替客户经理李四调用平台。</p>
+<p class="sub">这一页想让你讲得出：评估账号为什么单独一张表；接入应用替人调用时能力怎么算；生成新凭据后旧的怎么处理。
+<span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006；<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（开放 API 入口、限流）；<span class="who" style="--c:#f59e0b">M06</span> = 自进化（闻洛，选评估账号）。<b>接入应用是 P4，0017 还没定稿</b>，以 0017 草稿为准。</p>
+<nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 为什么这样做</a><a href="#s4">④ 它不保证什么</a><a href="#s5">⑤ 自测</a></nav>
+
+<h2 id="s1">① 先分清四对词</h2>
+<div class="pairs">
+  <div class="pair"><h3>评估账号 ≠ 用户账号</h3><dl>
+    <dt>评估账号</dt><dd>数据平台开通的三档账号，<b>不是人</b>：不能登录、不进用户列表、不参与判能力。只用来让评估跑出「不同权限的人问会怎样」。</dd>
+    <dt>用户账号</dt><dd>真实的人，能登录。</dd></dl>
+    <div class="eg">所以评估账号单独一张表（③ 第 1 条）。</div></div>
+  <div class="pair"><h3>调用资格 ≠ 数据范围</h3><dl>
+    <dt>调用资格</dt><dd>应用能调哪几类接口：四个场景开关（嵌入分析、成果取得、资源管理、管理自动化）。</dd>
+    <dt>数据范围</dt><dd><b>不给应用</b>。能看哪些数据由实际用户的 uid 在取数网关判断。</dd></dl>
+    <div class="eg">应用最多能做「勾选的场景 × 实际用户本来能做的事」。</div></div>
+  <div class="pair"><h3>应用凭据 ≠ 用户密码</h3><dl>
+    <dt>应用凭据</dt><dd>平台生成的随机密钥（ohk_ 开头），应用专属，生成时只显示一次，库里只存哈希，每次请求放在 Authorization 头里。</dd>
+    <dt>实际用户</dt><dd>用请求头 X-Acting-User 声明工号，<b>平台信任已登记的应用如实声明</b>；用户是谁由业务系统自己的登录保证。</dd></dl>
+    <div class="eg">「认实际用户」做成了可替换的一步，以后可换成统一认证票据。</div></div>
+  <div class="pair"><h3>生成新凭据 ≠ 撤销</h3><dl>
+    <dt>生成新凭据</dt><dd>插一把新的；同一应用其他有效凭据的过期时间<b>缩到 7 天内</b>，期间新旧并存。</dd>
+    <dt>撤销</dt><dd>立即作废，发变更通知。用于怀疑泄露。</dd></dl>
+    <div class="eg">业务系统多台服务器逐台换配置，7 天并存期让它不中断。</div></div>
+</div>
+
+<h2 id="s2">② 走一遍 <small>前半段：评估账号；后半段：接入应用（P4）</small></h2>
+<div id="walk"></div>
+
+<h2 id="s3">③ 为什么这样做 <small>每条都是「不这样会坏在哪」</small></h2>
+<div class="qa">
+<details><summary>1. 评估账号为什么不放进账号表、加一个「类型」列？</summary>
+  <p class="if">放进账号表：登录、用户列表、判权、至少一个管理员……处处都要记得排除它，漏一处就出问题（比如评估账号出现在用户列表里，或者能被拿来登录）。</p>
+  <p>单独一张表：它本来就只用在评估会话的取数身份和进程令牌上，和人的账号没有交集。</p></details>
+<details><summary>2. 评估账号为什么由页面维护，不用迁移脚本预置？</summary>
+  <p>生产库手工改数据要申请权限；三档账号由数据平台开通，uid 会变、会加，页面维护省事。不删除，用停用代替。</p></details>
+<details><summary>3. 接入应用替人调用时，为什么能力按实际用户算？</summary>
+  <p class="if">给应用自己一套权限：应用就成了一个「超级用户」，替谁调用都能做同样的事，绕过了每个人自己的权限。</p>
+  <p>按实际用户：开放 API 和网页用的是同一个处理函数、同一套判权，李四在网页上做不了的事，CRM 替他也做不了。</p></details>
+<details><summary>4. 为什么信任应用声明的工号，不要求用户的证明？</summary>
+  <p>行内系统之间常见的做法：用户已经在业务系统里登录过，平台信任已登记的应用如实声明。代价是应用凭据泄露或业务系统被攻破时，可以冒充任何人（0017 第 11.2 节）。所以这一步做成可替换的，第一个接入方开工前再确认身份方式。</p></details>
+</div>
+
+<h2 id="s4">④ 它不保证什么</h2>
+<ul class="no">
+  <li><b>评估账号的 uid 对不对，平台不验证。</b>由管理员按数据平台开通的结果填写。</li>
+  <li><b>应用凭据泄露 = 可以冒充任何已登记的用户</b>（在勾选的场景内）。靠撤销、到期、HTTPS 和业务系统自己的安全。</li>
+  <li><b>0017 还没定稿。</b>「复用行内已有的接入能力」指哪一套、第一期开放哪些接口，已问组长（第八批），等答复；若行内有现成能力，接入应用的表和校验会相应简化。</li>
+  <li><b>应用自主调用本期不做。</b>应用只能代用户调用，不能用自己的身份、任务也不能归应用。</li>
+</ul>
+
+<h2 id="s5">⑤ 自测 <small>先自己想，再点开</small></h2>
+<div class="qa">
+<details><summary>1. 评估账号能登录平台网页吗？会出现在用户列表里吗？</summary>
+  <p>都不能。它在单独的表里，只出现在评估会话的执行凭据和进程令牌里。</p></details>
+<details><summary>2. CRM 勾了「嵌入分析」，李四是普通使用者。CRM 替李四调「发布 Agent」会怎样？</summary>
+  <p>两道都过不了：发布属于「管理自动化」场景，CRM 没勾，入口先拒（identity.app-scope-denied）；即使勾了，李四没有「Agent 配置与发布」能力，模块判权也会拒。</p></details>
+<details><summary>3. CRM 生成了新凭据，旧凭据还能用多久？</summary>
+  <p>旧凭据的过期时间被改成「原过期时间」和「现在 + 7 天」中较早的那个，最多再用 7 天。怀疑泄露就直接撤销，立即作废。</p></details>
+<details><summary>4. 李四被重置了密码（必须改密），CRM 替他的调用会被拒吗？</summary>
+  <p>不会。接入应用替他调用时不看「必须改密」（B1）。</p></details>
+</div>
+
+<p class="src">出处：0006 第 1.1 节、第 2.3 节（接入应用的能力）、第 4 节、第 6 节（评估账号）、第 7 节（接入应用）、第 8.1 节（resolveAppCall、OpenScenario）、第 10.1 节；0017 草稿第 2–5 节（一次调用怎么走、凭据、实际用户、调用资格）；0004 第 4.3 节（开放 API、限流）；给组长的问题清单第八批。<br>
+<b>示意，不是 RFC 定的</b>：时间、ID、工号、uid 的值。</p>
+
+</div>
+<script>
+// 机制页引擎：页面脚本先调 init(初始状态)、step(...)，最后 mount({owners, procs, cols, tables})
+const STEPS=[]; let _cur=null;
+const _clone=o=>JSON.parse(JSON.stringify(o));
+function init(s0){ _cur=_clone(s0); }
+function step(o,mut){ if(mut) mut(_cur); STEPS.push(Object.assign({state:_clone(_cur)},o)); }
+function mount(cfg){
+  const {owners,procs,cols,tables}=cfg;
+  const boomLabel=cfg.boomLabel||'💥 在这一步之后崩', L=cfg.crashLabels||['留下了什么','接下来谁接手','结果'];
+  const dbTitle=cfg.dbTitle||'数据库（全平台一个库）', dbSub=cfg.dbSub||'只画这个例子用到的行和列';
+  const $=id=>document.getElementById(id);
+  const who=o=>`<span class="who" style="--c:${owners[o][1]}">${owners[o][0]}</span>`;
+  const chipOwn={};
+  const procBox=id=>{const p=procs[id];
+    return `<div class="proc" id="p_${id}"><h4>${p.n}<small>${p.s||''}</small></h4>`+
+      p.chips.map(([k,o,label,sub])=>{chipOwn[k]=o;return `<div class="chip" data-k="${k}" style="--c:${owners[o][1]}">${label}<span class="o">${sub||''}</span></div>`}).join('')+'</div>';};
+  const colW=c=>c==='db'?'minmax(0,1fr)':'minmax(170px,220px)';
+  $('walk').innerHTML=`<div class="walk"><div class="steps" id="steps"></div><div>
+    <div class="stage" style="--cols:${cols.map(colW).join(' ')}"><div class="page" id="page"></div>
+    ${cols.map(c=>c==='db'
+      ?`<div class="db"><h4>${dbTitle}<small>${dbSub}</small></h4><div id="tables"></div><div class="legend">图例：<span style="background:rgba(34,197,94,.5)"></span>这一步新增<span style="background:rgba(250,204,21,.6)"></span>这一步改了</div></div>`
+      :`<div class="col">${c.map(procBox).join('')}</div>`).join('')}
+    </div><div class="explain" id="explain"></div>
+    <div class="ctl"><button id="prev">◀ 上一步</button><button id="next">下一步 ▶</button><button class="boom" id="boom">${boomLabel}</button></div>
+    <div class="crash" id="crash"></div></div></div>`;
+  let i=0,boom=false;
+  function render(){
+    const st=STEPS[i], prev=i>0?STEPS[i-1].state:null;
+    $('steps').innerHTML=STEPS.map((s,j)=>`<button class="${j===i?'on':''}" data-j="${j}"><b>${j}</b>${s.h}</button>`).join('');
+    $('page').style.display=st.state.page?'':'none'; $('page').innerHTML=st.state.page||'';
+    document.querySelectorAll('.chip').forEach(c=>c.classList.toggle('on',(st.k||[]).includes(c.dataset.k)));
+    $('tables').innerHTML=tables.map(t=>{
+      const rows=t.rows(st.state), pr=prev?t.rows(prev):rows;
+      const body=rows.length?rows.map((r,ri)=>{const p=pr[ri];const isNew=!p;
+        return `<tr class="${isNew&&prev?'new':''}">`+r.map((c,ci)=>`<td class="${!isNew&&p&&p[ci]!==c?'chg':''}">${c}</td>`).join('')+'</tr>';}).join('')
+        :`<tr><td class="empty" colspan="${t.cols.length}">（没有相关的行）</td></tr>`;
+      return `<div class="tbl"><div class="tn">${t.n}<i>${t.o}</i></div><table><tr>${t.cols.map(c=>`<th>${c}</th>`).join('')}</tr>${body}</table></div>`;}).join('');
+    const own=(st.k||[]).map(k=>chipOwn[k]).filter((v,j,a)=>v&&a.indexOf(v)===j).map(who).join('');
+    const at=[].concat(st.at||[]);
+    $('explain').innerHTML=`<div class="t">第 ${i} 步 · ${st.t}${at.length?' · 在 '+at.map(a=>procs[a].n).join('、'):''} ${own}</div><h3>${st.h}</h3><p>${st.b}</p>${st.why?`<p class="why">${st.why}</p>`:''}`;
+    $('prev').disabled=i===0;$('next').disabled=i===STEPS.length-1;
+    const cr=st.crash; $('boom').style.display=cr?'':'none'; $('boom').textContent=st.boomText||boomLabel; $('boom').classList.toggle('on',boom&&!!cr);
+    const down=new Set(st.state.down||[]); if(boom&&cr&&cfg.stripe!==false&&st.stripe!==false) cr.forEach(c=>[].concat(c.p||st.at||[]).forEach(x=>down.add(x)));
+    Object.keys(procs).forEach(id=>{const e=$('p_'+id); if(e) e.classList.toggle('crashed',down.has(id));});
+    $('crash').classList.toggle('show',boom&&!!cr);
+    $('crash').innerHTML=cr?cr.map(c=>`<h4>${boomLabel.split(' ')[0]} ${c.w}</h4><p><b>${L[0]}：</b>${c.left}</p><p><b>${L[1]}：</b>${c.next}</p><p><b>${L[2]}：</b>${c.end}</p>`).join(''):'';
+    history.replaceState(null,'','#step='+i+(boom?'&boom=1':''));
+  }
+  $('steps').onclick=e=>{const b=e.target.closest('button');if(b){i=+b.dataset.j;boom=false;render();}};
+  $('prev').onclick=()=>{if(i>0){i--;boom=false;render();}};
+  $('next').onclick=()=>{if(i<STEPS.length-1){i++;boom=false;render();}};
+  $('boom').onclick=()=>{boom=!boom;render();};
+  document.addEventListener('keydown',e=>{if(/SUMMARY|INPUT|TEXTAREA/.test(e.target.tagName))return;if(e.key==='ArrowRight')$('next').click();if(e.key==='ArrowLeft')$('prev').click();});
+  const H=Object.fromEntries(location.hash.slice(1).split('&').filter(Boolean).map(x=>x.split('=')));
+  if(H.step)i=Math.min(+H.step,STEPS.length-1); if(H.boom)boom=true;
+  render();
+}
+
+init({page:'自进化要先评估再采纳：同一批用例，用现行版本和修改后的版本各跑一遍。',
+  evals:[],apps:[],creds:[],log:[]});
+
+step({t:'第 1 天',k:['adm'],at:'api',h:'管理员维护三档评估账号',
+  b:'数据平台开通了三档评估账号。管理员在用户管理的「评估账号」里新增三个：名称、档位、网关 uid（填了 uid 就是「已开通」）。它们不出现在用户列表里，不能登录。',
+  why:'单独一张表（③ 第 1 条）。',crash:null},
+  s=>{s.page='';s.evals.push({id:'eac_1',t:'一档',uid:'EVAL_T1',st:'启用'},{id:'eac_2',t:'二档',uid:'EVAL_T2',st:'启用'},{id:'eac_3',t:'三档（受限）',uid:'EVAL_T3',st:'启用'});});
+
+step({t:'第 2 天',k:['m06','m07'],at:['api','wk'],h:'评估：每档账号各跑一遍',
+  b:'自进化模块选账号（调 listEvalAccounts），会话模块建评估会话时再校验一次。被测会话跑在「路由键 = 评估账号 ID」的 DSH 进程里，令牌种类是「评估账号」（B5）；取数时身份模块按这个评估账号的 uid 返回（B4）。三档受限账号被取数网关拒绝，记为「权限行为通过」。打分和模拟用户会话跑在 eval-aux:评估 ID 的进程里，不取数、不调 MCP tool。',
+  why:'取数结果取决于谁在问，所以要用不同权限的账号跑（需求原文：「受限账号按预期拒绝访问记为权限行为通过」）。',crash:null},
+  s=>{s.log.push({who:'评估账号 · 一档',r:'取到数据'},{who:'评估账号 · 二档',r:'取到数据（范围不同）'},{who:'评估账号 · 三档（受限）',r:'被网关拒绝 → 权限行为通过'});});
+
+step({t:'第 3 天',k:['adm'],at:'api',h:'停用一个评估账号',
+  b:'二档账号的 uid 要换，管理员先停用它：同一事务作废它的进程令牌，发变更通知。之后它不能再被选来跑评估。',
+  why:'不删除，用停用代替（③ 第 2 条）。',crash:null},
+  s=>{s.evals[1].st='停用';});
+
+step({t:'P4 · 第 1 天',k:['adm'],at:'api',h:'登记 CRM，生成凭据',
+  b:'管理员登记接入应用 CRM：勾选场景「嵌入分析」，限流额度每分钟 600 次（默认）。点「创建凭据」：平台生成 ohk_ 开头的随机密钥，<b>只在这次响应里显示</b>，库里存 SHA-256，有效期 1 年（默认）。管理员把它交给 CRM 的运维配进服务器。',
+  why:'',crash:null},
+  s=>{s.apps.push({id:'app_crm',n:'CRM',sc:'嵌入分析',st:'启用'});s.creds.push({id:'acr_1',exp:'1 年后',st:'有效'});});
+
+step({t:'P4 · 第 2 天',k:['open','m07app','mod'],at:'api',h:'CRM 替李四提问',
+  b:'CRM 后台调 <code>POST /open/v1/conversations/sessions</code>，请求头带 <code>Authorization: Bearer ohk_…</code> 和 <code>X-Acting-User: A10023</code>。入口调 resolveAppCall：凭据有效、CRM 启用、工号规范化后查到李四且启用 → 主体 AppPrincipal(CRM, 李四)。入口检查这个路由的场景（嵌入分析）在 CRM 的资格里，再按 CRM 的额度限流。会话模块用同一个处理函数，照常按李四的能力和对象归属判权；会话归李四，取数用李四的 uid；入口发一条「应用调用」审计，同时记 CRM 和李四。',
+  why:'「勾选的场景 × 李四本来能做的事」（① 第 2 对、③ 第 3 条）。',
+  boomText:'🚫 如果被拒',stripe:false,
+  crash:[{w:'CRM 调了「管理自动化」的接口（没勾这个场景）',left:'入口拒绝：403 identity.app-scope-denied。',next:'—',end:'模块都不会被调到。'},{w:'声明的工号不存在或已停用',left:'403 identity.user-disabled。',next:'—',end:'平台不自动建账号。'},{w:'超过每分钟额度',left:'429，带 Retry-After。',next:'—',end:'多实例时每个实例用「额度 ÷ 实例数」，不经数据库。'}]},
+  s=>{s.log.push({who:'CRM + 李四',r:'允许（按李四的能力，叠加嵌入分析场景）'});});
+
+step({t:'P4 · 半年后',k:['adm'],at:'api',h:'换凭据：新旧并存 7 天；怀疑泄露就撤销',
+  b:'管理员给 CRM「替换凭据」：插入新凭据 acr_2；同一事务把 acr_1 的过期时间改为 7 天后。CRM 的服务器逐台换配置，7 天内两把都认。生成新凭据不发变更通知（旧的仍有效，缓存不用清）。如果怀疑泄露，直接「撤销」：立即作废并发通知，本进程立刻清缓存。',
+  why:'',crash:null},
+  s=>{s.creds[0].exp='7 天后';s.creds.push({id:'acr_2',exp:'1 年后',st:'有效'});});
+
+mount({
+  owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6'],m06:['M06','#f59e0b'],mod:['业务模块','#38bdf8']},
+  procs:{
+    api:{n:'请求进程',s:'',chips:[['adm','m07','M07 · 管理页面','评估账号、接入应用'],['open','fw','框架 · 开放 API 入口','场景检查、限流、审计'],['m07app','m07','M07 · resolveAppCall',''],['mod','mod','业务模块 · 同一个处理函数','按实际用户判权']]},
+    wk:{n:'后台进程 / 评估',s:'',chips:[['m06','m06','M06 · 自进化评估','选评估账号'],['m07','m07','M07 · 取数身份','按评估账号的 uid']]}},
+  cols:[['api'],'db',['wk']],
+  tables:[
+    {n:'评估账号',o:'M07 · identity_eval_accounts',cols:['ID','档位','网关 uid','状态'],rows:s=>s.evals.map(r=>[r.id,r.t,r.uid,r.st])},
+    {n:'接入应用',o:'M07 · identity_integration_apps',cols:['ID','名称','调用资格','状态'],rows:s=>s.apps.map(r=>[r.id,r.n,r.sc,r.st])},
+    {n:'应用凭据',o:'M07 · identity_app_credentials（只存哈希）',cols:['ID','过期','状态'],rows:s=>s.creds.map(r=>[r.id,r.exp,r.st])},
+    {n:'结果',o:'示意',cols:['谁','结果'],rows:s=>s.log.map(r=>[r.who,r.r])}]});
+</script>
+</body>
+</html>
