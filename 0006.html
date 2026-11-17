@@ -52,7 +52,8 @@ header button,header select{font:inherit;padding:4px 11px;border-radius:7px;bord
 #lines{position:absolute;left:0;top:0;z-index:2;pointer-events:none;overflow:visible}
 .ln{fill:none;stroke:#64748b;stroke-width:3.5;marker-end:url(#ag);transition:opacity .3s}
 .ln.p4{stroke-dasharray:12 9}.ln.hid{display:none}
-.ln.on{display:inline;stroke:#facc15;stroke-width:5;marker-end:url(#ay);stroke-dasharray:14 10;animation:flow .9s linear infinite}
+.ln.on{display:inline;stroke:#facc15;stroke-width:5;marker-end:url(#ay)}
+.ln.on.p4{stroke-dasharray:14 10}
 @keyframes flow{to{stroke-dashoffset:-48}}
 .lbl{position:absolute;z-index:3;transform:translate(-50%,-50%);font-size:25px;line-height:1.3;color:#94a3b8;background:#0a101c;padding:2px 8px;border-radius:8px;white-space:pre;text-align:center;border:1px solid #1e293b;pointer-events:none;transition:opacity .3s}
 .lbl.hid{display:none}.lbl.on{display:block;color:#fde68a;border-color:#facc15;font-size:21px;background:#020617}
@@ -141,7 +142,7 @@ body.still *{transition:none!important;animation:none!important}
 <span class="mut">阶段：</span><select id="phase"><option value="9">全部</option><option value="0">P0 结束时</option><option value="1">P1 结束时</option><option value="2">P2 结束时</option><option value="3">P3 结束时</option></select><span class="sep"></span>
 <span class="mut" style="font-size:12.5px">点区域看讲解 · Esc 返回全图 · 滚轮缩放 · 按住拖动 · 数据截至 <span id="date"></span></span></header>
 <div id="stage"><div id="world"></div>
-<div id="legend">灰线：主要的调用关系　虚线：P4 才做（P0–P4 是开发阶段）　点任意区域看讲解　看不懂的词点顶部「名词解释」</div>
+<div id="legend">灰线：主要的调用关系　虚线：P4 才做（P0–P4 是开发阶段）　黄线：走一遍时这一步用到的　箭头从发起的一方指向被问、被通知的一方，答案沿原线回来　点任意区域看讲解　看不懂的词点顶部「名词解释」</div>
 <aside id="detail"><button id="dx">✕ 返回全图（Esc）</button><div id="dbody"></div></aside>
 <div id="tourbar"><button id="tp">← 上一步</button><div id="ttxt"></div><button id="tn">下一步 →</button><button id="tx">退出</button></div></div>
 <script>
@@ -441,14 +442,14 @@ const LINES = [
   { id:'L1', from:'browser', to:'r3', def:1, label:'登录 cookie', pills:['T02'] },
   { id:'L2', from:'biz', to:'r7', def:1, label:'应用凭据\n+ 实际用户', pills:['T02'], p:4 },
   { id:'L3', from:'dsh', to:'r5', def:1, label:'MCP 调用\n带进程令牌', pills:['M05'], p:2 },
-  { id:'L4', from:'r5', to:'mcp', def:1, label:'代理转发：用连接自己的凭据，令牌不外发', pills:['M05'], p:2 },
+  { id:'L4', from:'r5', to:'mcp', def:1, label:'MCP 代理认出人后转发：用连接自己的凭据，令牌不外发', pills:['M05'], p:2 },
   { id:'L5', from:'dsh', to:'r4', def:1, label:'tool 回调：按执行凭据认人（不用令牌）', pills:['M03'] },
   { id:'L6', from:'r4', to:'gw', def:1, label:'网关 uid' },
   { id:'L7', from:'r3', to:'r1', def:1, label:'用户主体\n+ 能力' },
   { id:'L8', from:'r7', to:'r1', def:1, label:'应用主体', p:4 },
   { id:'L9', from:'r2', to:'r1', def:1, label:'角色、状态\n导出权限' },
   { id:'L10', from:'r6', to:'r1', def:1, label:'评估账号\n主体', p:3 },
-  { id:'H1', from:'r5', to:'r1', label:'校验后得到主体' },
+  { id:'H1', from:'r5', to:'r1', label:'代理拿令牌来问 → 答：是谁（主体）' },
   { id:'H2', from:'T04', to:'r5', label:'签发、作废令牌', pills:['T04'], at:[490,1428] },
   { id:'H3', from:'T04', to:'dsh', label:'令牌放进环境变量', pills:['T04'] },
   { id:'H4', from:'r2', to:'r3', label:'停用、移除、重置：作废会话' },
@@ -470,22 +471,22 @@ const LINES = [
 const TOURS = [
  { id:'t1', name:'张三登录、提问、取数', steps:[
   { open:['r3'], hit:['r3.flow','r3.bcrypt','r3.hash'], lines:['L1'], ext:['browser'],
-    t:'张三在浏览器输入工号和密码。平台把工号去空格、转大写，再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。' },
+    t:'张三在浏览器输入工号和密码。平台把工号去空格、转大写，再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。\n🔒 登录成功时插一行登录会话，一个事务。' },
   { open:['r3','r1'], hit:['r3.cache','r1.user','r1.cap'], lines:['L1','L7'], ext:['browser'],
-    t:'之后每个请求浏览器都自动带上 cookie。请求入口先看 30 秒内有没有认过这个 cookie（缓存），没有再问身份与权限模块，认出是「用户张三」，并拿到他的能力清单。' },
+    t:'之后每个请求浏览器都自动带上 cookie。请求入口先看 30 秒内有没有认过这个 cookie（缓存），没有再问身份与权限模块「这是谁」→ 答：「用户张三」和他的能力清单。\n🔒 只读。' },
   { open:['r5'], hit:['r5.route','r5.kinds','r5.env'], lines:['H2','H3'], ext:['dsh'],
-    t:'张三提问。DSH 适配层要给张三起一个 DSH 进程（路由键就是张三的用户 ID），先向身份与权限模块要一把用户令牌，放进这个进程的环境变量。' },
+    t:'张三提问。DSH 适配层要给张三起一个 DSH 进程（路由键就是张三的用户 ID），先向身份与权限模块要一把用户令牌（问 → 答：令牌明文，只给这一次），放进这个进程的环境变量。\n🔒 签发：插一行令牌（库里只存哈希），一个事务。' },
   { open:['r5'], hit:['r5.why','r5.withroute','r5.internal'], lines:['L3','L4','H1'], ext:['dsh','mcp'],
-    t:'Agent 调 mem0（个人记忆）：请求带着进程令牌发给 MCP 代理。代理拿令牌问身份与权限模块，认出是张三，再用这条连接自己的凭据去访问 mem0。令牌只在平台内部用，不发给 mem0。' },
+    t:'Agent 调 mem0（个人记忆）：请求带着进程令牌发给 MCP 代理。代理拿令牌问身份与权限模块，认出是张三，再用这条连接自己的凭据去访问 mem0。令牌只在平台内部用，不发给 mem0。\n🔒 只读（校验结果缓存 30 秒）。' },
   { open:['r4'], hit:['r4.only','r4.ret','r4.col'], lines:['L5','L6'], ext:['dsh','gw'],
-    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 查到这次执行的执行凭据（替张三干活）。数据访问模块向身份与权限模块要张三的网关 uid，交给取数网关，网关按 uid 决定张三能看哪些数据。' } ]},
+    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 查到这次执行的执行凭据（替张三干活）。数据访问模块向身份与权限模块要张三的网关 uid，交给取数网关，网关按 uid 决定张三能看哪些数据。\n🔒 只读。' } ]},
  { id:'t2', name:'管理员停用李四', steps:[
   { open:['r2'], hit:['r2.disable','r2.patch'], lines:[],
     t:'管理员在用户管理里停用李四（管理员要有「管理账号」这项能力）。' },
   { open:['r2'], hit:['r2.disable'], also:['r3','r5'], lines:['H4','H5'],
-    t:'在同一个事务里：李四的账号改为停用，作废他的全部登录会话和进程令牌，并登记一条变更通知。' },
+    t:'在同一个事务里：李四的账号改为停用，作废他的全部登录会话和进程令牌，并登记一条变更通知。\n🔒 一个事务：账号状态 + 作废会话 + 作废令牌 + 登记变更通知。\n💥 中途失败：整个回滚，李四没被停用，管理员看到报错再试一次。' },
   { open:['r8'], hit:['r8.speed','r8.sub','r8.tx'], also:['r3','r5'], lines:['H12','H13'],
-    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。李四的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。' },
+    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。李四的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。\n💥 通知处理失败：只是退回到「缓存最多 30 秒后到期」，不需要额外重试。' },
   { open:['r8'], hit:['r8.list','r8.speed'], lines:['H14'],
     t:'这次停用记一条审计。如果平台后端同时跑了多个副本，其他副本收不到这条通知，要等缓存到期，最多晚 30 秒生效。' } ]},
  { id:'t3', name:'王经理跑自进化评估', steps:[
@@ -496,14 +497,14 @@ const TOURS = [
   { open:['r6'], hit:['r6.use','r6.why'], also:['r4','r5'], lines:['H7','H8','H16'],
     t:'评估时用三档评估账号跑测试题：被测会话的进程路由键就是评估账号 ID，带评估账号令牌，取数用评估账号自己的 uid。打分、模拟用户提问的会话用评估辅助令牌，不能调 MCP 工具。' },
   { open:['r1','r5'], hit:['r1.r10','r5.two'], also:['r8'], lines:['H1'],
-    t:'评估跑到一半王经理被降级：同一个事务里作废他的自进化令牌并发变更通知；之后的判权按他现在的能力算，一律拒绝。' } ]},
+    t:'评估跑到一半王经理被降级：同一个事务里作废他的自进化令牌并发变更通知；之后的判权按他现在的能力算，一律拒绝。\n🔒 一个事务：改角色 + 作废令牌 + 登记变更通知。' } ]},
  { id:'t4', name:'新人首次登录', steps:[
   { open:['r2'], hit:['r2.initpw','r2.empno'], lines:[],
     t:'管理员新建账号（工号、姓名、角色）。系统生成随机初始密码，只在这次响应里显示，由管理员转告。' },
   { open:['r3','r1'], hit:['r3.flow','r1.must'], lines:['L1','L7'], ext:['browser'],
     t:'新人用初始密码登录成功，但必须先改密：这时他的能力清单是空的，做什么都会被拒；前端打开页面时会问后端「我是谁」，看到要改密就只显示改密页。' },
   { open:['r3'], hit:['r3.policy','r3.revoke'], lines:['L1'], ext:['browser'],
-    t:'改密（输旧密码，新密码至少 8 位、含字母和数字）后，其他会话作废、当前会话保留，能力恢复。' } ]},
+    t:'改密（输旧密码，新密码至少 8 位、含字母和数字）后，其他会话作废、当前会话保留，能力恢复。\n🔒 一个事务：改密码 + 作废其他会话 + 登记变更通知。' } ]},
  { id:'t5', name:'CRM 替李四问（P4）', steps:[
   { open:['r7'], hit:['r7.resolve','r7.cred'], lines:['L2'], ext:['biz'],
     t:'CRM 用应用凭据调开放 API，声明实际用户是李四。请求入口找身份与权限模块校验。' },
@@ -1016,7 +1017,7 @@ function render() {
     const pills = st.lines.flatMap(id => LINES.find(x => x.id === id).pills || []);
     let view = union([...st.open, ...(st.also || []), ...(st.ext || []), ...pills]);
     if (scaleFor(view, 50) < 0.5) view = union([...st.open, ...(st.also || [])]);
-    tourText(); fit(view, 50, 0.9);
+    tourText(); fit(view, 130, 0.62);
   } else if (state.sel) {
     $('#' + state.sel).classList.add('on');
     const ids = LINES.filter(l => l.from === state.sel || l.to === state.sel).map(l => l.id);
@@ -1034,7 +1035,7 @@ function select(id) { state.gloss = false; state.tour = null; $('#tour').value =
 // ---------- 走一遍 ----------
 function tourText() {
   const t = TOURS.find(t => t.id === state.tour), n = t.steps.length;
-  $('#ttxt').innerHTML = `<b>${esc(t.name)}　${state.step + 1} / ${n}</b><br>${esc(t.steps[state.step].t)}`;
+  $('#ttxt').innerHTML = `<b>${esc(t.name)}　${state.step + 1} / ${n}</b><br>${esc(t.steps[state.step].t).replace(/\n/g,'<br>')}`;
   $('#tp').disabled = state.step === 0; $('#tn').disabled = state.step === n - 1;
 }
 function startTour(id) { state.gloss = false; state.sel = null; state.tour = id || null; state.step = 0; $('#tour').value = id || ''; render(); }
