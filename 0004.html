@@ -142,22 +142,21 @@ const GLOSSARY=[
 const SW_L=220; // 请求分路左侧文字区宽度
 const NAME_F=24, NAME_LH=30, DESC_F=18, DESC_LH=27, ITEM_GAP=44, SEC_PAD=24;
 const LAYOUT={
- // 第五轮（11-18）：去掉内核块；整图改成矮而宽（走一遍时可视区约 2.7:1）。上面一排：外部入口、其他模块、和 DSH 打交道的模块、DSH，模块之间留 160 以上；下面：请求进程 3 列、数据库 4 列、后台进程 4 列
- top:{y:70, cols:[{x:60,w:340,items:["G_BROWSER"]},{x:440,w:340,items:["G_APP"]},{x:820,w:340,items:["G_BRIDGE"]},{x:1200,w:340,items:["G_EVR"]},
-   {x:2140,w:400,items:["N_ID"]},{x:2700,w:420,items:["N_PUB"]},{x:3280,w:900,items:["N_CONV"]},{x:4340,w:400,items:["N_DATA"]},{x:4900,w:400,items:["N_FILE"]},{x:5460,w:400,items:["N_AUD"]},
-   {x:6060,w:380,items:["N_RES"]},{x:6620,w:420,items:["N_T04"]},{x:7180,w:440,items:["DSH"]}]},
- mid:{gap:320, cols:[
+ // 第六轮（11-18）：横向压缩到约 5700 宽、2300 高（约 2.4:1，介于全图 1.8:1 和走一遍 2.7:1 之间）。外部入口 2×2；后台进程 3 列
+ top:{y:70, cols:[{x:60,w:340,items:["G_BROWSER","G_APP"]},{x:440,w:340,items:["G_BRIDGE","G_EVR"]},
+   {x:940,w:380,items:["N_ID"]},{x:1360,w:340,items:["N_PUB"]},{x:1760,w:840,items:["N_CONV"]},{x:2740,w:380,items:["N_DATA"]},{x:3200,w:380,items:["N_FILE"]},{x:3660,w:380,items:["N_AUD"]},
+   {x:4220,w:360,items:["N_RES"]},{x:4660,w:400,items:["N_T04"]},{x:5240,w:440,items:["DSH"]}]},
+ mid:{gap:300, cols:[
    {x:100,w:560,secs:[{id:"s_sw",name:"按网址分路",items:["A1"]},{id:"s_push",name:"实时推送给浏览器",items:["S2","S1","S3"]}]},
-   {x:880,w:470,gap:70,sec:{id:"s_auth",name:"认证（5 类路径）"},items:["A2","A3","A4","A5","A6"]},
-   {x:1780,w:470,gap:100,sec:{id:"s_out",name:"交给模块 · 发事件"},items:["A7","A8","E1"]},
-   {x:2580,w:420,gap:40,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB"]},
-   {x:3140,w:420,gap:40,sec:{id:"s_db3",name:"各模块自己的表"},items:["T_BCONV","T_BAGT","T_BFILE"]},
-   {x:3700,w:420,gap:40,sec:{id:"s_db4",name:"各模块自己的表（续）"},items:["T_BAUD","T_DSHP"]},
-   {x:4260,w:420,gap:40,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_JOBS","T_INBOX","T_CUR"]},
-   {x:4920,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
-   {x:5530,w:440,sec:{id:"s_long",name:"长任务（跑在长任务执行池里）"},items:["W6","W7"]},
-   {x:6130,w:450,sec:{id:"s_run",name:"任务处理与事件"},items:["W9","W8","W10"]},
-   {x:6740,w:440,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
+   {x:780,w:470,gap:60,sec:{id:"s_auth",name:"认证（5 类路径）"},items:["A2","A3","A4","A5","A6"]},
+   {x:1430,w:470,gap:150,sec:{id:"s_out",name:"交给模块 · 发事件"},items:["A7","A8","E1"]},
+   {x:2060,w:420,gap:40,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB"]},
+   {x:2540,w:420,gap:40,sec:{id:"s_db3",name:"各模块自己的表"},items:["T_BCONV","T_BAGT","T_BFILE"]},
+   {x:3020,w:420,gap:40,sec:{id:"s_db4",name:"各模块自己的表（续）"},items:["T_BAUD","T_DSHP"]},
+   {x:3500,w:420,gap:40,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_JOBS","T_INBOX","T_CUR"]},
+   {x:4120,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
+   {x:4650,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
+   {x:5170,w:440,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
  regions:[
    {id:"GATE",name:"外部入口",items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"],cls:"r-gate"},
    {id:"NB",name:"其他模块（只画对接口）",items:["N_ID","N_CONV","N_PUB","N_DATA","N_FILE","N_AUD"],cls:"r-nb"},
@@ -219,7 +218,7 @@ const SECS=[], REGIONS=[];
 })();
 const RR=Object.fromEntries(REGIONS.map(r=>[r.id,r])), SS=Object.fromEntries(SECS.map(s=>[s.id,s]));
 M.forEach(m=>{ if(MM[m.id]) m.ws=(SECS.find(s=>m.x>=s.x&&m.x<s.x+s.w&&m.y>=s.y&&m.y<s.y+s.h)||{}).id||''; });
-const WORLD=(()=>{ const xs=REGIONS.map(r=>r.x), xe=REGIONS.map(r=>r.x+r.w), ys=REGIONS.map(r=>r.y), ye=REGIONS.map(r=>r.y+r.h); return {x:Math.min(...xs)-200,y:Math.min(...ys)-220,w:Math.max(...xe)-Math.min(...xs)+400,h:Math.max(...ye)-Math.min(...ys)+400}; })();
+const WORLD=(()=>{ const xs=REGIONS.map(r=>r.x), xe=REGIONS.map(r=>r.x+r.w), ys=REGIONS.map(r=>r.y), ye=REGIONS.map(r=>r.y+r.h); return {x:Math.floor((Math.min(...xs)-200)/20)*20,y:Math.floor((Math.min(...ys)-220)/20)*20,w:Math.max(...xe)-Math.min(...xs)+400,h:Math.max(...ye)-Math.min(...ys)+400}; })();
 const nameOf=id=>(MM[id]||RR[id]||{}).name||id;
 
 /* ---------- 连线：正交走线，绕开组件、标题和管道 ---------- */
@@ -258,7 +257,7 @@ const inRange=(R,v)=>R&&v>=R.lo&&v<=R.hi&&!R.ex.some(([a,b])=>v>a&&v<b);
 const OUT={l:1,r:0,t:3,b:2}, DV=[[1,0],[-1,0],[0,1],[0,-1]];
 function computeBelts(){
   const bs=BB.map(([id,f,t,item,label,pr],i)=>({id,f,t,item,label,i,rf:MM[f],rt:MM[t],q:pr==='q',pr:pr&&pr.startsWith('r:')?pr.slice(2):null}));
-  const CL=24, ST=20, BEND=450, CROSS=12, OVER=6, NEAR=36; // 转弯代价高：能不绕就少拐弯
+  const CL=24, ST=20, BEND=450, CROSS=12, OVER=30, NEAR=36; // 转弯代价高：能不绕就少拐弯
   const nodes=Object.values(MM), TP=titlePlates(), PI=pipeInfo();
   // 每条线被高亮时，可能和它同时亮着的组件：两端各自的邻居 + 走流程时同一步里的组件。只需避开这些
   const nb={}; BB.forEach(x=>{ (nb[x[1]]=nb[x[1]]||new Set([x[1]])).add(x[2]); (nb[x[2]]=nb[x[2]]||new Set([x[2]])).add(x[1]); });
@@ -285,22 +284,24 @@ function computeBelts(){
   // 软障碍：所有组件（这一步没亮的也算）。可以穿过，但代价高，所以只在实在绕不开时才穿
   const soft=new Uint8Array(N); nodes.forEach(m=>{ const e=ext(m); raster(soft,{r:[e[0]-8,e[1]-8,e[2]+8,e[3]+8],b:1}); }); raster(soft,{r:[WORLD.x-500,WORLD.y-500,WORLD.x+WORLD.w+500,TOPY-6],b:1});
   // 数据库区里面也略贵：别的线不要借数据库区的空隙穿来穿去
-  const zsoft=new Uint8Array(N); { const d=RR.DBZ; raster(zsoft,{r:[d.x,d.y,d.x+d.w,d.y+d.h],b:1}); } const SOFT=4;
+  const zsoft=new Uint8Array(N); { const d=RR.DBZ; raster(zsoft,{r:[d.x,d.y,d.x+d.w,d.y+d.h],b:1}); } const SOFT=2;
   const nodeObs=Object.fromEntries(obs.filter(o=>o.id&&!isK(o.id)).map(o=>[o.id,o]));
   let code=base, cur=new Set();
   const setBelt=b=>{ cur=co[b.id]; code=base.slice(); cur.forEach(id=>{ if(nodeObs[id]) raster(code,nodeObs[id]); }); };
+  // 精确找到坐标所在的网格行/列（网格里插了几行请求分路出口，不是等距的）
+  const near=(arr,v)=>{ let j=lb(arr,v-0.5); if(j>=arr.length) j=arr.length-1; if(j>0&&Math.abs(arr[j-1]-v)<Math.abs(arr[j]-v)) j--; return j; }, rowOf=y=>near(ys,y), colOf=x=>near(xs,x);
   const useH=new Uint8Array(N), useV=new Uint8Array(N), ptH=new Uint8Array(N), ptV=new Uint8Array(N);
   const endUse={}; const nearUsed=(key,v)=>(endUse[key]||[]).some(u=>Math.abs(u-v)<NEAR);
   const hitHard=(p,q,skip)=>{ const x0=Math.min(p[0],q[0]),x1=Math.max(p[0],q[0]),y0=Math.min(p[1],q[1]),y1=Math.max(p[1],q[1]);
     return hard.some(o=>(!o.id||isK(o.id)||cur.has(o.id))&&!skip.includes(o.id)&&x1>o.r[0]&&x0<o.r[2]&&y1>o.r[1]&&y0<o.r[3]); };
   const mark=P=>{ for(let k=0;k<P.length-1;k++){ const [p,q]=[P[k],P[k+1]];
-    if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); let i0=lb(xs,Math.min(p[0],q[0])), i1=lb(xs,Math.max(p[0],q[0])); for(let i=i0;i<i1&&i<NX;i++){ useH[j*NX+i]++; ptH[j*NX+i]=1; } }
-    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); let j0=lb(ys,Math.min(p[1],q[1])), j1=lb(ys,Math.max(p[1],q[1])); for(let j=j0;j<j1&&j<NY;j++){ useV[j*NX+i]++; ptV[j*NX+i]=1; } } } };
+    if(Math.abs(p[1]-q[1])<1){ const j=rowOf(p[1]); let i0=lb(xs,Math.min(p[0],q[0])), i1=lb(xs,Math.max(p[0],q[0])); for(let i=i0;i<i1&&i<NX;i++){ useH[j*NX+i]++; ptH[j*NX+i]=1; } }
+    else { const i=colOf(p[0]); let j0=lb(ys,Math.min(p[1],q[1])), j1=lb(ys,Math.max(p[1],q[1])); for(let j=j0;j<j1&&j<NY;j++){ useV[j*NX+i]++; ptV[j*NX+i]=1; } } } };
   // 能直连就直连：两个组件正对、中间没有东西挡着
   const straight=b=>{ const a=b.rf, z=b.rt, ea=ext(a), ez=ext(z); let sa,sz,lo,hi,vert;
     if(ea[3]<=ez[1]){ sa='b'; sz='t'; vert=1; } else if(ez[3]<=ea[1]){ sa='t'; sz='b'; vert=1; } else if(ea[2]<=ez[0]){ sa='r'; sz='l'; vert=0; } else if(ez[2]<=ea[0]){ sa='l'; sz='r'; vert=0; } else return null;
     const Ra=sideRange(a,sa), Rz=sideRange(z,sz); if(!Ra||!Rz) return null; lo=Math.max(Ra.lo,Rz.lo); hi=Math.min(Ra.hi,Rz.hi); if(hi<lo) return null;
-    const c=(lo+hi)/2, cand=[]; for(let d=0;d<=(hi-lo)/2;d+=10){ cand.push(c-d,c+d); }
+    const c=(lo+hi)/2, cand=[]; for(let v=Math.ceil(lo/ST)*ST;v<=hi;v+=ST) cand.push(v); cand.sort((p,q)=>Math.abs(p-c)-Math.abs(q-c)); // 只用网格线，别和相邻车道挤在一起
     for(const v of cand){ if(!inRange(Ra,v)||!inRange(Rz,v)||nearUsed(a.id+sa,v)||nearUsed(z.id+sz,v)) continue;
       const p=vert?[v,edgeAt(a,sa,v)]:[edgeAt(a,sa,v),v], q=vert?[v,edgeAt(z,sz,v)]:[edgeAt(z,sz,v),v];
       if(hitHard(p,q,[a.id,z.id])) continue; if(softLen(p,q)>60) continue;
@@ -317,7 +318,7 @@ function computeBelts(){
         const i=vert?k:gi, j=vert?gi:k; if(i<0||j<0||i>=NX||j>=NY) continue; const p=j*NX+i; if(code[p]) continue;
         const body=vert?[v,edgeAt(m,sd,v)]:[edgeAt(m,sd,v),v], grid=[xs[i],ys[j]]; if(hitHard(body,grid,[m.id])) continue;
         const stub=Math.abs(body[0]-grid[0])+Math.abs(body[1]-grid[1]);
-        let pen=nearUsed(m.id+sd,v)?400:0; const oc=vert?other.x+other.w/2:other.y+other.h/2; pen+=Math.min(60,Math.abs(v-oc)*0.04);
+        let pen=nearUsed(m.id+sd,v)?3000:0; const oc=vert?other.x+other.w/2:other.y+other.h/2; pen+=Math.min(60,Math.abs(v-oc)*0.04);
         res.push({p,dir:role==='a'?OUT[sd]:OUT[sd]^1,cost:stub+pen,body,sd,v}); } });
     return res; };
   // A*：带转弯惩罚、重叠惩罚、交叉惩罚
@@ -335,7 +336,7 @@ function computeBelts(){
       for(let nd=0;nd<4;nd++){ if(nd===(d^1)) continue; const ni=i+DV[nd][0], nj=j+DV[nd][1]; if(ni<0||nj<0||ni>=NX||nj>=NY) continue; const q=nj*NX+ni;
         const hz=nd<2, bit=hz?1:2; if((code[p]&bit)||(code[q]&bit)) continue;
         const len=hz?Math.abs(xs[ni]-xs[i]):Math.abs(ys[nj]-ys[j]), ep=Math.min(p,q);
-        const c=len+(nd!==d?BEND:0)+(hz?useH[ep]:useV[ep])*len*OVER+((hz?ptV[q]:ptH[q])?CROSS:0)+(soft[q]?len*SOFT:0)+(zsoft[q]&&!isTblEnd?len*1.5:0);
+        const c=len+(nd!==d?BEND:0)+(hz?useH[ep]:useV[ep])*len*OVER+((hz?ptV[q]:ptH[q])?CROSS:0)+(soft[q]?len*SOFT:0);
         const ns=q*4+nd, ng=g+c; if(ng<G[ns]){ G[ns]=ng; FR[ns]=st; push(ng+H(q),ns,ng); } } }
     if(!GOALBEST) return null; const path=[]; let st=GOALBEST[2], first=st; while(st>=0){ path.push(st>>2); first=st; st=FR[st]; }
     path.reverse(); return {path,goal:goals[GOALBEST[1]],start:starts[sk.get(first)]};
@@ -361,23 +362,29 @@ function computeBelts(){
   const offsetOf=(P,rf,sa,rt,sz)=>{ const n=[]; for(let k=0;k<P.length-1;k++){ const dx=sg(P[k+1][0]-P[k][0]), dy=sg(P[k+1][1]-P[k][1]); n.push([-dy,dx]); }
     const Q=P.map((p,k)=>{ const n1=n[Math.max(0,k-1)], n2=n[Math.min(n.length-1,k)]; const same=n1[0]===n2[0]&&n1[1]===n2[1]; return same?[p[0]+n1[0]*PAIR,p[1]+n1[1]*PAIR]:[p[0]+(n1[0]+n2[0])*PAIR,p[1]+(n1[1]+n2[1])*PAIR]; });
     const fix=(q,m,sd)=>{ if(!sd) return; if(sd==='l'||sd==='r') q[0]=edgeAt(m,sd,q[1]); else q[1]=edgeAt(m,sd,q[0]); }; fix(Q[0],rf,sa); fix(Q[Q.length-1],rt,sz); return Q; };
+  // 拉直小台阶：首尾两段平行、中间一小段（<60）是台阶时，把一端的接线点挪齐，变成一条直线
+  const straighten=b=>{ const P=b.pts; if(P.length!==4) return; const [p0,p1,p2,p3]=P; const h0=Math.abs(p0[1]-p1[1])<1, mid=Math.abs(p1[0]-p2[0])+Math.abs(p1[1]-p2[1]);
+    if(mid>=60) return; const tryAlign=(v,isH)=>{ const sa=b.sa, sz=b.sz; const Ra=sideRange(b.rf,sa), Rz=sideRange(b.rt,sz); if(!Ra||!Rz||!inRange(Ra,v)||!inRange(Rz,v)) return null;
+      const p=isH?[edgeAt(b.rf,sa,v),v]:[v,edgeAt(b.rf,sa,v)], q=isH?[edgeAt(b.rt,sz,v),v]:[v,edgeAt(b.rt,sz,v)]; if(hitHard(p,q,[b.f,b.t])||cellsBusy(p,q)) return null; return [p,q]; };
+    const isH=h0&&Math.abs(p2[1]-p3[1])<1; const isV=!h0&&Math.abs(p2[0]-p3[0])<1; if(!isH&&!isV) return;
+    const r=isH?(tryAlign(p0[1],true)||tryAlign(p3[1],true)):(tryAlign(p0[0],false)||tryAlign(p3[0],false)); if(r) b.pts=r; };
   const reservePair=b=>{ if(!hasPair.has(b.id)) return; b.pairPts=offsetOf(b.pts,b.rf,b.sa,b.rt,b.sz); mark(b.pairPts); };
   // 简单走法：一个弯（L 形）或两个弯（Z 形），入口可以是任意一边；找得到就不用自动找路
-  const cellsBusy=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=useH[j*NX+i]; }
-    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=useV[j*NX+i]; } return n; };
-  const softLen=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=soft[j*NX+i]*ST; }
-    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=soft[j*NX+i]*ST; } return n; };
-  const zLen=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=zsoft[j*NX+i]*ST; }
-    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=zsoft[j*NX+i]*ST; } return n; };
-  const crossCount=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=Math.min(NY-1,lb(ys,p[1]-ST/2)); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=ptV[j*NX+i]; }
-    else { const i=Math.min(NX-1,lb(xs,p[0]-ST/2)); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=ptH[j*NX+i]; } return n; };
+  const cellsBusy=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=rowOf(p[1]); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=useH[j*NX+i]; }
+    else { const i=colOf(p[0]); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=useV[j*NX+i]; } return n; };
+  const softLen=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=rowOf(p[1]); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=soft[j*NX+i]*ST; }
+    else { const i=colOf(p[0]); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=soft[j*NX+i]*ST; } return n; };
+  const zLen=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=rowOf(p[1]); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=zsoft[j*NX+i]*ST; }
+    else { const i=colOf(p[0]); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=zsoft[j*NX+i]*ST; } return n; };
+  const crossCount=(p,q)=>{ let n=0; if(Math.abs(p[1]-q[1])<1){ const j=rowOf(p[1]); for(let i=lb(xs,Math.min(p[0],q[0]));i<lb(xs,Math.max(p[0],q[0]))&&i<NX;i++) n+=ptV[j*NX+i]; }
+    else { const i=colOf(p[0]); for(let j=lb(ys,Math.min(p[1],q[1]));j<lb(ys,Math.max(p[1],q[1]))&&j<NY;j++) n+=ptH[j*NX+i]; } return n; };
   const pipeHit=(p,q)=>Math.abs(p[1]-q[1])<1&&PI.some(pp=>Math.abs(p[1]-pp.my)<44&&Math.max(p[0],q[0])>Math.min(pp.x0,pp.tx)&&Math.min(p[0],q[0])<Math.max(pp.x0,pp.tx));
   const vals=(R,c,max)=>{ if(!R) return []; const out=[]; const lo=Math.ceil(R.lo/ST)*ST, hi=Math.floor(R.hi/ST)*ST; for(let v=lo;v<=hi;v+=ST) if(inRange(R,v)) out.push(v); out.sort((p,q)=>Math.abs(p-c)-Math.abs(q-c)); return out.slice(0,max); };
   const okPath=(b,P)=>{ for(let k=0;k<P.length-1;k++){ const p=P[k],q=P[k+1]; if(hitHard(p,q,k===0?[b.f]:k===P.length-2?[b.t]:[])) return false; if(k===0&&P.length>2&&hitHard(p,q,[b.f,b.t])) return false; if(pipeHit(p,q)||cellsBusy(p,q)) return false; } return true; };
   const simpleRoute=b=>{ const a=b.rf, z=b.rt, ea=ext(a), ez=ext(z), ac=[a.x+a.w/2,a.y+a.h/2], zc=[z.x+z.w/2,z.y+z.h/2], G=CL+8; let best=null;
     const tryP=(P,sa,sz,v1,v2)=>{ if(nearUsed(a.id+sa,v1)||nearUsed(z.id+sz,v2)) return; P=simplify(P); if(!okPath(b,P)) return;
       if(hasPair.has(b.id)){ const Q=offsetOf(P,a,sa,z,sz); for(let k=0;k<Q.length-1;k++){ if(cellsBusy(Q[k],Q[k+1])||pipeHit(Q[k],Q[k+1])||hitHard(Q[k],Q[k+1],[b.f,b.t])&&k>0&&k<Q.length-2) return; } }
-      let L=0,cr=0; for(let k=0;k<P.length-1;k++){ L+=Math.abs(P[k+1][0]-P[k][0])+Math.abs(P[k+1][1]-P[k][1]); cr+=crossCount(P[k],P[k+1]); L+=softLen(P[k],P[k+1])*SOFT; if(!isTblEnd) L+=zLen(P[k],P[k+1])*1.5; }
+      let L=0,cr=0; for(let k=0;k<P.length-1;k++){ L+=Math.abs(P[k+1][0]-P[k][0])+Math.abs(P[k+1][1]-P[k][1]); cr+=crossCount(P[k],P[k+1]); L+=softLen(P[k],P[k+1])*SOFT; }
       const c=(P.length-2)*BEND+L+cr*CROSS; if(!best||c<best.c) best={c,P,sa,sz,v1,v2}; };
     // L：先横后竖 / 先竖后横
     [['r',ea[2]],['l',ea[0]]].forEach(([sa,ex0])=>[['t',ez[1]],['b',ez[3]]].forEach(([sz,ey0])=>{
@@ -412,7 +419,7 @@ function computeBelts(){
     setBelt(b); const s=straight(b); if(s){ b.pts=s; mark(s); use(b.rf,b.sa,b.sa==='l'||b.sa==='r'?s[0][1]:s[0][0]); use(b.rt,b.sz,b.sz==='l'||b.sz==='r'?s[1][1]:s[1][0]); reservePair(b); } else todo.push(b); });
   const dist=b=>Math.abs(b.rf.x+b.rf.w/2-b.rt.x-b.rt.w/2)+Math.abs(b.rf.y+b.rf.h/2-b.rt.y-b.rt.h/2);
   todo.sort((p,q)=>(q.fixed-p.fixed)||dist(p)-dist(q)).forEach(b=>{
-    isTblEnd=b.rf.shape.startsWith('cyl')||b.rt.shape.startsWith('cyl'); setBelt(b); if(!b.fixed){ const sp=simpleRoute(b); if(sp){ b.pts=sp; mark(sp); reservePair(b); return; } } let starts;
+    isTblEnd=b.rf.shape.startsWith('cyl')||b.rt.shape.startsWith('cyl'); setBelt(b); if(!b.fixed){ const sp=simpleRoute(b); if(sp){ b.pts=sp; straighten(b); mark(b.pts); reservePair(b); return; } } let starts;
     if(b.fixed){ const k=['A2','A3','A4','A5','A6'].indexOf(b.t), y=exitY(k), x=a1.x+a1.w+44, j=ys.indexOf(y), i=lb(xs,ext(a1)[2]+CL); starts=[{p:j*NX+i,dir:0,cost:xs[i]-x,body:[x,y],sd:'r',v:y}]; }
     else starts=portsOf(b.rf,'a',b.rt);
     const goals=portsOf(b.rt,'z',b.rf); const R=runA(starts,goals);
@@ -427,7 +434,7 @@ function computeBelts(){
       if(R1){ const m=R1.goal, R2=runA([{p:m.p,dir:kd,cost:0,body:m.body}],goals);
         if(R2){ const P2=[R1.start.body,...R1.path.map(p=>[xs[p%NX],ys[(p/NX)|0]]),...R2.path.slice(1).map(p=>[xs[p%NX],ys[(p/NX)|0]]),R2.goal.body];
           const S2=simplify(P2); if(crossesK(S2,K)&&!backtrack(S2)&&plen(S2)<=plen(simplify(P))+1200){ P=P2; gEnd=R2.goal; } } } }
-    b.pts=simplify(P); b.sa=st0.sd; b.sz=gEnd.sd; const R_goal=gEnd;
+    b.pts=simplify(P); b.sa=st0.sd; b.sz=gEnd.sd; const R_goal=gEnd; if(!b.fixed) straighten(b);
     mark(b.pts); if(!b.fixed) use(b.rf,st0.sd,st0.v); use(b.rt,R_goal.sd,R_goal.v); reservePair(b); });
   bs.filter(b=>b.pr).forEach(b=>{ const a=bs.find(y=>y.id===b.pr); b.pts=(a.pairPts||offsetOf(a.pts,a.rf,a.sa,a.rt,a.sz)).slice().reverse(); });
   // 保险：万一出现斜线段，补一个直角拐点
