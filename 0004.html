@@ -73,7 +73,7 @@ body.nopanel #panel{display:none}
 </style></head><body>
 <header><h1>RFC-0004 后端框架结构图</h1><select id="tour"></select><span class="sep"></span>
 <span class="mut">去看：</span><button id="gall">全局</button><button id="gapi">外部入口 + 请求进程</button><button id="gdb">数据库</button><button id="gwk">后台进程</button><button id="gtop">其他模块 + DSH</button><span class="sep"></span>
-<button id="bgl">名词解释</button><button id="bpanel">隐藏右侧面板</button><span class="mut" style="font-size:12px">点击看连线 · 滚轮缩放 · 按住拖动 · 双击放大 · 数据截至 2026-11-16</span></header>
+<button id="bgl">名词解释</button><button id="bpanel">显示右侧面板</button><span class="mut" style="font-size:12px">点击看连线 · 滚轮缩放 · 按住拖动 · 双击放大 · 数据截至 2026-11-16</span></header>
 <main><div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg><div id="legend"></div>
 <div id="tourbar"><button id="tp">← 上一步</button><div id="ttxt"></div><button id="tn">下一步 →</button><button id="tx">退出</button></div></div>
 <aside id="panel"></aside></main>
@@ -138,24 +138,26 @@ const GLOSSARY=[
 const SW_L=220; // 请求分路左侧文字区宽度
 const NAME_F=24, NAME_LH=30, DESC_F=18, DESC_LH=27, ITEM_GAP=44, SEC_PAD=24;
 const LAYOUT={
- top:{y:70, cols:[{x:1380,w:470,items:["N_ID"]},{x:2020,w:700,items:["N_CONV"]},{x:3050,w:370,items:["N_PUB"]},{x:3480,w:370,items:["N_DATA"]},{x:3910,w:370,items:["N_RES"]},{x:4340,w:370,items:["N_FILE"]},{x:4770,w:370,items:["N_AUD"]},{x:5810,w:440,items:["N_T04"]},{x:6400,w:430,items:["DSH"]}]},
+ top:{y:70, cols:[{x:1300,w:470,items:["N_ID"]},{x:1930,w:700,items:["N_CONV"]},{x:2880,w:370,items:["N_PUB"]},{x:3310,w:370,items:["N_DATA"]},{x:3740,w:370,items:["N_FILE"]},{x:4170,w:370,items:["N_AUD"]}]},
  mid:{gap:240, cols:[
-   {x:40,w:340,items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"]},
-   {x:640,w:560,items:["A1","E1"]},
-   {x:1380,w:470,sec:{id:"s_auth",name:"认证（5 类路径）"},items:["A2","A3","A4","A5","A6"]},
-   {x:2020,w:420,secs:[{id:"s_out",name:"交给模块",items:["A7","A8"]},{id:"s_push",name:"实时推送给浏览器",items:["S2","S1","S3"]}]},
-   {x:2630,w:210,items:["K1"],full:true},
-   {x:3050,w:420,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB","T_DSHP"]},
-   {x:3610,w:420,sec:{id:"s_db3",name:"各模块自己的表"},items:["T_BCONV","T_BAGT","T_BFILE","T_BAUD"]},
-   {x:4170,w:420,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_JOBS","T_INBOX","T_CUR"]},
-   {x:4790,w:210,items:["K2"],full:true},
-   {x:5210,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
-   {x:5810,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
-   {x:6400,w:430,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
+   {x:40,w:340,items:["G_BROWSER","G_APP","G_EVR"]},
+   {x:580,w:560,items:["A1","E1"]},
+   {x:1300,w:470,sec:{id:"s_auth",name:"认证（5 类路径）"},items:["A2","A3","A4","A5","A6"]},
+   {x:1930,w:420,secs:[{id:"s_out",name:"交给模块",items:["A7","A8"]},{id:"s_push",name:"实时推送给浏览器",items:["S2","S1","S3"]}]},
+   {x:2510,w:210,items:["K1"],full:true},
+   {x:2880,w:420,gap:110,sec:{id:"s_db1",name:"请求进程用的表"},items:["T_IDEM","T_EP","T_CB","T_DSHP"]},
+   {x:3440,w:420,gap:110,sec:{id:"s_db3",name:"各模块自己的表"},items:["T_BCONV","T_BAGT","T_BFILE","T_BAUD"]},
+   {x:4000,w:420,gap:110,sec:{id:"s_db2",name:"后台进程用的表"},items:["T_JOBS","T_INBOX","T_CUR"]},
+   {x:4580,w:210,items:["K2"],full:true},
+   {x:4950,w:450,sec:{id:"s_pool",name:"执行池（每个后台进程 3 个）"},items:["W1a","W1b","W1c"]},
+   {x:5560,w:440,secs:[{id:"s_long",name:"长任务（跑在长任务执行池里）",items:["W6","W7"]},{id:"s_run",name:"任务处理与事件",items:["W9","W8","W10"]}]},
+   {x:6160,w:430,sec:{id:"s_sched",name:"定时任务（后台进程的调度线程）"},items:["W2","W3","W4","W5"]}]},
+ bot:{gap:260, cols:[{x:2880,w:420,items:["G_BRIDGE"]},{x:3480,w:470,items:["DSH"]},{x:4130,w:420,items:["N_RES"]},{x:4650,w:450,items:["N_T04"]}]},
  regions:[
-   {id:"NB",name:"其他模块（只画对接口）",items:["N_ID","N_CONV","N_PUB","N_DATA","N_RES","N_FILE","N_AUD","N_T04"],cls:"r-nb"},
-   {id:"DSHR",name:"DSH",items:["DSH"],cls:"r-gate"},
-   {id:"GATE",name:"外部入口",items:["G_BROWSER","G_APP","G_BRIDGE","G_EVR"],cls:"r-gate"},
+   {id:"NB",name:"其他模块（只画对接口）",items:["N_ID","N_CONV","N_PUB","N_DATA","N_FILE","N_AUD"],cls:"r-nb"},
+   {id:"NB2",name:"和 DSH 打交道的模块（只画对接口）",items:["N_RES","N_T04"],cls:"r-nb"},
+   {id:"DSHR",name:"DSH",items:["G_BRIDGE","DSH"],cls:"r-gate"},
+   {id:"GATE",name:"外部入口",items:["G_BROWSER","G_APP","G_EVR"],cls:"r-gate"},
    {id:"API",name:"请求进程（API）",sub:"接住所有外部请求 · 程序名 platform-api · 可部署多个 · 每个 200 个请求线程",items:["A1","E1","A2","A3","A4","A5","A6","A7","A8","S2","S1","S3","K1"],cls:"r-api",stack:true},
    {id:"DBZ",name:"数据库 · MySQL 一个库（TDSQL）",items:["T_IDEM","T_EP","T_CB","T_DSHP","T_BCONV","T_BAGT","T_BFILE","T_BAUD","T_JOBS","T_INBOX","T_CUR"],cls:"r-db"},
    {id:"WK",name:"后台进程（Worker）",sub:"跑后台任务、盯 DSH、定时清理 · 程序名 platform-worker · 部署 2 个（叠影表示）",items:["K2","W1a","W1b","W1c","W6","W7","W9","W8","W10","W2","W3","W4","W5"],cls:"r-wk",stack:true}]
@@ -191,18 +193,20 @@ function measure(m){ const i=INS[m.shape]; const tw=m.w-i.l-i.r;
 /* ---------- 布局 ---------- */
 const SECS=[], REGIONS=[];
 (function(){
-  const place=(id,x,w,y)=>{ const m=MM[id]; m.x=x; m.w=w; measure(m); y+=(INS[m.shape].deco||0); m.y=y; return y+m.h+ITEM_GAP; };
+  const place=(id,x,w,y,g)=>{ const m=MM[id]; m.x=x; m.w=w; measure(m); y+=(INS[m.shape].deco||0); m.y=y; return y+m.h+(g||ITEM_GAP); };
   let topBottom=0;
   LAYOUT.top.cols.forEach(c=>{ let y=LAYOUT.top.y; c.items.forEach(id=>{ y=place(id,c.x,c.w,y); }); topBottom=Math.max(topBottom,y); });
   const y0=topBottom+LAYOUT.mid.gap; let midBottom=y0;
   const fulls=[];
-  LAYOUT.mid.cols.forEach(c=>{ let y=y0;
+  LAYOUT.mid.cols.forEach(c=>{ let y=y0; const G=c.gap||ITEM_GAP;
     if(c.full){ fulls.push(c); return; }
     const secs=c.secs||(c.sec?[{...c.sec,items:c.items}]:null);
-    if(secs){ secs.forEach(s=>{ const sy=y; y+=56; s.items.forEach(id=>{ y=place(id,c.x+SEC_PAD,c.w-SEC_PAD*2,y); }); y=y-ITEM_GAP+SEC_PAD; SECS.push({id:s.id,name:s.name,x:c.x,y:sy,w:c.w,h:y-sy}); y+=50; }); y-=50; }
-    else c.items.forEach(id=>{ y=place(id,c.x,c.w,y); });
+    if(secs){ secs.forEach(s=>{ const sy=y; y+=56; s.items.forEach(id=>{ y=place(id,c.x+SEC_PAD,c.w-SEC_PAD*2,y,G); }); y=y-G+SEC_PAD; SECS.push({id:s.id,name:s.name,x:c.x,y:sy,w:c.w,h:y-sy}); y+=50; }); y-=50; }
+    else c.items.forEach(id=>{ y=place(id,c.x,c.w,y,G); });
     midBottom=Math.max(midBottom,y); });
   fulls.forEach(c=>{ const m=MM[c.items[0]]; m.x=c.x; m.w=c.w; measure(m); m.y=y0; });
+  // 最下面一排：和 DSH 打交道的模块和 DSH 本身
+  if(LAYOUT.bot){ const yb=midBottom+LAYOUT.bot.gap; LAYOUT.bot.cols.forEach(c=>{ let y=yb; c.items.forEach(id=>{ y=place(id,c.x,c.w,y); }); }); }
   LAYOUT.regions.forEach(r=>{ let x0=1e9,y1=1e9,x1=-1e9,y2=-1e9; r.items.forEach(id=>{ const m=MM[id]; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y1=Math.min(y1,m.y-d); x1=Math.max(x1,m.x+m.w+(m.shape==='booth'||m.shape==='booth3'||m.shape==='plug'?70:0)+(m.shape==='switch'?40:0)); y2=Math.max(y2,m.y+m.h); });
     SECS.forEach(s=>{ if(r.items.some(id=>MM[id].x>=s.x&&MM[id].x<s.x+s.w&&MM[id].y>=s.y&&MM[id].y<s.y+s.h)){ x0=Math.min(x0,s.x); y1=Math.min(y1,s.y); x1=Math.max(x1,s.x+s.w); y2=Math.max(y2,s.y+s.h); } });
     REGIONS.push({...r,x:x0-40,y:y1-96,w:x1-x0+80,h:y2-y1+96+40}); r.items.forEach(id=>MM[id].z=r.id); });
@@ -506,14 +510,17 @@ stage.addEventListener('pointerdown',e=>{ drag={x:e.clientX,y:e.clientY,vx:st.vb
 window.addEventListener('pointermove',e=>{ if(!drag) return; const r=stage.getBoundingClientRect(), dx=e.clientX-drag.x, dy=e.clientY-drag.y; if(Math.abs(dx)+Math.abs(dy)>5) drag.moved=true; if(drag.moved){ st.vb.x=drag.vx-dx/r.width*st.vb.w; st.vb.y=drag.vy-dy/r.height*st.vb.h; setVB(); stage.classList.add('grab'); } });
 window.addEventListener('pointerup',()=>{ if(drag&&drag.moved) stage.dataset.dragged='1'; drag=null; stage.classList.remove('grab'); });
 document.addEventListener('click',e=>{ if(stage.dataset.dragged){ delete stage.dataset.dragged; return; } const t=e.target;
-  const li=t.closest('li[data-belt]'); if(li){ if(st.tour) return; st.sel=null; st.selBelt=li.dataset.belt; showBelt(st.selBelt); applyHL(); return; }
-  const n=t.closest('.node'); if(n){ if(st.tour) return; st.selBelt=null; st.sel=n.dataset.node; showNode(st.sel); applyHL(); return; }
-  const b=t.closest('.belt,.blab'); if(b){ if(st.tour) return; st.sel=null; st.selBelt=b.dataset.belt; showBelt(st.selBelt); applyHL(); return; }
+  const li=t.closest('li[data-belt]'); if(li){ if(st.tour) return; st.sel=null; st.selBelt=li.dataset.belt; panelOn(); showBelt(st.selBelt); applyHL(); return; }
+  const n=t.closest('.node'); if(n){ if(st.tour) return; st.selBelt=null; st.sel=n.dataset.node; panelOn(); showNode(st.sel); applyHL(); return; }
+  const b=t.closest('.belt,.blab'); if(b){ if(st.tour) return; st.sel=null; st.selBelt=b.dataset.belt; panelOn(); showBelt(st.selBelt); applyHL(); return; }
   if(t.closest('#svg')&&!st.tour){ st.sel=null; st.selBelt=null; applyHL(); } });
 stage.addEventListener('dblclick',e=>{ const n=e.target.closest('.node'); if(n) zoomTo([n.dataset.node]); });
 $('#gall').onclick=()=>animVB(boxFit(WORLD.x,WORLD.y,WORLD.x+WORLD.w,WORLD.y+WORLD.h,1));
-$('#bgl').onclick=()=>{ document.body.classList.remove('nopanel'); $('#panel').innerHTML='<h2>名词解释</h2><dl class="gl">'+GLOSSARY.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>'; $('#panel').scrollTop=0; };
-$('#gapi').onclick=()=>goRegion('GATE','API'); $('#gtop').onclick=()=>goRegion('NB','DSHR'); $('#gdb').onclick=()=>goRegion('DBZ'); $('#gwk').onclick=()=>goRegion('WK');
+$('#bgl').onclick=()=>{ panelOn(); $('#panel').innerHTML='<h2>名词解释</h2><dl class="gl">'+GLOSSARY.map(([k,v])=>`<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join('')+'</dl>'; $('#panel').scrollTop=0; };
+$('#gapi').onclick=()=>goRegion('GATE','API'); $('#gtop').onclick=()=>goRegion('NB','NB2','DSHR'); $('#gdb').onclick=()=>goRegion('DBZ'); $('#gwk').onclick=()=>goRegion('WK');
+// 右侧面板默认收起（走一遍和总览时图更大）；自己点组件或连线时再展开
+const panelOn=()=>{ document.body.classList.remove('nopanel'); $('#bpanel').textContent='隐藏右侧面板'; };
+document.body.classList.add('nopanel');
 $('#bpanel').onclick=()=>{ document.body.classList.toggle('nopanel'); $('#bpanel').textContent=document.body.classList.contains('nopanel')?'显示右侧面板':'隐藏右侧面板'; };
 $('#tour').innerHTML='<option value="">▶ 走一遍…</option>'+TOURS.map(t=>`<option value="${t.id}">${esc(t.name)}</option>`).join('');
 // 走一遍的讲解排版：第一行是核心句（【…】开头的变成小标签）；「- 」开头是要点；🔒 事务、💥 失败时、📎 例子数据放右栏
@@ -548,7 +555,7 @@ const usedIt=new Set(BB.map(b=>b[3]));
 $('#legend').innerHTML='<b>连线</b>　<span>⋯ 点点线：发起的一方去问、递过去</span><span>— 实线：答案回来、或送出的东西</span><span>两条挨着、同一颜色的线 = 一问一答</span><span>颜色只为区分相邻的线，不代表种类；种类看线上的小图标</span><br><b>线上传的内容</b>　'+Object.entries(ITEMS).filter(([k])=>usedIt.has(k)).map(([k,i])=>i).map(i=>`<span><i style="border-color:#64748b">${i.e}</i>${esc(i.n)}</span>`).join('');
 $('#panel').innerHTML=`<h2>RFC-0004 后端框架</h2><ul>
 <li><b>两个进程</b>：平台后端是两个程序。<b>请求进程</b>（蓝框，程序名 platform-api）接住所有外部请求，处理完马上返回；<b>后台进程</b>（绿框，程序名 platform-worker）不接请求，只在后台跑任务、盯 DSH、定时清理。框后面的叠影表示可以部署多个（后台进程部署 2 个）。</li>
-<li><b>布局</b>：最上面一排是其他模块（只画和框架对接的地方）和 DSH；中间从左到右是外部入口 → 请求进程 → 数据库 → 后台进程。数据库夹在两个进程中间，分三列：左列是请求进程用的表，中列是各模块自己的表，右列是后台进程用的表。</li>
+<li><b>布局</b>：最上面一排是其他模块（只画和框架对接的地方）；中间从左到右是外部入口 → 请求进程 → 数据库 → 后台进程；最下面一排是和 DSH 打交道的部分：资源库的 MCP 代理、DSH（含桥接插件）、DSH 适配层。数据库夹在两个进程中间，分三列：左列是请求进程用的表，中列是各模块自己的表，右列是后台进程用的表。</li>
 <li><b>内核</b>是两个进程里贴着数据库的紫色竖条：框架给各模块的公共服务。紫色粗管道是共享连接池，铭牌上的条数是<b>每个进程</b>的。</li>
 <li><b>外形</b>：岗亭（带黄黑栏杆）是认证；道岔是请求分路；表盘是定时类；天线塔是浏览器推送连接；托盘上的刻度是执行池的并发上限；叠在一起的卡片表示有很多个（每个会话 / 每个 DSH 进程一个）；圆柱是表，列的中文名后面灰色的是列名。</li>
 <li><b>连线</b>：箭头指向接收的一方。<b>点点线</b>是发起的一方去问（线上的小图标是递过去的东西，什么都不递就是 ❓）；<b>实线</b>是答案回来，或单向送出的东西。两条挨着的线就是一问一答，比如网页认证带 🍪 去问身份模块，身份模块回 🪪「苏文韬」。</li><li><b>看不懂的词</b>点顶部「名词解释」。</li>
