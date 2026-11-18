@@ -325,6 +325,14 @@ function computeBelts(){
   const simplify=P=>{ const R=[P[0]]; for(let k=1;k<P.length;k++){ const q=P[k], p=R[R.length-1]; if(Math.abs(q[0]-p[0])<0.5&&Math.abs(q[1]-p[1])<0.5) continue;
       if(R.length>=2){ const o=R[R.length-2]; if((Math.abs(o[0]-p[0])<0.5&&Math.abs(p[0]-q[0])<0.5)||(Math.abs(o[1]-p[1])<0.5&&Math.abs(p[1]-q[1])<0.5)){ R[R.length-1]=q; continue; } } R.push(q); } return R; };
   const use=(m,sd,v)=>{ (endUse[m.id+sd]=endUse[m.id+sd]||[]).push(v); };
+  const isTbl=m=>m.shape==='cyl'||m.shape==='cylg';
+  const KS=nodes.filter(m=>m.shape==='kernel');
+  // 写表的线该穿哪个内核：源和表之间、横向上的内核；源本身在库区或是表就不管
+  const writeKernel=b=>{ if(!isTbl(b.rt)||isTbl(b.rf)||isK(b.f)) return null; const sx=b.rf.x+b.rf.w/2, tx=b.rt.x+b.rt.w/2;
+    const between=KS.filter(k=>{ const kx=k.x+k.w/2; return (kx-sx)*(kx-tx)<0; }); if(between.length) return between[0];
+    return KS.slice().sort((p,q)=>Math.abs(p.x+p.w/2-sx)-Math.abs(q.x+q.w/2-sx))[0]; };
+  const crossesK=(P,K)=>{ for(let k=0;k<P.length-1;k++){ const p=P[k],q=P[k+1]; if(Math.abs(p[1]-q[1])<1&&p[1]>K.y&&p[1]<K.y+K.h&&Math.min(p[0],q[0])<K.x&&Math.max(p[0],q[0])>K.x+K.w) return true; } return false; };
+  const plen=P=>{ let L=0; for(let k=0;k<P.length-1;k++) L+=Math.abs(P[k+1][0]-P[k][0])+Math.abs(P[k+1][1]-P[k][1]); return L+(P.length-2)*BEND; };
   // 先直连，再按距离从近到远走线
   const todo=[];
   bs.forEach(b=>{ if(b.pr) return; b.fixed=b.f==='A1'&&['A2','A3','A4','A5','A6'].includes(b.t); if(b.fixed){ todo.push(b); return; }
@@ -337,8 +345,17 @@ function computeBelts(){
     const goals=portsOf(b.rt,'z',b.rf); const R=runA(starts,goals);
     if(!R){ const p=[b.rf.x+b.rf.w,b.rf.y+b.rf.h/2], q=[b.rt.x,b.rt.y+b.rt.h/2]; b.pts=[p,q]; return; }
     const st0=R.start;
-    const P=[st0.body,...R.path.map(p=>[xs[p%NX],ys[(p/NX)|0]]),R.goal.body]; b.pts=simplify(P); b.sa=st0.sd; b.sz=R.goal.sd;
-    mark(b.pts); if(!b.fixed) use(b.rf,st0.sd,st0.v); use(b.rt,R.goal.sd,R.goal.v); });
+    let P=[st0.body,...R.path.map(p=>[xs[p%NX],ys[(p/NX)|0]]),R.goal.body], gEnd=R.goal;
+    // 写表的线尽量横穿内核（共享连接池）：先走到内核里，再走到表；绕路不多才用
+    const K=writeKernel(b);
+    if(K&&!crossesK(simplify(P),K)){ const ek=ext(K), ki=lb(xs,K.x+K.w/2), kd=(b.rf.x+b.rf.w/2)<(K.x+K.w/2)?0:1, mids=[];
+      for(let j=0;j<NY;j++){ const y=ys[j]; if(y<=ek[1]+CL+70||y>=ek[3]-CL) continue; const p=j*NX+ki; if(code[p]&1) continue; mids.push({p,dir:kd,cost:0,body:[xs[ki],y],sd:'k',v:y}); }
+      const R1=mids.length?runA(starts,mids):null;
+      if(R1){ const m=R1.goal, R2=runA([{p:m.p,dir:kd,cost:0,body:m.body}],goals);
+        if(R2){ const P2=[R1.start.body,...R1.path.map(p=>[xs[p%NX],ys[(p/NX)|0]]),...R2.path.slice(1).map(p=>[xs[p%NX],ys[(p/NX)|0]]),R2.goal.body];
+          if(plen(simplify(P2))<=plen(simplify(P))+1200){ P=P2; gEnd=R2.goal; } } } }
+    b.pts=simplify(P); b.sa=st0.sd; b.sz=gEnd.sd; const R_goal=gEnd;
+    mark(b.pts); if(!b.fixed) use(b.rf,st0.sd,st0.v); use(b.rt,R_goal.sd,R_goal.v); });
   // 一问一答：答案那条线 = 去问那条线平移 PAIR 像素、反过来走
   const PAIR=20, sg=v=>v>0.5?1:v<-0.5?-1:0;
   bs.filter(b=>b.pr).forEach(b=>{ const a=bs.find(y=>y.id===b.pr), P=a.pts, n=[];
