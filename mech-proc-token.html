@@ -116,7 +116,7 @@ table.plain td{color:#d6dee9}
 
 <p class="hint">对照 <a href="mech-toolcb.html">A8 tool 回调核验</a> 一起看。</p>
 <h1>DSH 进程调 MCP 时怎么认人：每个进程一把令牌</h1>
-<p class="lead">机制：进程令牌（身份与权限 0006 第 1.1、5 节）。例子：张三的 DSH 进程里，Agent 调 mem0 记忆服务；王经理的自进化进程调行内 MCP 服务；评估和探测进程。</p>
+<p class="lead">机制：进程令牌（身份与权限 0006 第 1.1、5 节）。例子：苏文韬的 DSH 进程里，Agent 调 mem0 记忆服务；王经理的自进化进程调行内 MCP 服务；评估和探测进程。</p>
 <p class="sub">这一页想让你讲得出：tool 回调已经能认人了，为什么 MCP 还要另一套；令牌从签发到作废的一生；五种令牌各代表谁、放行什么；为什么不设过期、风险能不能接受。
 <span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006（签发、校验）；<span class="who" style="--c:#94a3b8">DSH 适配层</span> = 0002（起进程、交给守护程序）；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理（拿令牌问「是谁」，再判能不能调）。</p>
 <nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 五种令牌</a><a href="#s4">④ 为什么这样做</a><a href="#s5">⑤ 它不保证什么</a><a href="#s6">⑥ 自测</a></nav>
@@ -181,8 +181,8 @@ table.plain td{color:#d6dee9}
 
 <h2 id="s6">⑥ 自测 <small>先自己想，再点开</small></h2>
 <div class="qa">
-<details><summary>1. 张三的 DSH 进程调 mem0，代理怎么知道是张三？</summary>
-  <p>请求头里带着进程令牌；代理调身份模块的 verifyCallerToken，身份模块按令牌的 SHA-256 查到这一行，未作废、张三是启用的 → 返回种类「用户」、路由键、主体张三。代理据此判断，并可以向 mem0 传张三的身份。</p></details>
+<details><summary>1. 苏文韬的 DSH 进程调 mem0，代理怎么知道是苏文韬？</summary>
+  <p>请求头里带着进程令牌；代理调身份模块的 verifyCallerToken，身份模块按令牌的 SHA-256 查到这一行，未作废、苏文韬是启用的 → 返回种类「用户」、路由键、主体苏文韬。代理据此判断，并可以向 mem0 传苏文韬的身份。</p></details>
 <details><summary>2. 王经理的自进化进程能用 mem0 吗？</summary>
   <p>不能。自进化令牌不放 mem0，也不传最终用户身份；只放这个自进化 Agent 版本勾选的 tool。</p></details>
 <details><summary>3. 发布探测进程能调行内 MCP 服务的 tool 吗？</summary>
@@ -371,25 +371,25 @@ function mount(cfg){
   render();
 }
 
-init({page:'张三第一次提问，平台要为路由键 usr_张三 起一个 DSH 进程。',
+init({page:'苏文韬第一次提问，平台要为路由键 usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB 起一个 DSH 进程。',
   tok:[],proc:[],cache:[]});
 
 step({t:'09:00:00',k:['t04','issue'],at:'api',h:'签发：按路由键认出种类和代表谁',
-  b:'DSH 适配层要为路由键 usr_张三 起进程，经装配层调身份模块的 <code>issueProcessToken(usr_张三)</code>。身份模块解析路由键：是用户 ID → 种类「用户」，代表张三；张三是启用的 → 生成 32 字节随机令牌，库里存它的 SHA-256、种类、路由键、代表对象；<b>明文只返回这一次</b>。',
+  b:'DSH 适配层要为路由键 usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB 起进程，经装配层调身份模块的 <code>issueProcessToken(usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB)</code>。身份模块解析路由键：是用户 ID → 种类「用户」，代表苏文韬；苏文韬是启用的 → 生成 32 字节随机令牌，库里存它的 SHA-256、种类、路由键、代表对象；<b>明文只返回这一次</b>。',
   why:'库里只存哈希：令牌只需要核对，不需要拿回明文（A11 ① 第 1 对）。',
   boomText:'🚫 如果代表对象不行',stripe:false,
-  crash:[{w:'张三已被停用',left:'拒绝签发（identity.user-disabled）。',next:'—',end:'起不了带他身份的进程。'},{w:'路由键是 evolution:王经理，而他没有「自进化管理」能力',left:'拒绝签发（identity.capability-missing）。',next:'—',end:'签发和校验时都查这项能力（④ 第 5 条）。'}]},
-  s=>{s.page='';s.tok.push({id:'ptk_1',k:'用户',rk:'usr_张三',who:'张三',st:'有效'});});
+  crash:[{w:'苏文韬已被停用',left:'拒绝签发（identity.user-disabled）。',next:'—',end:'起不了带他身份的进程。'},{w:'路由键是 evolution:王经理，而他没有「自进化管理」能力',left:'拒绝签发（identity.capability-missing）。',next:'—',end:'签发和校验时都查这项能力（④ 第 5 条）。'}]},
+  s=>{s.page='';s.tok.push({id:'ptk_1',k:'用户',rk:'usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB',who:'苏文韬',st:'有效'});});
 
 step({t:'09:00:01',k:['t04'],at:['api','dsh'],h:'交给守护程序，放进进程环境变量',
   b:'DSH 适配层把明文令牌（连同桥接服务密钥，A11）交给守护程序，守护程序注入新进程的环境变量；令牌 ID 记在 DSH 进程登记里。进程里的 MCP 配置会把它读进请求头。',
   why:'这就是「随进程有效」：令牌跟着这个进程。',crash:null},
-  s=>{s.proc.push({p:'dshp_张三',rk:'usr_张三',t:'ptk_1',st:'运行中'});});
+  s=>{s.proc.push({p:'dshp_苏文韬',rk:'usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB',t:'ptk_1',st:'运行中'});});
 
 step({t:'09:05:00',k:['agent','m05','verify'],at:['dsh','api'],h:'Agent 调 mem0：代理拿令牌问「是谁」',
-  b:'Agent 调 mem0 记忆服务，请求直接发到 MCP 代理，请求头里带着令牌。代理调 <code>verifyCallerToken</code>：身份模块按 SHA-256 查到 ptk_1，未作废，张三当前是启用的 → 返回令牌 ID、种类「用户」、路由键、主体张三。代理把结果缓存 30 秒，按资源模块的对象授权判断能不能调，可以向 mem0 传张三的身份，按路由键记一条 MCP 调用记录。',
+  b:'Agent 调 mem0 记忆服务，请求直接发到 MCP 代理，请求头里带着令牌。代理调 <code>verifyCallerToken</code>：身份模块按 SHA-256 查到 ptk_1，未作废，苏文韬当前是启用的 → 返回令牌 ID、种类「用户」、路由键、主体苏文韬。代理把结果缓存 30 秒，按资源模块的对象授权判断能不能调，可以向 mem0 传苏文韬的身份，按路由键记一条 MCP 调用记录。',
   why:'身份模块只回答「是谁」；「能不能用这条连接、这个 tool」是代理（0010）判断的。',crash:null},
-  s=>{s.cache.push({k:'ptk_1',v:'张三 · 用户 · usr_张三',exp:'09:05:30'});});
+  s=>{s.cache.push({k:'ptk_1',v:'苏文韬 · 用户 · usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB',exp:'09:05:30'});});
 
 step({t:'10:00:00',k:['t04','issue','m05','verify'],at:['api','dsh'],h:'王经理的自进化进程：另一种令牌，放行范围不同',
   b:'王经理发起自进化，适配层为路由键 evolution:王经理 起进程，签发「自进化」令牌（主体：服务主体·自进化·王经理）。这个进程调行内 MCP 服务时，代理只放这个自进化 Agent 版本勾选的 tool，不放 mem0，不传最终用户身份。',
@@ -401,9 +401,9 @@ step({t:'10:30:00',k:['adm'],at:'api',h:'王经理被降级：自进化令牌作
   why:'校验时还会再查一次能力，作为第二道保险（④ 第 3、5 条）。',crash:null},
   s=>{s.tok[1].st='已作废';});
 
-step({t:'18:00:00',k:['t04','revoke'],at:'api',h:'张三的进程被回收：令牌作废',
-  b:'会话模块判定张三没有运行中或等待中的会话，回收他的 DSH 进程。适配层调 <code>revokeProcessToken(ptk_1)</code>，令牌作废。失败了由适配层的清理任务重试，重复调用结果一样。作废超过 7 天的行由每日清理任务删除。',
-  why:'进程在，令牌在；进程没了，令牌作废（① 第 4 对）。下次张三提问，起新进程、签新令牌。',crash:null},
+step({t:'18:00:00',k:['t04','revoke'],at:'api',h:'苏文韬的进程被回收：令牌作废',
+  b:'会话模块判定苏文韬没有运行中或等待中的会话，回收他的 DSH 进程。适配层调 <code>revokeProcessToken(ptk_1)</code>，令牌作废。失败了由适配层的清理任务重试，重复调用结果一样。作废超过 7 天的行由每日清理任务删除。',
+  why:'进程在，令牌在；进程没了，令牌作废（① 第 4 对）。下次苏文韬提问，起新进程、签新令牌。',crash:null},
   s=>{s.tok[0].st='已作废';s.proc[0].st='已回收';s.cache[0].v='（已过期）';});
 
 mount({

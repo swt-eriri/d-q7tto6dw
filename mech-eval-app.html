@@ -116,7 +116,7 @@ table.plain td{color:#d6dee9}
 
 <p class="hint">架构级：知道做什么、为什么即可。</p>
 <h1>两种「不是普通用户」的身份：评估账号、接入应用</h1>
-<p class="lead">机制：评估账号（身份与权限 0006 第 6 节）、接入应用（0006 第 7 节，细节在 0017 开放 API）。例子：用三档评估账号跑同一批用例；CRM 替客户经理李四调用平台。</p>
+<p class="lead">机制：评估账号（身份与权限 0006 第 6 节）、接入应用（0006 第 7 节，细节在 0017 开放 API）。例子：用三档评估账号跑同一批用例；CRM 替客户经理韬文苏调用平台。</p>
 <p class="sub">这一页想让你讲得出：评估账号为什么单独一张表；接入应用替人调用时能力怎么算；生成新凭据后旧的怎么处理。
 <span class="who" style="--c:#f472b6">M07</span> = 身份与权限，你负责的 0006；<span class="who" style="--c:#a78bfa">框架</span> = 你负责的 0004（开放 API 入口、限流）；<span class="who" style="--c:#f59e0b">M06</span> = 自进化（闻洛，选评估账号）。<b>接入应用是 P4，0017 还没定稿</b>，以 0017 草稿为准。</p>
 <nav class="toc"><a href="#s1">① 先分清四对词</a><a href="#s2">② 走一遍</a><a href="#s3">③ 为什么这样做</a><a href="#s4">④ 它不保证什么</a><a href="#s5">⑤ 自测</a></nav>
@@ -153,7 +153,7 @@ table.plain td{color:#d6dee9}
   <p>生产库手工改数据要申请权限；三档账号由数据平台开通，uid 会变、会加，页面维护省事。不删除，用停用代替。</p></details>
 <details><summary>3. 接入应用替人调用时，为什么能力按实际用户算？</summary>
   <p class="if">给应用自己一套权限：应用就成了一个「超级用户」，替谁调用都能做同样的事，绕过了每个人自己的权限。</p>
-  <p>按实际用户：开放 API 和网页用的是同一个处理函数、同一套判权，李四在网页上做不了的事，CRM 替他也做不了。</p></details>
+  <p>按实际用户：开放 API 和网页用的是同一个处理函数、同一套判权，韬文苏在网页上做不了的事，CRM 替他也做不了。</p></details>
 <details><summary>4. 为什么信任应用声明的工号，不要求用户的证明？</summary>
   <p>行内系统之间常见的做法：用户已经在业务系统里登录过，平台信任已登记的应用如实声明。代价是应用凭据泄露或业务系统被攻破时，可以冒充任何人（0017 第 11.2 节）。所以这一步做成可替换的，第一个接入方开工前再确认身份方式。</p></details>
 </div>
@@ -170,11 +170,11 @@ table.plain td{color:#d6dee9}
 <div class="qa">
 <details><summary>1. 评估账号能登录平台网页吗？会出现在用户列表里吗？</summary>
   <p>都不能。它在单独的表里，只出现在评估会话的执行凭据和进程令牌里。</p></details>
-<details><summary>2. CRM 勾了「嵌入分析」，李四是普通使用者。CRM 替李四调「发布 Agent」会怎样？</summary>
-  <p>两道都过不了：发布属于「管理自动化」场景，CRM 没勾，入口先拒（identity.app-scope-denied）；即使勾了，李四没有「Agent 配置与发布」能力，模块判权也会拒。</p></details>
+<details><summary>2. CRM 勾了「嵌入分析」，韬文苏是普通使用者。CRM 替韬文苏调「发布 Agent」会怎样？</summary>
+  <p>两道都过不了：发布属于「管理自动化」场景，CRM 没勾，入口先拒（identity.app-scope-denied）；即使勾了，韬文苏没有「Agent 配置与发布」能力，模块判权也会拒。</p></details>
 <details><summary>3. CRM 生成了新凭据，旧凭据还能用多久？</summary>
   <p>旧凭据的过期时间被改成「原过期时间」和「现在 + 7 天」中较早的那个，最多再用 7 天。怀疑泄露就直接撤销，立即作废。</p></details>
-<details><summary>4. 李四被重置了密码（必须改密），CRM 替他的调用会被拒吗？</summary>
+<details><summary>4. 韬文苏被重置了密码（必须改密），CRM 替他的调用会被拒吗？</summary>
   <p>不会。接入应用替他调用时不看「必须改密」（B1）。</p></details>
 </div>
 
@@ -381,12 +381,12 @@ step({t:'P4 · 第 1 天',k:['adm'],at:'api',h:'登记 CRM，生成凭据',
   why:'',crash:null},
   s=>{s.apps.push({id:'app_crm',n:'CRM',sc:'嵌入分析',st:'启用'});s.creds.push({id:'acr_1',exp:'1 年后',st:'有效'});});
 
-step({t:'P4 · 第 2 天',k:['open','m07app','mod'],at:'api',h:'CRM 替李四提问',
-  b:'CRM 后台调 <code>POST /open/v1/conversations/sessions</code>，请求头带 <code>Authorization: Bearer ohk_…</code> 和 <code>X-Acting-User: A10023</code>。入口调 resolveAppCall：凭据有效、CRM 启用、工号规范化后查到李四且启用 → 主体 AppPrincipal(CRM, 李四)。入口检查这个路由的场景（嵌入分析）在 CRM 的资格里，再按 CRM 的额度限流。会话模块用同一个处理函数，照常按李四的能力和对象归属判权；会话归李四，取数用李四的 uid；入口发一条「应用调用」审计，同时记 CRM 和李四。',
-  why:'「勾选的场景 × 李四本来能做的事」（① 第 2 对、③ 第 3 条）。',
+step({t:'P4 · 第 2 天',k:['open','m07app','mod'],at:'api',h:'CRM 替韬文苏提问',
+  b:'CRM 后台调 <code>POST /open/v1/conversations/sessions</code>，请求头带 <code>Authorization: Bearer ohk_…</code> 和 <code>X-Acting-User: 190903</code>。入口调 resolveAppCall：凭据有效、CRM 启用、工号规范化后查到韬文苏且启用 → 主体 AppPrincipal(CRM, 韬文苏)。入口检查这个路由的场景（嵌入分析）在 CRM 的资格里，再按 CRM 的额度限流。会话模块用同一个处理函数，照常按韬文苏的能力和对象归属判权；会话归韬文苏，取数用韬文苏的 uid；入口发一条「应用调用」审计，同时记 CRM 和韬文苏。',
+  why:'「勾选的场景 × 韬文苏本来能做的事」（① 第 2 对、③ 第 3 条）。',
   boomText:'🚫 如果被拒',stripe:false,
   crash:[{w:'CRM 调了「管理自动化」的接口（没勾这个场景）',left:'入口拒绝：403 identity.app-scope-denied。',next:'—',end:'模块都不会被调到。'},{w:'声明的工号不存在或已停用',left:'403 identity.user-disabled。',next:'—',end:'平台不自动建账号。'},{w:'超过每分钟额度',left:'429，带 Retry-After。',next:'—',end:'多实例时每个实例用「额度 ÷ 实例数」，不经数据库。'}]},
-  s=>{s.log.push({who:'CRM + 李四',r:'允许（按李四的能力，叠加嵌入分析场景）'});});
+  s=>{s.log.push({who:'CRM + 韬文苏',r:'允许（按韬文苏的能力，叠加嵌入分析场景）'});});
 
 step({t:'P4 · 半年后',k:['adm'],at:'api',h:'换凭据：新旧并存 7 天；怀疑泄露就撤销',
   b:'管理员给 CRM「替换凭据」：插入新凭据 acr_2；同一事务把 acr_1 的过期时间改为 7 天后。CRM 的服务器逐台换配置，7 天内两把都认。生成新凭据不发变更通知（旧的仍有效，缓存不用清）。如果怀疑泄露，直接「撤销」：立即作废并发通知，本进程立刻清缓存。',

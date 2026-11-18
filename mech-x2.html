@@ -3,7 +3,7 @@
 <head><meta name="robots" content="noindex,nofollow">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>综合 · 李四被停用时执行正在跑，后台进程又刚好重启</title>
+<title>综合 · 韬文苏被停用时执行正在跑，后台进程又刚好重启</title>
 <style>
 :root{--bg:#0f172a;--panel:#111c33;--panel2:#16233f;--line:#2a3a5c;--text:#e2e8f0;--mute:#94a3b8;--dim:#64748b;
 --new:#22c55e;--chg:#facc15;--bad:#f87171}
@@ -115,8 +115,8 @@ table.plain td{color:#d6dee9}
 <body><div class="wrap">
 
 <p class="hint">综合题：前面各题都过一遍之后再看。</p>
-<h1>李四被停用时，他的执行正在跑，后台进程又刚好重启</h1>
-<p class="lead">综合题：停用（0006）和故障恢复（0004）同时发生。例子：李四的执行在 DSH 里跑着，后台进程崩了；20 秒后管理员停用了李四；后台进程重启后接手了跟随任务。</p>
+<h1>韬文苏被停用时，他的执行正在跑，后台进程又刚好重启</h1>
+<p class="lead">综合题：停用（0006）和故障恢复（0004）同时发生。例子：韬文苏的执行在 DSH 里跑着，后台进程崩了；20 秒后管理员停用了韬文苏；后台进程重启后接手了跟随任务。</p>
 <p class="sub">这一页想让你讲得出：哪些东西立刻失效、哪些最多 30 秒、哪些要等别的模块回收；后台进程重启后接手的任务，会不会替一个已经停用的人继续做事。
 <span class="who" style="--c:#a78bfa">框架</span> = 你的 0004；<span class="who" style="--c:#f472b6">M07</span> = 你的 0006；<span class="who" style="--c:#22d3ee">M01</span> = 会话（嘉敏）；<span class="who" style="--c:#fb923c">M05</span> = MCP 代理；<span class="who" style="--c:#94a3b8">DSH</span>。</p>
 <nav class="toc"><a href="#s2">① 走一遍</a><a href="#s3">② 一张总表</a><a href="#s4">③ 自测</a></nav>
@@ -124,11 +124,11 @@ table.plain td{color:#d6dee9}
 <h2 id="s2">① 走一遍</h2>
 <div id="walk"></div>
 
-<h2 id="s3">② 一张总表 <small>李四被停用、后台进程重启之后</small></h2>
+<h2 id="s3">② 一张总表 <small>韬文苏被停用、后台进程重启之后</small></h2>
 <table class="plain">
 <tr><th>什么</th><th>结果</th><th>靠什么</th><th>细节</th></tr>
-<tr><td>李四登录、页面操作</td><td>立刻不行（多请求进程时认证最多晚 30 秒，但判权立刻拒）</td><td>同事务作废会话；判权不缓存</td><td><a href="mech-disable.html">B6</a>、<a href="mech-login.html">B3</a></td></tr>
-<tr><td>CRM 替李四调用</td><td>立刻不行</td><td>resolveAppCall 查实际用户已停用</td><td><a href="mech-eval-app.html">B7</a></td></tr>
+<tr><td>韬文苏登录、页面操作</td><td>立刻不行（多请求进程时认证最多晚 30 秒，但判权立刻拒）</td><td>同事务作废会话；判权不缓存</td><td><a href="mech-disable.html">B6</a>、<a href="mech-login.html">B3</a></td></tr>
+<tr><td>CRM 替韬文苏调用</td><td>立刻不行</td><td>resolveAppCall 查实际用户已停用</td><td><a href="mech-eval-app.html">B7</a></td></tr>
 <tr><td>他执行里的取数</td><td>立刻不行</td><td>取数身份每次查库，已停用返回「不允许」</td><td><a href="mech-gateway-id.html">B4</a></td></tr>
 <tr><td>他执行里的 MCP 调用</td><td>立刻不行（其他进程上的代理最多 30 秒）</td><td>同事务作废进程令牌；代理清缓存；校验时查状态</td><td><a href="mech-proc-token.html">B5</a></td></tr>
 <tr><td>他在 DSH 里的执行本身</td><td>不会因停用而停</td><td>会话模块按规则回收（0006 Q6，问嘉敏）；等待用户超过上限（默认 7 天）自动停止</td><td><a href="mech-disable.html">B6</a></td></tr>
@@ -138,13 +138,13 @@ table.plain td{color:#d6dee9}
 
 <h2 id="s4">③ 自测 <small>先自己想，再点开</small></h2>
 <div class="qa">
-<details><summary>1. 后台进程重启后接手了李四的跟随任务。这算不算「替一个已停用的人继续做事」？</summary>
-  <p>不算。跟随器只是把 DSH 里已经在发生的事取回来交给会话模块写入，不以李四的身份发起任何操作。真正「以李四身份做事」的两条路（业务 tool、MCP）都已经被拒了。执行本身要不要停，是会话模块的规则（Q6）。</p></details>
+<details><summary>1. 后台进程重启后接手了韬文苏的跟随任务。这算不算「替一个已停用的人继续做事」？</summary>
+  <p>不算。跟随器只是把 DSH 里已经在发生的事取回来交给会话模块写入，不以韬文苏的身份发起任何操作。真正「以韬文苏身份做事」的两条路（业务 tool、MCP）都已经被拒了。执行本身要不要停，是会话模块的规则（Q6）。</p></details>
 <details><summary>2. 停用发生时后台进程不在，变更通知会不会丢？</summary>
   <p>不会影响结果。通知登记在事件登记表里，提交后在<b>请求进程</b>（管理员的请求所在的进程）里触发，清的是请求进程里的认证缓存和令牌校验缓存，和后台进程无关。</p></details>
-<details><summary>3. 李四的执行里 Agent 问了一个问题，会怎样？</summary>
-  <p>李四登录不了，答不了。限时提问 30 秒后变成「待回答」，执行进入等待用户；等待超过上限（默认 7 天），会话模块自动停止这个执行并释放版本引用。在那之前是否提前停，由会话模块定（Q6）。</p></details>
-<details><summary>4. 如果管理员很快又启用了李四，会怎样？</summary>
+<details><summary>3. 韬文苏的执行里 Agent 问了一个问题，会怎样？</summary>
+  <p>韬文苏登录不了，答不了。限时提问 30 秒后变成「待回答」，执行进入等待用户；等待超过上限（默认 7 天），会话模块自动停止这个执行并释放版本引用。在那之前是否提前停，由会话模块定（Q6）。</p></details>
+<details><summary>4. 如果管理员很快又启用了韬文苏，会怎样？</summary>
   <p>他能重新登录（旧会话不会恢复）。但他旧的 DSH 进程如果还没回收，进程令牌已经作废，MCP 调用会失败，直到进程重新拉起、签发新令牌（0006 第 10.2 节）。</p></details>
 </div>
 
@@ -328,22 +328,22 @@ function mount(cfg){
   render();
 }
 
-init({page:'李四的执行 exe_9 在 DSH 里跑着。部署：一个请求进程、一个后台进程。',
-  user:[{u:'李四',st:'启用'}],tok:[{k:'李四的进程令牌',st:'有效'}],
-  jobs:[{j:'跟随 · 李四的会话',st:'运行中',who:'后台进程 · 代次 1',lease:'10:00:50'}],exe:[{e:'exe_9',st:'运行中'}],res:[]});
+init({page:'韬文苏的执行 exe_9 在 DSH 里跑着。部署：一个请求进程、一个后台进程。',
+  user:[{u:'韬文苏',st:'启用'}],tok:[{k:'韬文苏的进程令牌',st:'有效'}],
+  jobs:[{j:'跟随 · 韬文苏的会话',st:'运行中',who:'后台进程 · 代次 1',lease:'10:00:50'}],exe:[{e:'exe_9',st:'运行中'}],res:[]});
 
 step({t:'10:00:00',k:[],at:'wk',h:'后台进程崩了',
-  b:'后台进程突然退出。跟随任务还是「运行中」，租约到 10:00:50（最后一次续租在 09:59:50）。李四的执行在 DSH 里照常跑，只是没人把事件取回来；页面上回答停住（<a href="mech-processes.html">A1</a>）。',
+  b:'后台进程突然退出。跟随任务还是「运行中」，租约到 10:00:50（最后一次续租在 09:59:50）。韬文苏的执行在 DSH 里照常跑，只是没人把事件取回来；页面上回答停住（<a href="mech-processes.html">A1</a>）。',
   why:'',crash:null},
   s=>{s.down=['wk'];s.page='';});
 
-step({t:'10:00:20',k:['adm','cache'],at:'api',h:'管理员停用李四',
-  b:'请求进程里，身份模块一个事务：账号停用、作废全部会话、作废全部进程令牌、登记变更通知。提交后，<b>请求进程里</b>的入口和 MCP 代理立刻清掉李四的缓存（<a href="mech-disable.html">B6</a>）。',
+step({t:'10:00:20',k:['adm','cache'],at:'api',h:'管理员停用韬文苏',
+  b:'请求进程里，身份模块一个事务：账号停用、作废全部会话、作废全部进程令牌、登记变更通知。提交后，<b>请求进程里</b>的入口和 MCP 代理立刻清掉韬文苏的缓存（<a href="mech-disable.html">B6</a>）。',
   why:'后台进程不在，不影响这一步：通知在提交它的请求进程里处理。',crash:null},
-  s=>{s.user[0].st='停用';s.tok[0].st='已作废';s.res.push({w:'李四登录、页面操作',r:'立刻不行'});});
+  s=>{s.user[0].st='停用';s.tok[0].st='已作废';s.res.push({w:'韬文苏登录、页面操作',r:'立刻不行'});});
 
-step({t:'10:00:30',k:['agent','v','m07g','m05'],at:['dsh','api'],h:'李四的执行还在跑：以他身份做事的两条路都断了',
-  b:'DSH 里，Agent 调「取数」：回调到请求进程，入口能取到执行凭据（执行还是活动的），但取数时身份模块查到李四已停用 → 「不允许」，取数被拒（<a href="mech-gateway-id.html">B4</a>）。Agent 调 mem0：进程令牌已作废 → 代理校验失败（<a href="mech-proc-token.html">B5</a>）。',
+step({t:'10:00:30',k:['agent','v','m07g','m05'],at:['dsh','api'],h:'韬文苏的执行还在跑：以他身份做事的两条路都断了',
+  b:'DSH 里，Agent 调「取数」：回调到请求进程，入口能取到执行凭据（执行还是活动的），但取数时身份模块查到韬文苏已停用 → 「不允许」，取数被拒（<a href="mech-gateway-id.html">B4</a>）。Agent 调 mem0：进程令牌已作废 → 代理校验失败（<a href="mech-proc-token.html">B5</a>）。',
   why:'执行本身没停：停不停、什么时候回收进程，由会话模块决定（0006 Q6）。',crash:null},
   s=>{s.res.push({w:'执行里的取数',r:'立刻不行（不允许）'},{w:'执行里的 MCP 调用',r:'立刻不行（令牌已作废）'});});
 
@@ -352,13 +352,13 @@ step({t:'10:00:40',k:['claim'],at:'wk',h:'后台进程重启：跟随任务的�
   why:'',crash:null},
   s=>{s.down=[];});
 
-step({t:'10:01:00',k:['reap','claim','fol','m01w'],at:'wk',h:'接手跟随任务：继续取事件，但不替李四做事',
+step({t:'10:01:00',k:['reap','claim','fol','m01w'],at:'wk',h:'接手跟随任务：继续取事件，但不替韬文苏做事',
   b:'过期检查把跟随任务退回排队，马上被领走（代次 2）。跟随器从会话模块记下的 DSH 序号接着跟，补上缺的事件：其中有两条被拒的 tool 结果（取数「不允许」、mem0 失败）。会话模块照常写入。',
-  why:'跟随器只是「把 DSH 里发生的事取回来」，不以李四的身份发起任何操作（③ 第 1 题）。',crash:null},
+  why:'跟随器只是「把 DSH 里发生的事取回来」，不以韬文苏的身份发起任何操作（③ 第 1 题）。',crash:null},
   s=>{s.jobs[0].st='运行中';s.jobs[0].who='后台进程（重启后）· 代次 2';s.jobs[0].lease='10:02:00';s.res.push({w:'跟随任务',r:'被接手，继续取回事件'});});
 
 step({t:'10:01:30 之后',k:['agent','m01w'],at:['dsh','wk'],h:'执行最后怎么收场',
-  b:'Agent 拿不到数据，可能直接结束这一轮（跟随器看到终态 → 跟随任务结束 → 版本引用 −1），也可能问李四一个问题：李四登录不了，限时提问 30 秒后变「待回答」，执行进入等待用户。等待超过上限（默认 7 天），会话模块自动停止它并释放版本引用。会话模块是否在停用时就提前停掉、回收进程，是 0006 Q6 待定的事。',
+  b:'Agent 拿不到数据，可能直接结束这一轮（跟随器看到终态 → 跟随任务结束 → 版本引用 −1），也可能问韬文苏一个问题：韬文苏登录不了，限时提问 30 秒后变「待回答」，执行进入等待用户。等待超过上限（默认 7 天），会话模块自动停止它并释放版本引用。会话模块是否在停用时就提前停掉、回收进程，是 0006 Q6 待定的事。',
   why:'',crash:null},
   s=>{s.exe[0].st='结束，或等待用户（最多 7 天后自动停止）';s.res.push({w:'执行本身',r:'不因停用而停（Q6 待定）'});});
 
@@ -366,7 +366,7 @@ mount({
   owners:{fw:['框架','#a78bfa'],m07:['M07','#f472b6'],m01:['M01','#22d3ee'],m05:['M05','#fb923c'],dsh:['DSH','#94a3b8']},
   procs:{
     api:{n:'请求进程',s:'',chips:[['adm','m07','M07 · 停用（一个事务）',''],['cache','fw','框架 · 清认证缓存','订阅变更通知'],['v','fw','框架 · tool 回调核验',''],['m07g','m07','M07 · 取数身份','每次查库'],['m05','m05','M05 · MCP 代理','']]},
-    dsh:{n:'李四的 DSH 进程',s:'',chips:[['agent','dsh','Agent','']]},
+    dsh:{n:'韬文苏的 DSH 进程',s:'',chips:[['agent','dsh','Agent','']]},
     wk:{n:'后台进程',s:'',chips:[['reap','fw','框架 · 过期检查',''],['claim','fw','框架 · 领取',''],['fol','fw','框架 · 跟随器',''],['m01w','m01','M01 · 写入事件','']]}},
   cols:[['api','dsh'],'db',['wk']],
   tables:[
