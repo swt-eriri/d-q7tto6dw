@@ -70,10 +70,14 @@ body:not(.still) .belt.hl.ask .bm{animation:flow .9s linear infinite}
 
 body.nopanel #panel{display:none}
 .blab .lead{stroke-width:2;stroke-dasharray:3 4;opacity:.8;fill:none}
+/* 全屏：标题栏收成左上角一条半透明浮条，鼠标移上去才看清；图占满整个屏幕 */
+body.fs header{position:fixed;left:8px;top:8px;right:auto;z-index:30;padding:4px 8px;border:1px solid #1e293b;border-radius:10px;opacity:.35;transition:opacity .2s;max-width:calc(100vw - 16px)}
+body.fs header:hover,body.fs header:focus-within{opacity:1}
+body.fs header h1,body.fs header .mut{display:none}
 </style></head><body>
 <header><h1>RFC-0004 后端框架结构图</h1><select id="tour"></select><span class="sep"></span>
 <span class="mut">去看：</span><button id="gall">全局</button><button id="gapi">外部入口 + 请求进程</button><button id="gdb">数据库</button><button id="gwk">后台进程</button><button id="gtop">其他模块 + DSH</button><span class="sep"></span>
-<button id="bgl">名词解释</button><button id="blegend">隐藏图例</button><button id="bpanel">显示右侧面板</button><span class="mut" style="font-size:12px">点击看连线 · 滚轮缩放 · 按住拖动 · 双击放大 · 数据截至 2026-11-16</span></header>
+<button id="bfs">⛶ 全屏</button><button id="bgl">名词解释</button><button id="blegend">隐藏图例</button><button id="bpanel">显示右侧面板</button><span class="mut" style="font-size:12px">点击看连线 · 滚轮缩放 · 按住拖动 · 双击放大 · 数据截至 2026-11-16</span></header>
 <main><div id="stage"><svg id="svg" xmlns="http://www.w3.org/2000/svg"></svg><div id="legend"></div>
 <div id="tourbar"><button id="tp">← 上一步</button><div id="ttxt"></div><button id="tn">下一步 →</button><button id="tx">退出</button></div></div>
 <aside id="panel"></aside></main>
@@ -250,7 +254,7 @@ const inRange=(R,v)=>R&&v>=R.lo&&v<=R.hi&&!R.ex.some(([a,b])=>v>a&&v<b);
 const OUT={l:1,r:0,t:3,b:2}, DV=[[1,0],[-1,0],[0,1],[0,-1]];
 function computeBelts(){
   const bs=BB.map(([id,f,t,item,label,pr],i)=>({id,f,t,item,label,i,rf:MM[f],rt:MM[t],q:pr==='q',pr:pr&&pr.startsWith('r:')?pr.slice(2):null}));
-  const CL=24, ST=20, BEND=160, CROSS=40, OVER=6, NEAR=36;
+  const CL=24, ST=20, BEND=450, CROSS=40, OVER=6, NEAR=36; // 转弯代价高：能不绕就少拐弯
   const nodes=Object.values(MM), TP=titlePlates(), PI=pipeInfo();
   // 每条线被高亮时，可能和它同时亮着的组件：两端各自的邻居 + 走流程时同一步里的组件。只需避开这些
   const nb={}; BB.forEach(x=>{ (nb[x[1]]=nb[x[1]]||new Set([x[1]])).add(x[2]); (nb[x[2]]=nb[x[2]]||new Set([x[2]])).add(x[1]); });
@@ -335,7 +339,7 @@ function computeBelts(){
     const between=KS.filter(k=>{ const kx=k.x+k.w/2; return (kx-sx)*(kx-tx)<0; }); if(between.length) return between[0];
     return KS.slice().sort((p,q)=>Math.abs(p.x+p.w/2-sx)-Math.abs(q.x+q.w/2-sx))[0]; };
   const crossesK=(P,K)=>{ for(let k=0;k<P.length-1;k++){ const p=P[k],q=P[k+1]; if(Math.abs(p[1]-q[1])<1&&p[1]>K.y&&p[1]<K.y+K.h&&Math.min(p[0],q[0])<K.x&&Math.max(p[0],q[0])>K.x+K.w) return true; } return false; };
-  const plen=P=>{ let L=0; for(let k=0;k<P.length-1;k++) L+=Math.abs(P[k+1][0]-P[k][0])+Math.abs(P[k+1][1]-P[k][1]); return L+(P.length-2)*BEND; };
+  const plen=P=>{ let L=0; for(let k=0;k<P.length-1;k++) L+=Math.abs(P[k+1][0]-P[k][0])+Math.abs(P[k+1][1]-P[k][1]); return L+(P.length-2)*160; }; // 只用于「要不要改走内核」的比较，沿用原来的转弯折算
   // 先直连，再按距离从近到远走线
   const todo=[];
   bs.forEach(b=>{ if(b.pr) return; b.fixed=b.f==='A1'&&['A2','A3','A4','A5','A6'].includes(b.t); if(b.fixed){ todo.push(b); return; }
@@ -563,6 +567,14 @@ $('#panel').innerHTML=`<h2>RFC-0004 后端框架</h2><ul>
 <li><b>连线</b>：箭头指向接收的一方。<b>点点线</b>是发起的一方去问（线上的小图标是递过去的东西，什么都不递就是 ❓）；<b>实线</b>是答案回来，或单向送出的东西。两条挨着的线就是一问一答，比如网页认证带 🍪 去问身份模块，身份模块回 🪪「苏文韬」。</li><li><b>看不懂的词</b>点顶部「名词解释」。</li>
 <li><b>点击</b>组件或连线才高亮：相关连线画到最上层、标出传的是什么，并有图标沿线走；点空白处取消。右侧会列出它具体做什么、表的每一列干什么用。</li>
 <li>双击组件放大；滚轮缩放、按住拖动；顶部「去看」跳到各区域；「▶ 走一遍」逐步讲 7 个场景（第一个是完整例子「一次提问全流程」），左右方向键翻页。讲解里 🔒 写这一步有几个事务、各包含什么，💥 写崩在这里谁兜底。</li></ul>`;
+
+// 全屏：浏览器全屏 + 标题栏收成浮条；按 Esc 或再点一次退出
+(function(){ const b=document.getElementById('bfs'); if(!b) return;
+  b.onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); };
+  document.addEventListener('fullscreenchange',()=>{ const on=!!document.fullscreenElement; document.body.classList.toggle('fs',on); b.textContent=on?'退出全屏':'⛶ 全屏'; });
+})();
+// 窗口大小变了（含进出全屏）：走一遍时按当前步重新取景，否则保持中心、按新比例取景
+window.addEventListener('resize',()=>{ if(st.tour){ tourGo(); return; } const v=st.vb; let w=v.w, h=v.h; const r=$('#stage').getBoundingClientRect(), ar=r.width/r.height; if(w/h>ar) h=w/ar; else w=h*ar; st.vb={x:v.x+v.w/2-w/2,y:v.y+v.h/2-h/2,w,h}; setVB(); });
 const hh=new URLSearchParams(location.hash.slice(1)); if(hh.get('noanim')) document.body.classList.add('still');
 render(); st.vb=boxFit(WORLD.x,WORLD.y,WORLD.x+WORLD.w,WORLD.y+WORLD.h,1); setVB();
 if(hh.get('go')){ ({api:()=>$('#gapi').click(),wk:()=>$('#gwk').click(),db:()=>$('#gdb').click(),top:()=>$('#gtop').click()})[hh.get('go')](); }

@@ -149,9 +149,13 @@ body.touring #tourbar{display:flex}
 body.touring #legend{display:none}
 #chk{position:fixed;left:0;top:0;z-index:99;margin:0;background:#b91c1c;color:#fff;padding:4px 8px}
 body.still *{transition:none!important;animation:none!important}
+/* 全屏：标题栏收成左上角一条半透明浮条，鼠标移上去才看清；图占满整个屏幕 */
+body.fs header{position:fixed;right:8px;top:8px;left:auto;z-index:30;padding:4px 8px;border:1px solid #1e293b;border-radius:10px;opacity:.35;transition:opacity .2s;max-width:calc(100vw - 16px);background:#020617}
+body.fs header:hover,body.fs header:focus-within{opacity:1}
+body.fs header h1,body.fs header .mut{display:none}
 </style></head><body>
 <header><h1>RFC-0006 身份与权限 · 大图</h1>
-<button id="home">全景</button><button id="gloss">名词解释</button><select id="tour"></select><span class="sep"></span>
+<button id="home">全景</button><button id="gloss">名词解释</button><button id="bfs">⛶ 全屏</button><select id="tour"></select><span class="sep"></span>
 <span class="mut">阶段：</span><select id="phase"><option value="9">全部</option><option value="0">P0 结束时</option><option value="1">P1 结束时</option><option value="2">P2 结束时</option><option value="3">P3 结束时</option></select><span class="sep"></span>
 <span class="mut" style="font-size:12.5px">点区域看讲解 · Esc 返回全图 · 滚轮缩放 · 按住拖动 · 数据截至 <span id="date"></span></span></header>
 <div id="stage"><div id="world"></div>
@@ -1117,6 +1121,12 @@ $('#tour').innerHTML = '<option value="">▶ 走一遍…</option>' + TOURS.map(
 $('#tour').onchange = e => startTour(e.target.value);
 $('#phase').onchange = e => { state.phase = +e.target.value; applyPhase(); };
 window.addEventListener('resize', () => render());
+// 全屏：浏览器全屏 + 标题栏收成浮条；按 Esc 或再点一次退出
+(function(){ const b=document.getElementById('bfs'); if(!b) return;
+  b.onclick=()=>{ if(document.fullscreenElement) document.exitFullscreen(); else (document.documentElement.requestFullscreen||function(){}).call(document.documentElement); };
+  document.addEventListener('fullscreenchange',()=>{ const on=!!document.fullscreenElement; document.body.classList.toggle('fs',on); b.textContent=on?'退出全屏':'⛶ 全屏'; });
+})();
+
 
 // ---------- 启动 ----------
 build();
