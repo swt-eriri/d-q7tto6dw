@@ -131,10 +131,20 @@ ol.cons{margin:4px 0 0;padding-left:22px}ol.cons li{margin:6px 0;line-height:1.6
 .band .then{width:100%;font-size:14.5px;color:#cbd5e1}
 .tb{border-collapse:collapse;width:100%;margin-top:10px}.tb th,.tb td{border:1px solid #243049;padding:5px 8px;font-size:14px;text-align:left;vertical-align:top;line-height:1.5}.tb th{background:#16213a;color:#94a3b8}
 /* 走一遍 */
-#tourbar{display:none;position:absolute;left:24px;right:24px;bottom:14px;z-index:11;margin:auto;max-width:1040px;background:#020617;border:2px solid #facc15;border-radius:14px;padding:10px 14px;gap:12px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
+#tourbar{display:none;position:absolute;left:24px;right:24px;bottom:14px;z-index:11;margin:auto;max-width:1250px;background:#020617;border:2px solid #facc15;border-radius:14px;padding:10px 14px;gap:12px;align-items:center;box-shadow:0 10px 40px rgba(0,0,0,.6)}
 body.touring #tourbar{display:flex}
 #tourbar button{font:inherit;padding:6px 14px;border-radius:8px;border:0;background:#facc15;color:#111;cursor:pointer;font-weight:700}#tourbar button:disabled{opacity:.35}
 #ttxt{flex:1;font-size:15.5px;line-height:1.6}
+#ttxt .th{font-size:14px;color:#fde68a;margin-bottom:4px}
+#ttxt .tg{display:grid;grid-template-columns:minmax(0,1fr) 36%;gap:16px;align-items:start}#ttxt .tg.one{grid-template-columns:1fr}
+#ttxt .lead{margin:0 0 4px;font-size:16.5px;font-weight:700;color:#f8fafc;line-height:1.5}
+#ttxt .pl{margin:0 0 4px;font-size:15.5px;line-height:1.6;color:#e2e8f0}
+#ttxt .tag{display:inline-block;font-size:12px;font-weight:600;padding:0 6px;margin-right:8px;border:1px solid #facc15;color:#facc15;border-radius:6px;vertical-align:2px}
+#ttxt ul{margin:0;padding-left:20px}#ttxt li{margin:2px 0;font-size:14.5px;line-height:1.55;color:#e2e8f0}
+#ttxt .tx{font-size:13.5px;line-height:1.5;padding:5px 9px;margin-bottom:6px;border-radius:8px;background:#0f172a;border-left:3px solid;color:#e2e8f0}
+#ttxt .tx b{display:block;font-size:12px;color:#94a3b8;font-weight:600}
+#ttxt .tx-tx{border-color:#60a5fa}#ttxt .tx-fail{border-color:#f87171}#ttxt .tx-ex{border-color:#475569;color:#94a3b8;word-break:break-all}
+
 #legend{position:absolute;left:12px;bottom:12px;z-index:5;background:rgba(2,6,23,.88);border:1px solid #1e293b;border-radius:10px;padding:5px 10px;font-size:12.5px;color:#94a3b8}
 body.touring #legend{display:none}
 #chk{position:fixed;left:0;top:0;z-index:99;margin:0;background:#b91c1c;color:#fff;padding:4px 8px}
@@ -474,47 +484,47 @@ const LINES = [
 const TOURS = [
  { id:'t1', name:'苏文韬登录、提问、取数', steps:[
   { open:['r3'], hit:['r3.flow','r3.bcrypt','r3.hash'], lines:['L1'], ext:['browser'],
-    t:'苏文韬在浏览器输入工号 309091 和密码。平台把工号去空格、转大写，按工号找到他的账号（用户 ID usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB），再核对密码（库里只存密码的哈希）；对了就生成一串随机数放进登录 cookie，库里同样只存它的哈希。\n🔒 写库：登录会话表插一行（存 cookie 的哈希和到期时间），账号的「连续输错次数」清零。' },
+    t:'苏文韬在浏览器输入工号和密码登录\n- 平台把工号去空格、转大写，按工号找到他的账号\n- 核对密码：库里只存密码的哈希\n- 对了就生成一串随机数放进登录 cookie，库里也只存它的哈希\n🔒 写库：登录会话表插一行（cookie 的哈希、到期时间），账号的连续输错次数清零\n📎 苏文韬：工号 309091，用户 ID usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB' },
   { open:['r3','r1'], hit:['r3.cache','r1.user','r1.cap'], lines:['L1','L7'], ext:['browser'],
-    t:'之后每个请求浏览器都自动带上 cookie。请求入口先看 30 秒内有没有认过这个 cookie（缓存），没有再问身份与权限模块「这是谁」→ 答：主体 UserPrincipal(用户 ID = usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB)，也就是苏文韬，和他的能力清单（使用者：只有「对话、上传、下载本人文件」）。\n🔒 只读。' },
+    t:'之后每个请求，浏览器都自动带上 cookie，请求入口靠它认人\n- 先看 30 秒内认过这个 cookie 没有（缓存）\n- 没认过，再问身份与权限模块「这是谁」\n- 答：用户苏文韬，和他的能力清单（使用者只有「对话、上传、下载本人文件」）\n🔒 只读\n📎 主体 = UserPrincipal(usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB)' },
   { open:['r5'], hit:['r5.route','r5.kinds','r5.env'], lines:['H2','H3'], ext:['dsh'],
-    t:'苏文韬提问。DSH 适配层要给他起一个 DSH 进程（路由键就是他的用户 ID usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB），先向身份与权限模块要一把用户令牌（问 → 答：令牌明文，只给这一次），放进这个进程的环境变量。\n🔒 写库：进程令牌表插一行（存令牌的哈希、这是谁的令牌）。明文只交给适配层这一次，库里没有明文。' },
+    t:'苏文韬提问，DSH 适配层要先给他起一个 DSH 进程\n- 路由键就是他的用户 ID\n- 起进程前，向身份与权限模块要一把用户令牌 → 答：令牌明文，只给这一次\n- 把令牌放进这个进程的环境变量\n🔒 写库：进程令牌表插一行（令牌的哈希、这是谁的令牌），库里没有明文' },
   { open:['r5'], hit:['r5.why','r5.withroute','r5.internal'], lines:['L3','L4','H1'], ext:['dsh','mcp'],
-    t:'Agent 调 mem0（个人记忆）：请求带着进程令牌发给 MCP 代理。代理拿令牌问身份与权限模块，认出是苏文韬（用户令牌，代表 usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB），再用这条连接自己的凭据去访问 mem0。令牌只在平台内部用，不发给 mem0。\n🔒 只读（校验结果缓存 30 秒）。' },
+    t:'Agent 调 mem0（个人记忆），请求带着进程令牌发给 MCP 代理\n- 代理拿令牌问身份与权限模块 → 答：这是苏文韬的用户令牌\n- 代理再用这条连接自己的凭据去访问 mem0\n- 令牌只在平台内部用，不发给 mem0\n🔒 只读；校验结果缓存 30 秒' },
   { open:['r4'], hit:['r4.only','r4.ret','r4.col'], lines:['L5','L6'], ext:['dsh','gw'],
-    t:'Agent 调取数 tool：桥接插件把请求转回平台，平台按 DSH 会话 ID 找到这次执行的执行凭据：苏文韬提问时会话模块记下的那条执行记录（发起人 UserPrincipal(usr_01JD8K2M7QX4W9P3R5T6Y8Z0AB)、允许哪些 tool、额度多少），所以知道是在替苏文韬干活。数据访问模块向身份与权限模块要他的网关 uid，得到 309091（新建账号时默认填工号），交给取数网关，网关按 309091 决定苏文韬能看哪些数据。\n🔒 只读。' } ]},
+    t:'Agent 调取数 tool，平台靠执行凭据知道是在替苏文韬干活\n- 桥接插件把请求转回平台，平台按 DSH 会话 ID 找到这次执行的执行凭据\n- 执行凭据就是苏文韬提问时会话模块记下的执行记录：发起人、允许哪些 tool、额度\n- 数据访问模块向身份与权限模块要苏文韬的网关 uid，交给取数网关\n- 网关按 uid 决定苏文韬能看哪些数据\n🔒 只读\n📎 网关 uid = 309091（新建账号时默认填工号）' } ]},
  { id:'t2', name:'管理员停用韬文苏', steps:[
   { open:['r2'], hit:['r2.disable','r2.patch'], lines:[],
-    t:'管理员在用户管理里停用韬文苏（工号 190903，用户 ID usr_01JD8M5R2TB7C3D9E6F4G1H8KN）。管理员要有「管理账号」这项能力。' },
+    t:'管理员在用户管理里停用韬文苏\n- 管理员要有「管理账号」这项能力\n📎 韬文苏：工号 190903，用户 ID usr_01JD8M5R2TB7C3D9E6F4G1H8KN' },
   { open:['r2'], hit:['r2.disable'], also:['r3','r5'], lines:['H4','H5'],
-    t:'在同一个事务里：韬文苏的账号改为停用，作废他的全部登录会话和进程令牌，并登记一条变更通知。\n🔒 一个事务：账号状态 + 作废会话 + 作废令牌 + 登记变更通知。\n💥 中途失败：整个回滚，韬文苏没被停用，管理员看到报错再试一次。' },
+    t:'身份与权限模块在同一个事务里做完四件事：\n- 韬文苏的账号改为停用\n- 作废他的全部登录会话\n- 作废他的全部进程令牌\n- 登记一条变更通知\n🔒 一个事务：四件事一起生效，或一起不算\n💥 中途失败：整个回滚，韬文苏没被停用，管理员看到报错再试一次' },
   { open:['r8'], hit:['r8.speed','r8.sub','r8.tx'], also:['r3','r5'], lines:['H12','H13'],
-    t:'事务提交后发出变更通知：请求入口和 MCP 代理立刻清掉缓存。韬文苏的下一个请求会被当作未登录（401），他的 Agent 调 MCP 也立刻失败。\n（缓存：请求入口把「这个 cookie 是谁」记在内存里，每条只留 30 秒，到点自动作废、下次重新查库。）\n💥 通知处理失败：缓存没被清，但最多 30 秒后自己过期，下次查库就看到韬文苏已停用，所以不需要额外重试。' },
+    t:'事务提交后发出变更通知，请求入口和 MCP 代理立刻清掉缓存\n- 韬文苏的下一个请求会被当作未登录（401）\n- 他的 Agent 调 MCP 也立刻失败\n- 缓存是什么：请求入口把「这个 cookie 是谁」记在内存里，每条只留 30 秒，到点自动作废、下次重新查库\n💥 通知处理失败：缓存没被清，但最多 30 秒后自己过期，再查库就看到已停用，所以不需要额外重试' },
   { open:['r8'], hit:['r8.list','r8.speed'], lines:['H14'],
-    t:'这次停用记一条审计。如果平台后端同时跑了多个副本，变更通知只在处理停用请求的那个副本里发，其他副本收不到，要等它们各自的缓存过期，最多晚 30 秒生效。' } ]},
+    t:'这次停用记一条审计\n- 平台后端跑多个副本时，变更通知只在处理停用请求的那个副本里发\n- 其他副本收不到，要等各自的缓存过期，最多晚 30 秒生效' } ]},
  { id:'t3', name:'王经理跑自进化评估', steps:[
   { open:['r1'], hit:['r1.svc','r1.r10'], lines:[],
-    t:'王经理（全站管理员）发起自进化。这个后台任务的主体是 ServicePrincipal(服务 = 自进化, 发起人 ID = usr_01JC9W4N6PA2B8C5D7E3F1G9HJ)，也就是「自进化，发起人王经理」，之后每一步判权都按王经理当时的能力算。' },
+    t:'王经理（全站管理员）发起自进化，这个后台任务以「服务」主体运行\n- 主体是「自进化，发起人王经理」\n- 之后每一步判权，都按王经理当时的能力算\n📎 主体 = ServicePrincipal(自进化, 发起人 usr_01JC9W4N6PA2B8C5D7E3F1G9HJ)' },
   { open:['r5'], hit:['r5.kinds','r5.route'], lines:['H2'],
-    t:'自进化的 Agent 跑在王经理名下的自进化进程里（路由键 evolution:usr_01JC9W4N6PA2B8C5D7E3F1G9HJ），带自进化令牌：只放这个 Agent 版本勾选的 tool，不放 mem0。签发令牌时王经理必须有「管理自进化」这项能力。' },
+    t:'自进化的 Agent 跑在王经理名下的自进化进程里，带自进化令牌\n- 令牌只放这个 Agent 版本勾选的 tool，不放 mem0\n- 签发令牌时，王经理必须有「管理自进化」这项能力\n📎 路由键 = evolution:usr_01JC9W4N6PA2B8C5D7E3F1G9HJ' },
   { open:['r6'], hit:['r6.use','r6.why'], also:['r4','r5'], lines:['H7','H8','H16'],
-    t:'评估时用三档评估账号跑测试题：比如用「二档测试 01」跑时，被测会话的进程路由键就是它的 ID eac_01JE5T2X8YB4C7D1E9F3G6H2JM，带评估账号令牌，主体是 EvalAccountPrincipal(eac_01JE5T2X8YB4C7D1E9F3G6H2JM, 二档)，取数用这个评估账号自己的 uid。打分、模拟用户提问的会话用评估辅助令牌，不能调 MCP 工具。' },
+    t:'评估时用三档评估账号跑测试题\n- 被测会话的进程路由键就是评估账号 ID，带评估账号令牌\n- 取数用这个评估账号自己的 uid\n- 打分、模拟用户提问的会话用评估辅助令牌，不能调 MCP 工具\n📎 用「二档测试 01」跑时：路由键 eac_01JE5T2X8YB4C7D1E9F3G6H2JM，主体 EvalAccountPrincipal(eac_01JE5T2X8YB4C7D1E9F3G6H2JM, 二档)' },
   { open:['r1','r5'], hit:['r1.r10','r5.two'], also:['r8'], lines:['H1'],
-    t:'评估跑到一半王经理被降级：同一个事务里作废他的自进化令牌并发变更通知；之后的判权按他现在的能力算，一律拒绝。\n🔒 一个事务：改角色 + 作废令牌 + 登记变更通知。' } ]},
+    t:'评估跑到一半，王经理被降级\n- 同一个事务里作废他的自进化令牌，并登记变更通知\n- 之后的判权按他现在的能力算，一律拒绝\n🔒 一个事务：改角色 + 作废令牌 + 登记变更通知' } ]},
  { id:'t4', name:'新人首次登录', steps:[
   { open:['r2'], hit:['r2.initpw','r2.empno'], lines:[],
-    t:'管理员新建账号：工号 190903、姓名韬文苏、角色使用者。系统给他分配用户 ID usr_01JD8M5R2TB7C3D9E6F4G1H8KN，网关 uid 默认填 190903。系统生成随机初始密码，只在这次响应里显示，由管理员转告。' },
+    t:'管理员新建账号：韬文苏，角色使用者\n- 网关 uid 默认填工号\n- 系统生成随机初始密码，只在这次响应里显示，由管理员转告\n📎 工号 190903，用户 ID usr_01JD8M5R2TB7C3D9E6F4G1H8KN，uid 190903' },
   { open:['r3','r1'], hit:['r3.flow','r1.must'], lines:['L1','L7'], ext:['browser'],
-    t:'韬文苏用初始密码登录成功，但必须先改密：这时他的能力清单是空的，做什么都会被拒；前端打开页面时会问后端「我是谁」，看到要改密就只显示改密页。' },
+    t:'韬文苏用初始密码登录成功，但必须先改密\n- 这时他的能力清单是空的，做什么都会被拒\n- 前端打开页面时会问后端「我是谁」，看到要改密，就只显示改密页' },
   { open:['r3'], hit:['r3.policy','r3.revoke'], lines:['L1'], ext:['browser'],
-    t:'改密（输旧密码，新密码至少 8 位、含字母和数字）后，其他会话作废、当前会话保留，能力恢复。\n🔒 一个事务：改密码 + 作废其他会话 + 登记变更通知。' } ]},
+    t:'韬文苏改密后，能力恢复\n- 要输旧密码；新密码至少 8 位，含字母和数字\n- 他其他地方的登录会话作废，当前这个保留\n🔒 一个事务：改密码 + 作废其他会话 + 登记变更通知' } ]},
  { id:'t5', name:'CRM 替韬文苏问（P4）', steps:[
   { open:['r7'], hit:['r7.resolve','r7.cred'], lines:['L2'], ext:['biz'],
-    t:'CRM 用应用凭据调开放 API，在请求头里声明实际用户的工号 190903（韬文苏）。请求入口找身份与权限模块校验。' },
+    t:'CRM 用应用凭据调开放 API，声明替韬文苏调用\n- 请求头里填实际用户的工号 190903\n- 请求入口找身份与权限模块校验' },
   { open:['r7','r1'], hit:['r7.onbehalf','r7.inter','r1.app'], lines:['L2','L8'], ext:['biz'],
-    t:'主体是 AppPrincipal(应用 ID = app_01JE3Q7S5VA9B2C6D4E8F1G3HK, 实际用户 ID = usr_01JD8M5R2TB7C3D9E6F4G1H8KN)，也就是「CRM 替韬文苏」。能做的事：韬文苏能做的事里，管理员允许 CRM 调用的那部分。' },
+    t:'校验通过，主体是「CRM 替韬文苏」\n- 能做的事：韬文苏能做的事里，管理员允许 CRM 调用的那部分\n📎 主体 = AppPrincipal(应用 app_01JE3Q7S5VA9B2C6D4E8F1G3HK, 实际用户 usr_01JD8M5R2TB7C3D9E6F4G1H8KN)' },
   { open:['r4'], hit:['r4.ret'], lines:['L6'], ext:['gw'],
-    t:'取数用韬文苏的 uid 190903；会话、文件归韬文苏；审计里同时记 CRM 和韬文苏。' } ]}
+    t:'之后的事都算在韬文苏名下\n- 取数用韬文苏的 uid\n- 会话、文件归韬文苏\n- 审计里同时记 CRM 和韬文苏\n📎 韬文苏的 uid = 190903' } ]}
 ];
 
 </script><script>
@@ -1037,9 +1047,25 @@ function render() {
 function select(id) { state.gloss = false; state.tour = null; $('#tour').value = ''; state.sel = id; render(); }
 
 // ---------- 走一遍 ----------
+// 走一遍的讲解排版：第一行是核心句（【…】开头的变成小标签）；「- 」开头是要点；🔒 事务、💥 失败时、📎 例子数据放右栏
+function fmtStep(t){
+  let main='', side='', ul=[]; const cls=/(^|\n)- /.test(t)?'lead':'pl';
+  const flush=()=>{ if(ul.length){ main+='<ul>'+ul.map(x=>'<li>'+x+'</li>').join('')+'</ul>'; ul=[]; } };
+  const box=(c,lab,x)=>`<div class="tx ${c}"><b>${lab}</b>${x}</div>`;
+  t.split('\n').forEach(l=>{ const e=esc(l.trim()); if(!e) return;
+    if(e.startsWith('- ')){ ul.push(e.slice(2)); return; }
+    flush();
+    if(/^🔒/u.test(e)) side+=box('tx-tx','事务',e.replace(/^🔒\s*/u,''));
+    else if(/^💥/u.test(e)) side+=box('tx-fail','失败时',e.replace(/^💥\s*/u,''));
+    else if(/^📎/u.test(e)) side+=box('tx-ex','例子数据',e.replace(/^📎\s*/u,''));
+    else { const m=e.match(/^【([^】]+)】(.*)$/); main+=`<p class="${cls}">${m?`<span class="tag">${m[1]}</span>${m[2]}`:e}</p>`; }
+  }); flush();
+  return `<div class="tg${side?'':' one'}"><div class="tm">${main}</div>${side?`<div class="ts">${side}</div>`:''}</div>`;
+}
+
 function tourText() {
   const t = TOURS.find(t => t.id === state.tour), n = t.steps.length;
-  $('#ttxt').innerHTML = `<b>${esc(t.name)}　${state.step + 1} / ${n}</b><br>${esc(t.steps[state.step].t).replace(/\n/g,'<br>')}`;
+  $('#ttxt').innerHTML = `<div class="th"><b>${esc(t.name)}</b>　${state.step + 1} / ${n}</div>${fmtStep(t.steps[state.step].t)}`;
   $('#tp').disabled = state.step === 0; $('#tn').disabled = state.step === n - 1;
 }
 function startTour(id) { state.gloss = false; state.sel = null; state.tour = id || null; state.step = 0; $('#tour').value = id || ''; render(); }
