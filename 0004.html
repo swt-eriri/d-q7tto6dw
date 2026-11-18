@@ -479,8 +479,10 @@ function applyHL(){ const fs=focus(), top=$('#beltsTop'), base=$('#belts'); Arra
 function setVB(){ const v=st.vb; $('#svg').setAttribute('viewBox',`${v.x} ${v.y} ${v.w} ${v.h}`); }
 function animVB(to){ if(document.body.classList.contains('still')){ st.vb=to; setVB(); return; } const from={...st.vb}, t0=performance.now(), D=650;
   (function f(t){ const k=Math.min(1,(t-t0)/D), e=k<.5?2*k*k:1-Math.pow(-2*k+2,2)/2; st.vb={x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e,w:from.w+(to.w-from.w)*e,h:from.h+(to.h-from.h)*e}; setVB(); if(k<1) requestAnimationFrame(f); })(t0); }
-function boxFit(x0,y0,x1,y1,minW){ const r=$('#stage').getBoundingClientRect(); let w=Math.max(x1-x0,minW||1200), h=y1-y0; const ar=r.width/r.height; if(w/h>ar) h=w/ar; else w=h*ar; return {x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h}; }
-function zoomTo(ids){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const m=MM[id]; if(!m) return; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y0=Math.min(y0,m.y-d-40); x1=Math.max(x1,m.x+m.w); y1=Math.max(y1,m.y+m.h); }); if(x0>x1) return; animVB(boxFit(x0-140,y0-80,x1+140,y1+240)); }
+// 走一遍时底部讲解栏会盖住画面：只在栏上方的可见区域里摆内容
+function boxFit(x0,y0,x1,y1,minW){ const r=$('#stage').getBoundingClientRect(), tb=$('#tourbar'), res=document.body.classList.contains('touring')&&tb.offsetHeight?Math.min(r.height*0.6,r.bottom-tb.getBoundingClientRect().top+12):0, vh=r.height-res;
+  let w=Math.max(x1-x0,minW||1200), h=y1-y0; const ar=r.width/vh; if(w/h>ar) h=w/ar; else w=h*ar; const H=h*r.height/vh; return {x:(x0+x1)/2-w/2,y:(y0+y1)/2-h/2,w,h:H}; }
+function zoomTo(ids){ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const m=MM[id]; if(!m) return; const d=INS[m.shape].deco||0; x0=Math.min(x0,m.x); y0=Math.min(y0,m.y-d-40); x1=Math.max(x1,m.x+m.w); y1=Math.max(y1,m.y+m.h); }); if(x0>x1) return; animVB(boxFit(x0-140,y0-80,x1+140,y1+80)); }
 const goRegion=(...ids)=>{ let x0=1e9,y0=1e9,x1=-1e9,y1=-1e9; ids.forEach(id=>{ const r=RR[id]; x0=Math.min(x0,r.x); y0=Math.min(y0,r.y); x1=Math.max(x1,r.x+r.w+22); y1=Math.max(y1,r.y+r.h+22); }); animVB(boxFit(x0-60,y0-60,x1+60,y1+60,1)); };
 
 /* ---------- 详情 ---------- */
@@ -529,9 +531,15 @@ function fmtStep(t){
   }); flush();
   return `<div class="tg${side?'':' one'}"><div class="tm">${main}</div>${side?`<div class="ts">${side}</div>`:''}</div>`;
 }
+// 一步里亮的组件分得太开时（比如 DSH 在右上、桥接插件在左下），整体缩放会小到看不清：按这一步列出的顺序取组件，框住的宽度不超过 4200
+function tourView(s,all){ const ms=all.map(id=>MM[id]).filter(Boolean); const L=4200;
+  if(Math.max(...ms.map(m=>m.x+m.w))-Math.min(...ms.map(m=>m.x))<=L) return all;
+  // 太宽：找一个宽 4200 的窗口，框住最多的亮组件（这一步列出的组件算双份）
+  let best=null; ms.forEach(a=>{ const inn=ms.filter(m=>m.x>=a.x&&m.x+m.w<=a.x+L), sc=inn.reduce((t,m)=>t+(s.m.includes(m.id)?2:1),0); if(!best||sc>best.sc) best={sc,ids:inn.map(m=>m.id)}; });
+  return best.ids; }
 function tourGo(){ const t=TOURS.find(x=>x.id===st.tour), s=t.steps[st.step]; $('#tourbar').style.display='flex'; document.body.classList.add('touring');
   $('#ttxt').innerHTML=`<div class="th"><b>${esc(t.name)}</b>　第 ${st.step+1} / ${t.steps.length} 步</div>${fmtStep(s.t)}`; $('#tp').disabled=st.step===0; $('#tn').disabled=st.step===t.steps.length-1;
-  st.sel=null; st.selBelt=null; applyHL(); const f=focus(); zoomTo([...f.n]); const main=s.m.find(id=>MM[id]&&MM[id].z!=='DBZ')||s.m.find(id=>MM[id]); if(main) showNode(main); }
+  st.sel=null; st.selBelt=null; applyHL(); const f=focus(); zoomTo(tourView(s,[...f.n])); const main=s.m.find(id=>MM[id]&&MM[id].z!=='DBZ')||s.m.find(id=>MM[id]); if(main) showNode(main); }
 $('#tour').onchange=e=>{ if(!e.target.value) return endTour(); st.tour=e.target.value; st.step=0; tourGo(); };
 function endTour(){ st.tour=null; document.body.classList.remove('touring'); $('#tourbar').style.display='none'; $('#tour').value=''; applyHL(); }
 $('#tp').onclick=()=>{ st.step--; tourGo(); }; $('#tn').onclick=()=>{ st.step++; tourGo(); }; $('#tx').onclick=endTour;
